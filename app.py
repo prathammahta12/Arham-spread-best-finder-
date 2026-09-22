@@ -1,37 +1,38 @@
 import streamlit as st
 import requests
-import pandas as pd
+import os
+import base64
 from datetime import datetime, date, timedelta
 
 st.set_page_config(page_title="ARHAM TRADERS", layout="wide", initial_sidebar_state="collapsed")
 
-# Direct CDN Link of Girnar Ji Tirth
-GIRNAR_IMG = "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1600&q=80"
+# Pavithra Girnar Ji Maha Tirth (Shri Neminath Bhagwan) Direct Image Link
+GIRNAR_ONLINE = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Neminath_Temple_Girnar_02.jpg/1280px-Neminath_Temple_Girnar_02.jpg"
 
-# --- FULLSCREEN BACKGROUND & CYBER THEME CSS ---
-st.markdown(f"""
+def get_bg():
+    if os.path.exists("girnar.jpg"):
+        with open("girnar.jpg", "rb") as f:
+            return f"data:image/jpeg;base64,{base64.b64encode(f.read()).decode()}"
+    return GIRNAR_ONLINE
+
+bg_url = get_bg()
+
+st.markdown(f'''
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
     
-    /* 100% Guaranteed Fullscreen Background Layer */
-    .bg-girnar {{
+    /* Poore Background Me Girnar Ji Ki Photo Fit */
+    .bg-layer {{
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        background-image: linear-gradient(rgba(6, 11, 23, 0.85), rgba(6, 11, 23, 0.93)), url('{GIRNAR_IMG}');
+        background: linear-gradient(rgba(6, 11, 23, 0.82), rgba(6, 11, 23, 0.92)), url('{bg_url}') no-repeat center center fixed;
         background-size: cover;
-        background-position: center center;
-        background-repeat: no-repeat;
         z-index: -999;
     }}
-
-    .stApp {{
-        background: transparent !important;
-        color: #ffffff !important;
-        font-family: 'Rajdhani', sans-serif !important;
-    }}
+    .stApp {{ background: transparent !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }}
     
     .brand-card {{
         text-align: center;
@@ -82,12 +83,7 @@ st.markdown(f"""
         margin-top: 10px;
     }}
     
-    label {{
-        font-size: 0.78rem !important;
-        font-weight: 700 !important;
-        color: #94a3b8 !important;
-        text-transform: uppercase !important;
-    }}
+    label {{ font-size: 0.78rem !important; font-weight: 700 !important; color: #94a3b8 !important; text-transform: uppercase !important; }}
     div[data-baseweb="select"] > div, .stTextInput input, .stNumberInput input {{
         background-color: #0b1329 !important;
         color: #38bdf8 !important;
@@ -97,20 +93,8 @@ st.markdown(f"""
         border-radius: 6px !important;
     }}
     
-    .scan-btn > button {{
-        background: #0284c7 !important;
-        color: white !important;
-        font-weight: 800 !important;
-        border: none !important;
-        border-radius: 6px !important;
-    }}
-    .stop-btn > button {{
-        background: #ef4444 !important;
-        color: white !important;
-        font-weight: 800 !important;
-        border: none !important;
-        border-radius: 6px !important;
-    }}
+    .scan-btn > button {{ background: #0284c7 !important; color: white !important; font-weight: 800 !important; border: none !important; border-radius: 6px !important; }}
+    .stop-btn > button {{ background: #ef4444 !important; color: white !important; font-weight: 800 !important; border: none !important; border-radius: 6px !important; }}
     
     .spread-card {{
         background: rgba(13, 23, 46, 0.92);
@@ -121,54 +105,16 @@ st.markdown(f"""
         padding: 14px;
         margin-bottom: 12px;
     }}
-    .spread-title {{
-        font-size: 1.15rem;
-        font-weight: 800;
-        color: #ffbe0b;
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-    }}
-    .spread-grid {{
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 8px;
-        margin: 10px 0;
-    }}
-    .grid-item {{
-        background: #080f21;
-        padding: 8px;
-        border-radius: 6px;
-        border: 1px solid #14223d;
-        font-size: 0.85rem;
-    }}
-    .grid-label {{
-        color: #64748b;
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        font-weight: 700;
-    }}
-    .grid-val {{
-        color: #f8fafc;
-        font-weight: 700;
-        font-size: 0.92rem;
-        margin-top: 2px;
-    }}
-    .advice-box {{
-        background: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-        border: 1px solid rgba(16, 185, 129, 0.35);
-        padding: 8px 12px;
-        border-radius: 6px;
-        font-weight: 700;
-        font-size: 0.88rem;
-        margin-top: 6px;
-    }}
+    .spread-title {{ font-size: 1.15rem; font-weight: 800; color: #ffbe0b; display: flex; justify-content: space-between; margin-bottom: 8px; }}
+    .spread-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin: 10px 0; }}
+    .grid-item {{ background: #080f21; padding: 8px; border-radius: 6px; border: 1px solid #14223d; font-size: 0.85rem; }}
+    .grid-label {{ color: #64748b; font-size: 0.72rem; text-transform: uppercase; font-weight: 700; }}
+    .grid-val {{ color: #f8fafc; font-weight: 700; font-size: 0.92rem; margin-top: 2px; }}
+    .advice-box {{ background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 0.88rem; margin-top: 6px; }}
 </style>
-<div class="bg-girnar"></div>
-""", unsafe_allow_html=True)
+<div class="bg-layer"></div>
+''', unsafe_allow_html=True)
 
-# --- SUPABASE REST CONFIG ---
 SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaWdpeGdxZGZ0YWpxa211b3VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTI0OTUsImV4cCI6MjEwNTYyODQ5NX0.pI7CPt9XdLG2zirwkisz5Ttzm3CZIQiL6qg7D70fKlc"
 HEADERS = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": "application/json"}
@@ -197,22 +143,21 @@ def update_user_days(uid, days):
     except:
         return False
 
-# Session States
 for key, default in [("logged_in", False), ("username", ""), ("is_admin", False), ("valid_until", None), ("scanned", False)]:
     if key not in st.session_state:
         st.session_state[key] = default
 
-# ==================== 1. LOGIN SCREEN ====================
+# 1. LOGIN SCREEN
 if not st.session_state.logged_in:
     _, col_mid, _ = st.columns([1, 1.4, 1])
     with col_mid:
-        st.markdown("""
+        st.markdown('''
         <div class="brand-card">
             <div class="brand-main">ARHAM TRADERS</div>
             <div class="brand-dev">⚡ DEVELOPED BY PRATHAM MEHTA ⚡</div>
-            <div style='color:#f59e0b; font-size:0.9rem; margin-top:6px; font-weight:700;'>🙏 Jai Girnar Ji Maha Tirth 🙏</div>
+            <div style="color:#f59e0b; font-size:0.9rem; margin-top:6px; font-weight:700;">🙏 Jai Girnar Ji Maha Tirth 🙏</div>
         </div>
-        """, unsafe_allow_html=True)
+        ''', unsafe_allow_html=True)
         
         tab_login, tab_reg = st.tabs(["🔐 Sign In", "📝 Register Access"])
         
@@ -228,16 +173,16 @@ if not st.session_state.logged_in:
                             st.session_state.update(logged_in=True, username=usr["username"], is_admin=True)
                             st.rerun()
                         elif not usr.get("is_approved", False):
-                            st.warning("⏳ आपका अकाउंट पेंडिंग है! एडमिन अप्रूवल का इंतज़ार करें।")
+                            st.warning("Account approval pending!")
                         elif not usr.get("valid_until") or datetime.strptime(usr["valid_until"], "%Y-%m-%d").date() < date.today():
-                            st.error("⛔ आपका एक्सेस समाप्त हो चुका है! एडमिन से संपर्क करें।")
+                            st.error("Access validity expired!")
                         else:
                             st.session_state.update(logged_in=True, username=usr["username"], is_admin=False, valid_until=usr["valid_until"])
                             st.rerun()
                     else:
-                        st.error("गलत क्रेडेंशियल्स!")
+                        st.error("Invalid credentials!")
                 else:
-                    st.warning("दोनों फ़ील्ड भरें।")
+                    st.warning("Please fill both fields.")
 
         with tab_reg:
             ru = st.text_input("Desired Username", key="reg_u")
@@ -247,11 +192,11 @@ if not st.session_state.logged_in:
                 if ru and rph and rp:
                     res = register_user(ru, rp, rph)
                     if res and res.status_code in [200, 201]:
-                        st.success("✅ रिक्वेस्ट सबमिट हो गई! एडमिन अप्रूवल के बाद लॉगिन करें।")
+                        st.success("Request submitted! Wait for admin approval.")
                     else:
-                        st.error("यह यूज़रनेम पहले से मौजूद है!")
+                        st.error("Username already exists!")
 
-# ==================== 2. ADMIN CONTROL PANEL ====================
+# 2. ADMIN PANEL
 elif st.session_state.is_admin:
     st.title("👑 Admin Control Panel — Arham Traders")
     if st.button("Logout"):
@@ -272,7 +217,7 @@ elif st.session_state.is_admin:
                     st.success("Days Updated!")
                     st.rerun()
 
-# ==================== 3. TRADER TERMINAL ====================
+# 3. TERMINAL
 else:
     if st.session_state.valid_until and datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() < date.today():
         st.session_state.logged_in = False
@@ -280,17 +225,16 @@ else:
 
     rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.valid_until else 0
     
-    st.markdown(f"""
-    <div style='display:flex; justify-content:space-between; align-items:center; padding:4px 0 12px 0; border-bottom:1px solid #131c31; margin-bottom:15px;'>
-        <div style='font-size:1.25rem; font-weight:800; color:#fff;'>▲ Delta Analysis <span style='font-size:0.85rem; color:#64748b;'>FNO SCANNER</span></div>
-        <div style='display:flex; align-items:center; gap:10px;'>
-            <span style='color:#f59e0b; background:rgba(245,158,11,0.15); padding:3px 8px; border-radius:6px; font-size:0.8rem; font-weight:700;'>● LIVE MARKET</span>
-            <span style='font-size:0.85rem; color:#94a3b8;'>Validity: <b>{rem_days} Days</b></span>
+    st.markdown(f'''
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0 12px 0; border-bottom:1px solid #131c31; margin-bottom:15px;">
+        <div style="font-size:1.25rem; font-weight:800; color:#fff;">▲ Delta Analysis <span style="font-size:0.85rem; color:#64748b;">FNO SCANNER</span></div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span style="color:#f59e0b; background:rgba(245,158,11,0.15); padding:3px 8px; border-radius:6px; font-size:0.8rem; font-weight:700;">● LIVE MARKET</span>
+            <span style="font-size:0.85rem; color:#94a3b8;">Validity: <b>{rem_days} Days</b></span>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    ''', unsafe_allow_html=True)
 
-    # Filter Box
     st.markdown('<div class="filter-panel">', unsafe_allow_html=True)
     
     r1_1, r1_2, r1_3 = st.columns(3)
@@ -315,12 +259,12 @@ else:
 
     f_dir = st.selectbox("DIRECTION", ["Buy → Sell", "Sell → Buy", "Arbitrage Spread"])
 
-    st.markdown("""
+    st.markdown('''
     <div class="alert-panel">
-        <div style='color:#ef4444; font-size:0.9rem; font-weight:800; margin-bottom:10px;'>
+        <div style="color:#ef4444; font-size:0.9rem; font-weight:800; margin-bottom:10px;">
             🎯 Custom Spread Alert — Specific Company / Strike
         </div>
-    """, unsafe_allow_html=True)
+    ''', unsafe_allow_html=True)
     
     a1, a2, a3, a4, a5, a6 = st.columns(6)
     a_comp = a1.selectbox("COMPANY", ["Select Co..", "HDFCBANK", "NIFTY", "BANKNIFTY", "RELIANCE"])
@@ -331,37 +275,26 @@ else:
     a_debit = a6.number_input("TARGET DEBIT ₹", value=0, step=1)
 
     b_al1, b_al2 = st.columns(2)
-    with b_al1:
-        st.button("🔔 START CUSTOM ALERT", use_container_width=True)
-    with b_al2:
-        st.button("CHECK NOW", use_container_width=True)
+    with b_al1: st.button("🔔 START CUSTOM ALERT", use_container_width=True)
+    with b_al2: st.button("CHECK NOW", use_container_width=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div></div>", unsafe_allow_html=True)
 
-    # Action Toolbar Buttons
     btn1, btn2, btn3, btn4, btn5 = st.columns([1.5, 1.5, 1.5, 1, 1])
     with btn1:
         st.markdown('<div class="scan-btn">', unsafe_allow_html=True)
-        if st.button("SCAN NOW", use_container_width=True):
-            st.session_state.scanned = True
+        if st.button("SCAN NOW", use_container_width=True): st.session_state.scanned = True
         st.markdown('</div>', unsafe_allow_html=True)
-    with btn2:
-        st.button("START AUTO SCAN", use_container_width=True)
-    with btn3:
-        st.button("🔔 ENABLE NOTIFICATIONS", use_container_width=True)
+    with btn2: st.button("START AUTO SCAN", use_container_width=True)
+    with btn3: st.button("🔔 ENABLE NOTIFICATIONS", use_container_width=True)
     with btn4:
         st.markdown('<div class="stop-btn">', unsafe_allow_html=True)
-        if st.button("STOP", use_container_width=True):
-            st.session_state.scanned = False
+        if st.button("STOP", use_container_width=True): st.session_state.scanned = False
         st.markdown('</div>', unsafe_allow_html=True)
     with btn5:
-        if st.button("RESET", use_container_width=True):
-            st.session_state.scanned = False
+        if st.button("RESET", use_container_width=True): st.session_state.scanned = False
 
     st.write("---")
-
-    # Output Cards
     st.markdown("### 💎 Detected Spread Opportunities (Individual Analysis)")
 
     market_data = {
@@ -385,7 +318,7 @@ else:
             carry_pct = round((pts / info["near"]) * 100, 2)
             advice = "⭐ High Premium Carry! Sell Far / Buy Near (Reverse Calendar)" if carry_pct > 0.8 else ("🔥 Cheap Carry! Buy Far / Sell Near (Long Calendar)" if carry_pct < 0.4 else "✅ Balanced Spread. Low-risk Carry Setup.")
             
-            st.markdown(f"""
+            st.markdown(f'''
             <div class="spread-card">
                 <div class="spread-title">
                     <span>{sym} — Futures Calendar Spread</span>
@@ -400,11 +333,11 @@ else:
                 </div>
                 <div class="advice-box">🎯 <b>Action Advice:</b> {advice}</div>
             </div>
-            """, unsafe_allow_html=True)
+            ''', unsafe_allow_html=True)
             
         else:
             diff = 12.50
-            st.markdown(f"""
+            st.markdown(f'''
             <div class="spread-card">
                 <div class="spread-title">
                     <span>{sym} — Option {f_type.split(' ')[0]} ({f_ratio})</span>
@@ -419,9 +352,8 @@ else:
                 </div>
                 <div class="advice-box">🎯 <b>Action Advice:</b> ✅ Defined Risk Spread. Theta decay advantage on sell leg.</div>
             </div>
-            """, unsafe_allow_html=True)
+            ''', unsafe_allow_html=True)
 
     if st.sidebar.button("Logout", use_container_width=True):
         st.session_state.logged_in = False
         st.rerun()
-        
