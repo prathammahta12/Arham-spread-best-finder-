@@ -25,172 +25,6 @@ def get_exact_girnar_bg():
 
 girnar_bg_src = get_exact_girnar_bg()
 
-st.markdown(f'''
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
-    
-    /* Fullscreen High-Resolution Girnar Background */
-    .girnar-bg-full {{
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: linear-gradient(rgba(6, 11, 23, 0.70), rgba(6, 11, 23, 0.85)), 
-                    url('{girnar_bg_src}') no-repeat center center fixed !important;
-        background-size: cover !important;
-        z-index: -999;
-    }}
-
-    .stApp {{
-        background: transparent !important;
-        color: #ffffff !important;
-        font-family: 'Rajdhani', sans-serif !important;
-    }}
-    
-    /* Perfectly Fitted & Centered Golden Brand Card */
-    .brand-card {{
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        margin: 25px auto 20px auto;
-        padding: 18px 24px;
-        background: rgba(11, 18, 36, 0.92);
-        backdrop-filter: blur(14px);
-        border: 2.5px solid #f59e0b;
-        border-radius: 16px;
-        box-shadow: 0 0 45px rgba(245, 158, 11, 0.55);
-        width: fit-content !important;
-        max-width: 95% !important;
-        box-sizing: border-box;
-    }}
-    .brand-main {{
-        font-family: 'Cinzel', serif;
-        font-size: clamp(1.7rem, 5.2vw, 2.4rem) !important;
-        font-weight: 900 !important;
-        font-style: italic !important;
-        white-space: nowrap !important;
-        letter-spacing: 1.5px !important;
-        color: #ffbe0b !important;
-        text-shadow: 0 0 25px rgba(255, 190, 11, 0.85);
-        margin: 0 !important;
-        line-height: 1.2 !important;
-    }}
-    .brand-dev {{
-        font-family: 'Teko', sans-serif;
-        font-size: clamp(1.1rem, 3.8vw, 1.35rem) !important;
-        font-weight: 700 !important;
-        letter-spacing: 1.5px !important;
-        white-space: nowrap !important;
-        color: #38bdf8 !important;
-        text-shadow: 0 0 16px rgba(56, 189, 248, 0.85);
-        margin-top: 4px !important;
-    }}
-    
-    .filter-panel {{
-        background: rgba(11, 18, 36, 0.90);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(56, 189, 248, 0.35);
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 14px;
-    }}
-    .alert-panel {{
-        background: rgba(8, 14, 28, 0.92);
-        border: 1px solid #1c2b4d;
-        border-radius: 8px;
-        padding: 14px;
-        margin-top: 10px;
-    }}
-    
-    label {{
-        font-size: 0.78rem !important;
-        font-weight: 700 !important;
-        color: #94a3b8 !important;
-        text-transform: uppercase !important;
-    }}
-    div[data-baseweb="select"] > div, .stTextInput input, .stNumberInput input {{
-        background-color: #0b1329 !important;
-        color: #38bdf8 !important;
-        font-size: 0.95rem !important;
-        font-weight: 700 !important;
-        border: 1px solid #1e2e50 !important;
-        border-radius: 6px !important;
-    }}
-    
-    .scan-btn > button {{
-        background: #0284c7 !important;
-        color: white !important;
-        font-weight: 800 !important;
-        border: none !important;
-        border-radius: 6px !important;
-    }}
-    .stop-btn > button {{
-        background: #ef4444 !important;
-        color: white !important;
-        font-weight: 800 !important;
-        border: none !important;
-        border-radius: 6px !important;
-    }}
-    
-    .spread-card {{
-        background: rgba(13, 23, 46, 0.92);
-        backdrop-filter: blur(10px);
-        border: 1px solid #1e2e50;
-        border-left: 5px solid #38bdf8;
-        border-radius: 10px;
-        padding: 14px;
-        margin-bottom: 12px;
-    }}
-    .spread-title {{
-        font-size: 1.15rem;
-        font-weight: 800;
-        color: #ffbe0b;
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-    }}
-    .spread-grid {{
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 8px;
-        margin: 10px 0;
-    }}
-    .grid-item {{
-        background: #080f21;
-        padding: 8px;
-        border-radius: 6px;
-        border: 1px solid #14223d;
-        font-size: 0.85rem;
-    }}
-    .grid-label {{
-        color: #64748b;
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        font-weight: 700;
-    }}
-    .grid-val {{
-        color: #f8fafc;
-        font-weight: 700;
-        font-size: 0.92rem;
-        margin-top: 2px;
-    }}
-    .advice-box {{
-        background: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-        border: 1px solid rgba(16, 185, 129, 0.35);
-        padding: 8px 12px;
-        border-radius: 6px;
-        font-weight: 700;
-        font-size: 0.88rem;
-        margin-top: 6px;
-    }}
-</style>
-<div class="girnar-bg-full"></div>
-''', unsafe_allow_html=True)
-
 # --- SUPABASE CONFIG ---
 SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaWdpeGdxZGZ0YWpxa211b3VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTI0OTUsImV4cCI6MjEwNTYyODQ5NX0.pI7CPt9XdLG2zirwkisz5Ttzm3CZIQiL6qg7D70fKlc"
@@ -225,8 +59,68 @@ for key, default in [("logged_in", False), ("username", ""), ("is_admin", False)
     if key not in st.session_state:
         st.session_state[key] = default
 
-# ==================== 1. LOGIN SCREEN ====================
+# ==================== 1. LOGIN SCREEN (GIRNAR BACKGROUND) ====================
 if not st.session_state.logged_in:
+    st.markdown(f'''
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
+        
+        .girnar-bg-full {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(rgba(6, 11, 23, 0.70), rgba(6, 11, 23, 0.85)), 
+                        url('{girnar_bg_src}') no-repeat center center fixed !important;
+            background-size: cover !important;
+            z-index: -999;
+        }}
+        .stApp {{ background: transparent !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }}
+        
+        .brand-card {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin: 25px auto 20px auto;
+            padding: 18px 24px;
+            background: rgba(11, 18, 36, 0.92);
+            backdrop-filter: blur(14px);
+            border: 2.5px solid #f59e0b;
+            border-radius: 16px;
+            box-shadow: 0 0 45px rgba(245, 158, 11, 0.55);
+            width: fit-content !important;
+            max-width: 95% !important;
+            box-sizing: border-box;
+        }}
+        .brand-main {{
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.7rem, 5.2vw, 2.4rem) !important;
+            font-weight: 900 !important;
+            font-style: italic !important;
+            white-space: nowrap !important;
+            letter-spacing: 1.5px !important;
+            color: #ffbe0b !important;
+            text-shadow: 0 0 25px rgba(255, 190, 11, 0.85);
+            margin: 0 !important;
+            line-height: 1.2 !important;
+        }}
+        .brand-dev {{
+            font-family: 'Teko', sans-serif;
+            font-size: clamp(1.1rem, 3.8vw, 1.35rem) !important;
+            font-weight: 700 !important;
+            letter-spacing: 1.5px !important;
+            white-space: nowrap !important;
+            color: #38bdf8 !important;
+            text-shadow: 0 0 16px rgba(56, 189, 248, 0.85);
+            margin-top: 4px !important;
+        }}
+    </style>
+    <div class="girnar-bg-full"></div>
+    ''', unsafe_allow_html=True)
+
     _, col_mid, _ = st.columns([1, 1.8, 1])
     with col_mid:
         st.markdown('''
@@ -294,8 +188,118 @@ elif st.session_state.is_admin:
                     st.success("Days Updated!")
                     st.rerun()
 
-# ==================== 3. TRADER TERMINAL ====================
+# ==================== 3. TRADER TERMINAL (DARK GREY BACKGROUND) ====================
 else:
+    st.markdown('''
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
+        
+        /* Pura Solid Dark Grey Background */
+        .stApp {
+            background-color: #0f141c !important;
+            color: #d1d5db !important;
+            font-family: 'Rajdhani', sans-serif !important;
+        }
+        
+        .filter-panel {
+            background: #171f2c;
+            border: 1px solid #232f42;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .alert-panel {
+            background: #131a26;
+            border: 1px solid #253347;
+            border-radius: 8px;
+            padding: 14px;
+            margin-top: 10px;
+        }
+        
+        label {
+            font-size: 0.78rem !important;
+            font-weight: 700 !important;
+            color: #94a3b8 !important;
+            text-transform: uppercase !important;
+        }
+        div[data-baseweb="select"] > div, .stTextInput input, .stNumberInput input {
+            background-color: #1a2332 !important;
+            color: #38bdf8 !important;
+            font-size: 0.95rem !important;
+            font-weight: 700 !important;
+            border: 1px solid #2a3b54 !important;
+            border-radius: 6px !important;
+        }
+        
+        .scan-btn > button {
+            background: #0284c7 !important;
+            color: white !important;
+            font-weight: 800 !important;
+            border: none !important;
+            border-radius: 6px !important;
+        }
+        .stop-btn > button {
+            background: #ef4444 !important;
+            color: white !important;
+            font-weight: 800 !important;
+            border: none !important;
+            border-radius: 6px !important;
+        }
+        
+        .spread-card {
+            background: #171f2c;
+            border: 1px solid #232f42;
+            border-left: 5px solid #38bdf8;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .spread-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #ffbe0b;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .spread-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .grid-item {
+            background: #101621;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #232f42;
+            font-size: 0.85rem;
+        }
+        .grid-label {
+            color: #64748b;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        .grid-val {
+            color: #f8fafc;
+            font-weight: 700;
+            font-size: 0.92rem;
+            margin-top: 2px;
+        }
+        .advice-box {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.30);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            margin-top: 6px;
+        }
+    </style>
+    ''', unsafe_allow_html=True)
+
     if st.session_state.valid_until and datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() < date.today():
         st.session_state.logged_in = False
         st.rerun()
@@ -303,7 +307,7 @@ else:
     rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.valid_until else 0
     
     st.markdown(f'''
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0 12px 0; border-bottom:1px solid #131c31; margin-bottom:15px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0 12px 0; border-bottom:1px solid #232f42; margin-bottom:15px;">
         <div style="font-size:1.25rem; font-weight:800; color:#fff;">▲ Delta Analysis <span style="font-size:0.85rem; color:#64748b;">FNO SCANNER</span></div>
         <div style="display:flex; align-items:center; gap:10px;">
             <span style="color:#f59e0b; background:rgba(245,158,11,0.15); padding:3px 8px; border-radius:6px; font-size:0.8rem; font-weight:700;">● LIVE MARKET</span>
@@ -438,10 +442,4 @@ else:
                     <div class="grid-item"><div class="grid-label">Total Max Risk / Lot</div><div class="grid-val" style="color:#10b981;">₹{round(diff * lot, 2)}</div></div>
                     <div class="grid-item"><div class="grid-label">Delta Target</div><div class="grid-val">20-30 Delta Edge</div></div>
                 </div>
-                <div class="advice-box">🎯 <b>Action Advice:</b> ✅ Defined Risk Spread. Theta decay advantage on sell leg.</div>
-            </div>
-            ''', unsafe_allow_html=True)
-
-    if st.sidebar.button("Logout", use_container_width=True):
-        st.session_state.logged_in = False
-        st.rerun()
+        
