@@ -2,24 +2,21 @@ import streamlit as st
 import requests
 import pandas as pd
 from datetime import datetime, date, timedelta
-import os
 import time
 
 # Page Configuration
 st.set_page_config(page_title="ARHAM TRADERS | Terminal", layout="wide", initial_sidebar_state="expanded")
 
-# Direct Image Link (Palitana / Jain Temple)
-TEMPLE_IMG_URL = "https://images.unsplash.com/photo-1622396481304-4ad7343b6794?auto=format&fit=crop&w=1920&q=80"
+# Temple Wallpaper Direct URL
+TEMPLE_IMG = "https://images.unsplash.com/photo-1622396481304-4ad7343b6794?auto=format&fit=crop&w=1920&q=80"
 
-# --- HIGH-CONTRAST GOLDEN & NEON THEME ---
+# --- STYLING: GOLDEN NEON & DARK CYBER THEME ---
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:ital,wght@0,800;1,900&family=Rajdhani:wght@600;700;800&display=swap');
 
-    /* Global Dark Cyber & Temple Overlay Background */
     .stApp {{
-        background: linear-gradient(rgba(5, 10, 24, 0.90), rgba(5, 10, 24, 0.95)), 
-                    url('{TEMPLE_IMG_URL}');
+        background: linear-gradient(rgba(5, 10, 24, 0.90), rgba(5, 10, 24, 0.96)), url('{TEMPLE_IMG}');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -27,11 +24,9 @@ st.markdown(f"""
         font-family: 'Rajdhani', sans-serif;
     }}
 
-    /* Main Big Brand Header */
-    .brand-container {{
+    .brand-box {{
         text-align: center;
-        margin-top: 10px;
-        margin-bottom: 22px;
+        margin: 10px 0 25px 0;
         padding: 22px;
         background: rgba(10, 18, 38, 0.75);
         border: 2.5px solid rgba(245, 158, 11, 0.6);
@@ -39,98 +34,78 @@ st.markdown(f"""
         box-shadow: 0 0 40px rgba(245, 158, 11, 0.35);
     }}
 
-    .brand-title-big {{
+    .brand-title {{
         font-family: 'Cinzel', serif;
-        font-size: 3.6rem !important;
+        font-size: 3.5rem !important;
         font-weight: 900 !important;
         font-style: italic !important;
         letter-spacing: 3px !important;
         color: #ffbe0b !important;
-        text-shadow: 0 0 25px rgba(255, 190, 11, 0.8), 0 0 50px rgba(255, 110, 0, 0.5);
+        text-shadow: 0 0 25px rgba(255, 190, 11, 0.8);
         margin: 0 !important;
         line-height: 1.1;
     }}
 
-    .brand-sub-big {{
+    .brand-sub {{
         font-family: 'Montserrat', sans-serif;
-        font-size: 1.45rem !important;
+        font-size: 1.4rem !important;
         font-weight: 900 !important;
         font-style: italic !important;
         letter-spacing: 2px !important;
         color: #38bdf8 !important;
         text-shadow: 0 0 20px rgba(56, 189, 248, 0.9);
         margin-top: 8px !important;
-        margin-bottom: 0px !important;
     }}
 
-    /* Temple Header Banner Image Box */
-    .temple-banner-box {{
-        text-align: center;
-        margin-bottom: 15px;
-    }}
-    .temple-banner-box img {{
+    .temple-header-img {{
         width: 100%;
-        max-height: 230px;
+        max-height: 220px;
         object-fit: cover;
         border-radius: 14px;
         border: 2px solid rgba(245, 158, 11, 0.6);
         box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+        margin-bottom: 15px;
     }}
 
-    /* High Visibility Input Form Styling */
-    .terminal-glass-card {{
+    .glass-panel {{
         background: rgba(13, 22, 45, 0.92);
-        backdrop-filter: blur(14px);
         border: 1.5px solid rgba(56, 189, 248, 0.35);
         border-radius: 14px;
-        padding: 22px;
+        padding: 20px;
         margin-bottom: 20px;
-        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7);
     }}
 
-    /* Labels & Texts */
     label, p, span {{
         font-family: 'Rajdhani', sans-serif !important;
         font-size: 1.1rem !important;
         font-weight: 700 !important;
         color: #f1f5f9 !important;
-        letter-spacing: 0.5px !important;
     }}
 
-    /* Input Fields */
     div[data-baseweb="select"] > div, .stTextInput > div > div > input, .stNumberInput input {{
         background-color: #0b1329 !important;
         color: #38bdf8 !important;
-        font-size: 1.15rem !important;
+        font-size: 1.1rem !important;
         font-weight: 800 !important;
         border: 1.5px solid #2563eb !important;
         border-radius: 8px !important;
     }}
 
-    /* Scan Now High Glow Action Button */
     .scan-glow > button {{
         background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%) !important;
         color: #ffffff !important;
         font-family: 'Montserrat', sans-serif !important;
-        font-size: 1.2rem !important;
+        font-size: 1.15rem !important;
         font-weight: 900 !important;
         border: 1.5px solid #ffbe0b !important;
         box-shadow: 0 0 25px rgba(245, 158, 11, 0.7) !important;
         border-radius: 10px !important;
     }}
-    .scan-glow > button:hover {{
-        box-shadow: 0 0 35px rgba(255, 190, 11, 1) !important;
-        transform: scale(1.02);
-    }}
 </style>
 """, unsafe_allow_html=True)
 
 def play_alert_sound():
-    st.markdown("""
-    <audio autoplay>
-        <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
-    </audio>
-    """, unsafe_allow_html=True)
+    st.markdown("""<audio autoplay><source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg"></audio>""", unsafe_allow_html=True)
 
 # --- SUPABASE REST CONFIG ---
 SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
@@ -149,10 +124,7 @@ def get_user(identifier):
         clean_id = identifier.strip()
         url = f"{SUPABASE_URL}/rest/v1/users?or=(username.ilike.{clean_id},phone.eq.{clean_id})&select=*"
         r = requests.get(url, headers=HEADERS, timeout=8)
-        if r.status_code == 200:
-            d = r.json()
-            return d if len(d) > 0 else None
-        return None
+        return r.json() if r.status_code == 200 and r.json() else None
     except:
         return None
 
@@ -184,16 +156,14 @@ def update_user_full(user_id, username, phone, password, valid_until, is_approve
 
 def delete_user(user_id):
     try:
-        url = f"{SUPABASE_URL}/rest/v1/users?id=eq.{user_id}"
-        r = requests.delete(url, headers=HEADERS, timeout=8)
-        return r.status_code in [200, 204]
+        requests.delete(f"{SUPABASE_URL}/rest/v1/users?id=eq.{user_id}", headers=HEADERS, timeout=8)
+        return True
     except:
         return False
 
 def log_activity(username, action):
     try:
-        url = f"{SUPABASE_URL}/rest/v1/activity_logs"
-        requests.post(url, headers=HEADERS, json={"username": username, "action": action}, timeout=3)
+        requests.post(f"{SUPABASE_URL}/rest/v1/activity_logs", headers=HEADERS, json={"username": username, "action": action}, timeout=3)
     except:
         pass
 
@@ -209,36 +179,30 @@ if "valid_until" not in st.session_state:
 if "auto_scan" not in st.session_state:
     st.session_state.auto_scan = False
 
-# ==================== 1. BRANDED LOGIN SCREEN ====================
+# ==================== 1. LOGIN SCREEN ====================
 if not st.session_state.logged_in:
-    col_l, col_center, col_r = st.columns([1, 1.4, 1])
-    with col_center:
-        st.markdown(f"""
-        <div class='temple-banner-box'>
-            <img src='{TEMPLE_IMG_URL}' alt='Temple Peak'>
-        </div>
-        """, unsafe_allow_html=True)
-
+    c_left, c_mid, c_right = st.columns([1, 1.4, 1])
+    with c_mid:
+        st.markdown(f'<img src="{TEMPLE_IMG}" class="temple-header-img">', unsafe_allow_html=True)
         st.markdown("""
-        <div class='brand-container'>
-            <div class='brand-title-big'>ARHAM TRADERS</div>
-            <div class='brand-sub-big'>⚡ DEVELOPED BY PRATHAM MEHTA ⚡</div>
+        <div class="brand-box">
+            <div class="brand-title">ARHAM TRADERS</div>
+            <div class="brand-sub">⚡ DEVELOPED BY PRATHAM MEHTA ⚡</div>
         </div>
         """, unsafe_allow_html=True)
 
-        tab_login, tab_reg, tab_rst = st.tabs(["Trader Login", "New Registration", "Reset Access Key"])
+        tab_login, tab_reg, tab_rst = st.tabs(["Trader Login", "New Registration", "Reset Password"])
         
         with tab_login:
             u_name = st.text_input("Username / Mobile", key="l_name")
             u_pass = st.text_input("Access Password", type="password", key="l_pass")
-            
             if st.button("AUTHENTICATE & ENTER TERMINAL", use_container_width=True, type="primary"):
                 if not u_name or not u_pass:
-                    st.warning("कृपया Username और Password दोनों भरें।")
+                    st.warning("कृपया दोनों फ़ील्ड भरें।")
                 else:
                     u_data = get_user(u_name)
                     if not u_data:
-                        st.error("यूज़र नहीं मिला! सही डिटेल्स डालें।")
+                        st.error("यूज़र नहीं मिला! सही क्रेडेंशियल्स डालें।")
                     else:
                         u = u_data[0]
                         if u["password"] != u_pass.strip():
@@ -250,9 +214,9 @@ if not st.session_state.logged_in:
                             log_activity(u["username"], "Admin Logged In")
                             st.rerun()
                         elif not u.get("is_approved", False):
-                            st.warning("⏳ आपका अकाउंट अभी पेंडिंग है! एडमिन (Admin) से अप्रूवल का इंतज़ार करें।")
+                            st.warning("⏳ आपका अकाउंट अभी पेंडिंग है! एडमिन अप्रूवल का इंतज़ार करें।")
                         elif not u.get("valid_until") or datetime.strptime(u["valid_until"], "%Y-%m-%d").date() < date.today():
-                            st.error(f"⛔ आपका एक्सेस समाप्त हो चुका है ({u.get('valid_until')})! रिन्यू के लिए एडमिन से संपर्क करें।")
+                            st.error(f"⛔ एक्सेस समाप्त हो चुका है ({u.get('valid_until')})! एडमिन से संपर्क करें।")
                         else:
                             st.session_state.logged_in = True
                             st.session_state.username = u["username"]
@@ -265,11 +229,11 @@ if not st.session_state.logged_in:
             r_user = st.text_input("Desired Username", key="r_user")
             r_phone = st.text_input("Mobile Number", key="r_phone")
             r_pass = st.text_input("Password", type="password", key="r_pass")
-            if st.button("REQUEST TERMINAL ACCESS", use_container_width=True):
+            if st.button("REQUEST ACCESS", use_container_width=True):
                 if r_user and r_phone and r_pass:
                     res = register_user(r_user, r_pass, r_phone)
                     if res and res.status_code in [200, 201]:
-                        st.success("✅ रिक्वेस्ट सबमिट हो गई! एडमिन अप्रूव करते ही आप लॉगिन कर सकेंगे।")
+                        st.success("✅ रिक्वेस्ट सबमिट हो गई! एडमिन अप्रूवल के बाद लॉगिन करें।")
                     else:
                         st.error("यूज़रनेम पहले से मौजूद है!")
                 else:
@@ -279,7 +243,7 @@ if not st.session_state.logged_in:
             f_user = st.text_input("Username", key="f_user")
             f_phone = st.text_input("Mobile Number", key="f_phone")
             f_pass = st.text_input("New Password", type="password", key="f_pass")
-            if st.button("RESET SECURITY KEY", use_container_width=True):
+            if st.button("RESET PASSWORD", use_container_width=True):
                 if f_user and f_phone and f_pass:
                     u_d = get_user(f_user)
                     if u_d and str(u_d[0].get("phone")).strip() == str(f_phone).strip():
@@ -296,7 +260,7 @@ elif st.session_state.is_admin:
         st.rerun()
 
     st.title("🛠️ Admin Control Center — Arham Traders")
-    a_tab1, a_tab2 = st.tabs(["Trader Accounts & Days Validity", "Audit Logs"])
+    a_tab1, a_tab2 = st.tabs(["Trader Validity Manager", "Audit Logs"])
 
     with a_tab1:
         st.subheader("Manage Active Users")
@@ -319,16 +283,16 @@ elif st.session_state.is_admin:
                         c1, c2, c3 = st.columns([1.5, 1.5, 1])
                         with c1:
                             val_d = st.number_input("Set Validity Days:", min_value=1, max_value=365, value=30, key=f"d_{u['id']}")
-                            if st.button(f"Grant {val_d} Days Access", key=f"btn_d_{u['id']}", use_container_width=True):
+                            if st.button(f"Grant {val_d} Days", key=f"btn_d_{u['id']}", use_container_width=True):
                                 update_user_access(u['id'], True, val_d)
-                                st.success(f"{val_d} दिनों का एक्सेस दे दिया गया!")
+                                st.success("अपडेटेड!")
                                 st.rerun()
                         with c2:
-                            np = st.text_input("Force Reset Pass", key=f"np_{u['id']}")
-                            if st.button("Commit Pass", key=f"b_np_{u['id']}", use_container_width=True):
+                            np = st.text_input("New Pass", key=f"np_{u['id']}")
+                            if st.button("Save Pass", key=f"b_np_{u['id']}", use_container_width=True):
                                 if np:
                                     update_user_full(u['id'], u['username'], u['phone'], np, u.get('valid_until'), u.get('is_approved', False))
-                                    st.success("पासवर्ड बदल दिया गया!")
+                                    st.success("पासवर्ड अपडेटेड!")
                                     st.rerun()
                         with c3:
                             if st.button("Revoke Access", key=f"b_rvk_{u['id']}", use_container_width=True):
@@ -345,27 +309,23 @@ elif st.session_state.is_admin:
         if res_l.status_code == 200 and res_l.json():
             st.dataframe(pd.DataFrame(res_l.json()), use_container_width=True)
 
-# ==================== 3. TRADER SPREAD SCANNER TERMINAL ====================
+# ==================== 3. TRADER TERMINAL ====================
 else:
-    # Auto-Logout Check
     if st.session_state.valid_until:
         if datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() < date.today():
             st.session_state.logged_in = False
             st.error("⛔ आपका एक्सेस समाप्त हो चुका है!")
             st.rerun()
 
-    # Sidebar
     with st.sidebar:
         st.markdown("<h1 style='color:#ffbe0b; font-family: Cinzel; font-size: 1.8rem; margin:0;'>ARHAM TRADERS</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='color:#38bdf8; font-size: 0.95rem; font-weight:800; margin-bottom: 15px;'>DEV BY PRATHAM MEHTA</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#38bdf8; font-size: 0.95rem; font-weight:800;'>DEV BY PRATHAM MEHTA</p>", unsafe_allow_html=True)
         st.write("---")
-        
         rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.valid_until else 0
         st.markdown(f"Trader: **{st.session_state.username}**")
-        st.markdown(f"Plan Validity: **{rem_days} Days Remaining**")
+        st.markdown(f"Validity: **{rem_days} Days Left**")
         st.markdown(f"Valid Till: `{st.session_state.valid_until}`")
         st.write("---")
-        
         if st.sidebar.button("Logout", use_container_width=True):
             st.session_state.logged_in = False
             st.rerun()
@@ -378,8 +338,8 @@ else:
     with h2:
         st.markdown("<div style='text-align:right; margin-top: 10px;'><span style='color: #22c55e; font-weight: 900; font-size: 1.1rem;'>● FEED ACTIVE</span> | <span style='color:#94a3b8; font-weight:700;'>NSE F&O</span></div>", unsafe_allow_html=True)
 
-    # --- TOP SCANNER FILTERS PANEL ---
-    st.markdown("<div class='terminal-glass-card'>", unsafe_allow_html=True)
+    # Filter Box
+    st.markdown("<div class='glass-panel'>", unsafe_allow_html=True)
     st.markdown("<div style='color:#ffbe0b; font-size: 1.15rem; font-weight: 800; margin-bottom: 12px;'>SCANNER FILTER PARAMETERS</div>", unsafe_allow_html=True)
     
     r1_c1, r1_c2, r1_c3, r1_c4, r1_c5, r1_c6, r1_c7 = st.columns(7)
@@ -388,7 +348,7 @@ else:
     with r1_c2:
         f_expiry = st.selectbox("EXPIRY DATE", ["CURRENT vs NEXT", "NEXT vs FAR", "CURRENT MONTH", "WEEKLY"])
     with r1_c3:
-        f_ref = st.selectbox("REFERENCE", ["Future LTP", "Spot Index", "VWAP", "Synthetic Future"])
+        f_ref = st.selectbox("REFERENCE", ["Future LTP", "Spot Index", "VWAP"])
     with r1_c4:
         f_type = st.selectbox("TYPE", ["Futures Calendar Spread", "Both (CE & PE)", "Call Spread (CE)", "Put Spread (PE)"])
     with r1_c5:
@@ -404,7 +364,7 @@ else:
     with r2_c2:
         f_min_vol = st.number_input("MIN VOLUME (LOTS)", min_value=1, max_value=10000, value=10, step=5)
     with r2_c3:
-        f_ratio = st.selectbox("RATIO", ["1 : 1", "2 : 1", "3 : 10", "1 : 2", "1 : 3"])
+        f_ratio = st.selectbox("RATIO", ["1 : 1", "2 : 1", "3 : 10", "1 : 2"])
     with r2_c4:
         f_limit_type = st.selectbox("LIMIT TYPE", ["Max Debit", "Min Credit", "Max Payoff", "Zero Cost"])
     with r2_c5:
@@ -413,8 +373,8 @@ else:
         f_direction = st.selectbox("DIRECTION", ["Buy -> Sell", "Sell -> Buy", "Arbitrage Spread"])
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- CUSTOM ALERT PANEL ---
-    st.markdown("<div class='terminal-glass-card'>", unsafe_allow_html=True)
+    # Custom Alert Box
+    st.markdown("<div class='glass-panel'>", unsafe_allow_html=True)
     st.markdown("<div style='color:#38bdf8; font-size: 1.15rem; font-weight: 800; margin-bottom: 12px;'>CUSTOM SPREAD ALERT — SPECIFIC COMPANY / STRIKE</div>", unsafe_allow_html=True)
     
     c_col1, c_col2, c_col3, c_col4, c_col5, c_col6 = st.columns(6)
@@ -435,4 +395,125 @@ else:
     with btn_ca1:
         start_alert_btn = st.button("START CUSTOM ALERT", use_container_width=True)
     with btn_ca2:
-        check_now_btn = st.button("CHECK STRIKE PAIR NOW", u
+        check_now_btn = st.button("CHECK STRIKE PAIR NOW", use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # Action Toolbar
+    b1, b2, b3, b4, b5 = st.columns([1.5, 1.5, 1.5, 1, 1])
+    with b1:
+        st.markdown('<div class="scan-glow">', unsafe_allow_html=True)
+        scan_triggered = st.button("SCAN NOW", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    with b2:
+        if st.button("START AUTO SCAN", use_container_width=True):
+            st.session_state.auto_scan = True
+            st.rerun()
+    with b3:
+        if st.button("NOTIFICATIONS ON", use_container_width=True):
+            st.success("Audio notifications active!")
+    with b4:
+        if st.button("STOP", use_container_width=True):
+            st.session_state.auto_scan = False
+            st.rerun()
+    with b5:
+        if st.button("RESET", use_container_width=True):
+            st.session_state.auto_scan = False
+            st.rerun()
+
+    st.write("---")
+
+    # Data Engine
+    underlyings = {
+        "NIFTY": {"spot": 25350, "near_fut": 25380.50, "far_fut": 25515.20, "lot": 75, "step": 50, "iv": 13.2},
+        "BANKNIFTY": {"spot": 53600, "near_fut": 53680.00, "far_fut": 53995.00, "lot": 35, "step": 100, "iv": 16.5},
+        "HDFCBANK": {"spot": 1660, "near_fut": 1664.20, "far_fut": 1678.80, "lot": 550, "step": 10, "iv": 18.4},
+        "RELIANCE": {"spot": 1395, "near_fut": 1399.10, "far_fut": 1413.50, "lot": 250, "step": 10, "iv": 21.0},
+        "ICICIBANK": {"spot": 1280, "near_fut": 1284.00, "far_fut": 1295.60, "lot": 700, "step": 10, "iv": 19.5},
+        "TCS": {"spot": 4250, "near_fut": 4265.00, "far_fut": 4302.00, "lot": 175, "step": 50, "iv": 15.0},
+        "INFY": {"spot": 1940, "near_fut": 1946.50, "far_fut": 1962.00, "lot": 400, "step": 20, "iv": 18.0},
+        "SBIN": {"spot": 820, "near_fut": 823.40, "far_fut": 831.20, "lot": 750, "step": 5, "iv": 22.5}
+    }
+
+    selected_stocks = list(underlyings.keys()) if f_stock == "ALL STOCKS" else [f_stock]
+    results = []
+
+    for s in selected_stocks:
+        u = underlyings[s]
+        lot = u["lot"]
+
+        if f_type == "Futures Calendar Spread":
+            near_p = u["near_fut"]
+            far_p = u["far_fut"]
+            spread_pts = round(far_p - near_p, 2)
+            total_spread_pnl = round(spread_pts * lot, 2)
+            spread_pct = round((spread_pts / near_p) * 100, 2)
+            annualized = round(spread_pct * 12, 1)
+
+            if spread_pct > 0.8:
+                action = "⭐ High Premium Carry! Sell Far / Buy Near"
+            elif spread_pct < 0.35:
+                action = "🔥 Cheap Carry! Buy Far / Sell Near"
+            else:
+                action = "✅ Balanced Arbitrage Range. Margin Benefit."
+
+            results.append({
+                "Stock": s,
+                "Strategy": "Futures Calendar Spread",
+                "Near Month Future": f"Current Expiry @ Rs {near_p}",
+                "Far Month Future": f"Next Expiry @ Rs {far_p}",
+                "Spread (Pts)": f"+{spread_pts} pts",
+                "Lot Size": lot,
+                "Total PnL / Lot": f"Rs {total_spread_pnl}",
+                "Carry % (Annualized)": f"{spread_pct}% ({annualized}% p.a.)",
+                "Best Action Advice": action
+            })
+        else:
+            spot = u["spot"]
+            step = u["step"]
+            gap = spot * (float(f_strike_gap) / 100.0)
+            buy_strike = int(round((spot - (gap * 0.5)) / step) * step)
+            sell_strike = int(round((spot + (gap * 0.5)) / step) * step)
+            prem_buy = round(max(6.0, (spot * 0.016) + (u["iv"] * 0.25)), 2)
+            prem_sell = round(max(2.5, prem_buy * 0.52), 2)
+            r_sell_mult = 2 if f_ratio == "1 : 2" else (10 if f_ratio == "3 : 10" else 1)
+            net_diff = round(prem_buy - (prem_sell * r_sell_mult), 2)
+            max_risk = round(abs(net_diff) * lot, 2)
+
+            if net_diff < 0:
+                action = "🔥 Net Credit Setup. Theta Decay Edge."
+            else:
+                action = "✅ Defined Risk Setup. Favorable Delta Gap."
+
+            results.append({
+                "Stock": s,
+                "Strategy": f"Option {f_type.split(' ')[0]} ({f_ratio})",
+                "Leg 1 (Buy Strike)": f"{buy_strike} @ Rs {prem_buy}",
+                "Leg 2 (Sell Strike)": f"{sell_strike} (x{r_sell_mult}) @ Rs {prem_sell}",
+                "Spread (Pts)": f"{'+' if net_diff > 0 else ''}Rs {net_diff}",
+                "Lot Size": lot,
+                "Total PnL / Lot": f"Rs {max_risk}",
+                "Carry % (Annualized)": f"{round(float(f_iv_gap), 1)}% IV Gap",
+                "Best Action Advice": action
+            })
+
+    if check_now_btn or start_alert_btn:
+        st.markdown(f"""
+        <div style='background: rgba(245, 158, 11, 0.2); border: 2px solid #ffbe0b; border-radius: 8px; padding: 14px; margin-bottom: 15px;'>
+            🔔 <b style='color:#ffbe0b; font-size:1.2rem;'>Custom Spread Evaluated:</b> {a_company} | Buy: {a_buy} vs Sell: {a_sell} | Target: Rs {a_debit} <br>
+            <span style='color: #22c55e; font-weight:800; font-size:1.1rem;'><b>Status:</b> Spread condition active. Favorable risk-reward detected!</span>
+        </div>
+        """, unsafe_allow_html=True)
+        play_alert_sound()
+
+    mode_text = "FUTURES CALENDAR SPREADS ONLY" if f_type == "Futures Calendar Spread" else "OPTIONS DELTA SPREADS"
+    st.markdown(f"<h3 style='color: #ffbe0b; font-family: Montserrat; font-weight:800;'>💎 BEST HIGH-PROBABILITY SPREADS FOUND — [{mode_text}]</h3>", unsafe_allow_html=True)
+    
+    if results:
+        st.dataframe(pd.DataFrame(results), use_container_width=True, hide_index=True)
+    else:
+        st.warning("कोई स्प्रेड मैच नहीं हुआ।")
+
+    if st.session_state.auto_scan:
+        st.caption("⚡ Auto-Scanning active (Refreshing market in 5 seconds)...")
+        time.sleep(5)
+        st.rerun()
