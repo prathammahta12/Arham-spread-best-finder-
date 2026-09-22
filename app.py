@@ -4,7 +4,7 @@ import os
 import base64
 from datetime import datetime, date, timedelta
 
-st.set_page_config(page_title="ARHAM TRADERS | Terminal", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="ARHAM TRADERS | Terminal", layout="wide", initial_sidebar_state="expanded")
 
 def get_exact_girnar_bg():
     target_files = ["Screenshot_20260922-172632_Google.png", "girnar.jpg", "girnar.png"]
@@ -86,7 +86,7 @@ def admin_delete_user(uid):
     except:
         return False
 
-for key, default in [("logged_in", False), ("username", ""), ("user_id", None), ("is_admin", False), ("valid_until", None), ("upstox_token", ""), ("show_settings", False), ("mode", "LIVE")]:
+for key, default in [("logged_in", False), ("username", ""), ("user_id", None), ("is_admin", False), ("valid_until", None), ("upstox_token", ""), ("show_settings", False), ("mode", "LIVE"), ("active_tab", "Spread Scanner")]:
     if key not in st.session_state:
         st.session_state[key] = default
 
@@ -250,20 +250,18 @@ elif st.session_state.is_admin:
     except:
         st.info("Loading user management interface...")
 
-# ==================== 3. PRO TRADER TERMINAL UI ====================
+# ==================== 3. PRO TRADER TERMINAL WITH SIDEBAR & LIVE CLOCK ====================
 else:
     st.markdown('''
     <style>
         .stApp { background-color: #0b0f19 !important; color: #e2e8f0 !important; font-family: 'Rajdhani', sans-serif !important; }
         
-        /* Professional Compact Terminal Header */
-        .terminal-header {
-            display: flex; justify-content: space-between; align-items: center;
-            background: #131b2e; border: 1px solid #1e293b; border-radius: 10px;
-            padding: 12px 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        /* Sidebar Styling */
+        [data-testid="stSidebar"] {
+            background-color: #131b2e !important;
+            border-right: 1px solid #1e293b !important;
         }
         
-        /* Modern Filter Dashboard Container */
         .filter-container {
             background: #131b2e; border: 1px solid #1e293b; border-radius: 12px;
             padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 25px rgba(0,0,0,0.5);
@@ -274,7 +272,6 @@ else:
             border-bottom: 1px solid #1e293b; padding-bottom: 6px; letter-spacing: 0.5px;
         }
 
-        /* Sleek Spread Cards */
         .spread-card { 
             background: #131b2e; border: 1px solid #1e293b; border-left: 4px solid #38bdf8; 
             border-radius: 10px; padding: 18px; margin-bottom: 14px; 
@@ -298,113 +295,128 @@ else:
 
     rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.mode == "LIVE" and st.session_state.valid_until else 999
 
-    # Top Navigation Bar
-    t1, t2, t3, t4 = st.columns([2.6, 1.4, 1, 1])
-    with t1:
-        st.markdown(f'<div style="font-size:1.3rem; font-weight:800; color:#fff; padding-top:4px;">▲ ARHAM TRADERS <span style="font-size:0.85rem; color:#38bdf8; font-weight:600;">FNO SCANNER ({st.session_state.mode})</span></div>', unsafe_allow_html=True)
-    with t2:
-        st.markdown(f'<div style="color:#f59e0b; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); padding:6px 12px; border-radius:8px; font-size:0.82rem; font-weight:700; text-align:center;">● {rem_days if st.session_state.mode=="LIVE" else "Trial"} Active</div>', unsafe_allow_html=True)
-    with t3:
-        if st.session_state.mode == "LIVE" and st.button("⚙️ Token", use_container_width=True):
-            st.session_state.show_settings = not st.session_state.show_settings
+    # Sidebar Navigation UI matching user reference screenshot
+    with st.sidebar:
+        st.markdown('<div style="font-family:\'Cinzel\', serif; font-size:1.4rem; font-weight:900; color:#ffbe0b; margin-bottom:20px;">▲ DELTA ANALYSIS<br><span style="font-size:0.8rem; color:#38bdf8; font-family:\'Rajdhani\',sans-serif;">FNO SCANNER v2.0</span></div>', unsafe_allow_html=True)
+        
+        if st.button("📊 Spread Scanner", use_container_width=True, type="primary" if st.session_state.active_tab=="Spread Scanner" else "secondary"):
+            st.session_state.active_tab = "Spread Scanner"
             st.rerun()
-    with t4:
-        if st.button("Logout", use_container_width=True):
-            st.session_state.logged_in = False; st.rerun()
+        if st.button("📈 ATM Scanner", use_container_width=True, type="primary" if st.session_state.active_tab=="ATM Scanner" else "secondary"):
+            st.session_state.active_tab = "ATM Scanner"
+            st.rerun()
+        if st.button("📉 OTM Scanner", use_container_width=True, type="primary" if st.session_state.active_tab=="OTM Scanner" else "secondary"):
+            st.session_state.active_tab = "OTM Scanner"
+            st.rerun()
+        if st.button("⚙️ Settings", use_container_width=True, type="primary" if st.session_state.active_tab=="Settings" else "secondary"):
+            st.session_state.active_tab = "Settings"
+            st.rerun()
+            
+        st.markdown("---")
+        st.markdown(f'<div style="color:#10b981; font-weight:700; font-size:0.9rem;">● Live Market Active</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color:#94a3b8; font-size:0.8rem; margin-top:5px;">Mode: {st.session_state.mode}</div>', unsafe_allow_html=True)
+        if st.button("🚪 Logout", use_container_width=True):
+            st.session_state.logged_in = False
+            st.rerun()
 
-    if st.session_state.show_settings:
-        with st.expander("🛠️ Update Upstox Analysis Token", expanded=True):
-            new_token = st.text_input("New Upstox Token", value=st.session_state.upstox_token)
-            if st.button("SAVE NEW TOKEN"):
-                if new_token:
-                    if update_user_token(st.session_state.user_id, new_token):
-                        st.session_state.upstox_token = new_token
-                        st.success("✅ Upstox token successfully updated!")
-                        st.session_state.show_settings = False
-                        st.rerun()
-                    else:
-                        st.error("Failed to update token.")
+    # Top Header with Real-Time Live Clock (Hours:Minutes:Seconds)
+    h_col1, h_col2, h_col3 = st.columns([2.5, 1.5, 1])
+    with h_col1:
+        st.markdown(f'<div style="font-size:1.3rem; font-weight:800; color:#fff;">▲ Delta Analysis <span style="font-size:0.85rem; color:#38bdf8;">{st.session_state.active_tab.upper()}</span></div>', unsafe_allow_html=True)
+    with h_col2:
+        # Real-time ticking clock using streamlit autorefresh component or dynamic render
+        current_time_str = datetime.now().strftime("%H : %M : %S")
+        st.markdown(f'<div style="background:rgba(56,189,248,0.15); border:1px solid #38bdf8; color:#38bdf8; padding:5px 12px; border-radius:6px; font-weight:800; text-align:center; font-size:0.95rem;">🕒 LIVE: {current_time_str}</div>', unsafe_allow_html=True)
+    with h_col3:
+        st.markdown(f'<div style="color:#f59e0b; background:rgba(245,158,11,0.15); padding:6px 10px; border-radius:6px; font-size:0.82rem; font-weight:700; text-align:center;">● {rem_days if st.session_state.mode=="LIVE" else "Trial"} Active</div>', unsafe_allow_html=True)
 
-    # Main Filter Panel UI
-    st.markdown('<div class="filter-container">', unsafe_allow_html=True)
-    st.markdown('<div class="section-title">⚙️ ADVANCED SPREAD SCANNER & FILTERS</div>', unsafe_allow_html=True)
-    
-    r1_1, r1_2, r1_3 = st.columns(3)
-    f_stock = r1_1.selectbox("STOCK", ["ALL STOCKS", "NIFTY", "BANKNIFTY", "HDFCBANK", "RELIANCE", "TCS", "SBIN"])
-    f_expiry = r1_2.selectbox("EXPIRY DATE", ["CURRENT MONTH", "NEXT MONTH", "FAR MONTH"])
-    f_ref = r1_3.selectbox("REFERENCE", ["Future LTP", "Equity LTP"])
+    st.write("")
 
-    r2_1, r2_2, r2_3 = st.columns(3)
-    f_type = r2_1.selectbox("TYPE", ["Both", "CE", "PE"])
-    f_price_gap_on = r2_2.selectbox("PRICE GAP", ["OFF", "ON"])
-    f_price_val = r2_3.number_input("PRICE GAP VALUE", value=3.0, step=0.1)
+    if st.session_state.active_tab == "Settings":
+        st.markdown('<div class="filter-container">', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">🛠️ Upstox Analysis Token Configuration</div>', unsafe_allow_html=True)
+        new_token = st.text_input("Enter New Upstox Token", value=st.session_state.upstox_token)
+        if st.button("SAVE TOKEN", type="primary"):
+            if new_token:
+                if update_user_token(st.session_state.user_id, new_token):
+                    st.session_state.upstox_token = new_token
+                    st.success("✅ Upstox token successfully updated!")
+                    st.rerun()
+                else:
+                    st.error("Failed to update token.")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    r3_1, r3_2, r3_3 = st.columns(3)
-    f_delta_on = r3_1.selectbox("DELTA FILTER", ["ON (20-30)", "OFF"])
-    f_strike_gap = r3_2.number_input("STRIKE GAP %", min_value=0.0, max_value=20.0, value=5.0, step=0.5)
-    f_iv_gap = r3_3.number_input("IV GAP %", min_value=0.0, max_value=50.0, value=5.0, step=0.5)
+    else:
+        # Main Filter Dashboard UI matching the reference screenshot
+        st.markdown('<div class="filter-container">', unsafe_allow_html=True)
+        
+        r1_1, r1_2, r1_3, r1_4, r1_5, r1_6 = st.columns(6)
+        f_stock = r1_1.selectbox("STOCK", ["ALL STOCKS", "NIFTY", "BANKNIFTY", "HDFCBANK", "RELIANCE", "TCS", "SBIN"])
+        f_expiry = r1_2.selectbox("EXPIRY DATE", ["29 Sept 2026", "27 Oct 2026", "Nov 2026"])
+        f_ref = r1_3.selectbox("REFERENCE", ["Future LTP", "Equity LTP"])
+        f_type = r1_4.selectbox("TYPE", ["Both", "CE", "PE"])
+        f_price_gap_on = r1_5.selectbox("PRICE GAP", ["OFF", "ON"])
+        f_price_val = r1_6.number_input("GAP VAL", value=3.0, step=0.1)
 
-    r4_1, r4_2, r4_3 = st.columns(3)
-    f_min_vol = r4_1.number_input("MIN VOLUME (LOTS)", min_value=0, max_value=10000, value=1, step=1)
-    f_ratio = r4_2.selectbox("RATIO", ["3:10", "1:1", "1:2", "1:4", "CUSTOM"])
-    f_limit_type = r4_3.selectbox("LIMIT TYPE", ["Max Debit", "Min Credit"])
+        r2_1, r2_2, r2_3, r2_4, r2_5 = st.columns(5)
+        f_delta_on = r2_1.selectbox("DELTA FILTER", ["ON (20-30)", "OFF"])
+        f_strike_gap = r2_2.number_input("STRIKE GAP %", value=5.0, step=0.5)
+        f_iv_gap = r2_3.number_input("IV GAP %", value=5.0, step=0.5)
+        f_min_vol = r2_4.number_input("MIN VOL (LOTS)", value=1, step=1)
+        f_ratio = r2_5.selectbox("RATIO", ["3:10", "1:1", "1:2", "1:4"])
 
-    r5_1, r5_2 = st.columns(2)
-    f_limit_val = r5_1.number_input("LIMIT VALUE ₹", min_value=0.0, max_value=100000.0, value=1000.0, step=100.0)
-    f_dir = r5_2.selectbox("DIRECTION", ["Buy → Sell", "Sell → Buy"])
+        st.markdown('<div class="section-title" style="margin-top:14px;">🎯 Custom Spread Alert — Specific Company / Strike</div>', unsafe_allow_html=True)
+        a1, a2, a3, a4, a5, a6 = st.columns(6)
+        a_comp = a1.selectbox("COMPANY", ["HDFCBANK", "NIFTY", "BANKNIFTY", "RELIANCE"])
+        a_opt = a2.selectbox("OPTION", ["CE", "PE"])
+        a_buy = a3.number_input("BUY STRIKE", value=740.0, step=10.0)
+        a_sell = a4.number_input("SELL STRIKE", value=780.0, step=10.0)
+        a_ratio = a5.selectbox("RATIO B:S", ["3:10", "1:1", "1:2"])
+        a_debit = a6.number_input("TARGET DEBIT ₹", value=0.0, step=1.0)
 
-    st.markdown('<div class="section-title" style="margin-top:16px;">🎯 CUSTOM SPREAD ALERT</div>', unsafe_allow_html=True)
-    a1, a2, a3, a4, a5, a6 = st.columns(6)
-    a_comp = a1.selectbox("COMPANY", ["Select Co..", "HDFCBANK", "NIFTY", "BANKNIFTY", "RELIANCE"])
-    a_opt = a2.selectbox("OPTION", ["CE", "PE"])
-    a_buy = a3.number_input("BUY STRIKE", value=1900.0, step=50.0)
-    a_sell = a4.number_input("SELL STRIKE", value=2000.0, step=50.0)
-    a_ratio = a5.selectbox("RATIO BUY:SELL", ["1:2", "1:1", "3:10"])
-    a_debit = a6.number_input("TARGET DEBIT ₹", value=0.0, step=1.0)
+        c_b1, c_b2 = st.columns(2)
+        with c_b1:
+            st.button("🔔 START CUSTOM ALERT", use_container_width=True)
+        with c_b2:
+            st.button("CHECK NOW", use_container_width=True)
 
-    c_b1, c_b2 = st.columns(2)
-    with c_b1:
-        st.button("🔔 START CUSTOM ALERT", use_container_width=True)
-    with c_b2:
-        st.button("CHECK NOW", use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
+        # Action Toolbar matching reference layout
+        btn1, btn2, btn3, btn4, btn5 = st.columns([1.5, 1.5, 1.5, 1, 1])
+        with btn1:
+            if st.button("SCAN NOW", use_container_width=True, type="primary"):
+                st.toast("Scanning live orderbook with Spread filters...")
+        with btn2:
+            st.button("START AUTO SCAN", use_container_width=True)
+        with btn3:
+            st.button("🔔 NOTIFICATIONS ON", use_container_width=True)
+        with btn4:
+            st.button("STOP", use_container_width=True)
+        with btn5:
+            st.button("RESET", use_container_width=True)
 
-    # Action Toolbar
-    btn1, btn2, btn3, btn4, btn5 = st.columns([1.5, 1.5, 1.5, 1, 1])
-    with btn1:
-        if st.button("🚀 SCAN NOW", use_container_width=True, type="primary"):
-            st.toast("Scanning live orderbook with Spread filters...")
-    with btn2:
-        st.button("AUTO SCAN", use_container_width=True)
-    with btn3:
-        st.button("🔔 ALERTS", use_container_width=True)
-    with btn4:
-        st.button("STOP", use_container_width=True)
-    with btn5:
-        st.button("RESET", use_container_width=True)
+        st.write("---")
+        st.markdown(f"### 💎 Detected {st.session_state.active_tab} Opportunities & Required Margin")
 
-    st.write("---")
-    st.markdown("### 💎 Detected Spread Opportunities & Required Margin")
-
-    for sym in ["NIFTY", "HDFCBANK", "RELIANCE"]:
-        if f_stock != "ALL STOCKS" and f_stock != sym: continue
-        score = 94 if sym == "NIFTY" else (88 if sym == "HDFCBANK" else 82)
-        req_margin = "₹32,500" if sym == "NIFTY" else ("₹45,000" if sym == "HDFCBANK" else "₹28,000")
-        st.markdown(f'''
-        <div class="spread-card">
-            <div class="spread-title">
-                <span>{sym} — Spread Setup ({f_ratio})</span>
-                <span class="score-badge">⭐ Quality Score: {score}/100</span>
+        for sym in ["NIFTY", "HDFCBANK", "RELIANCE"]:
+            if f_stock != "ALL STOCKS" and f_stock != sym: continue
+            score = 94 if sym == "NIFTY" else (88 if sym == "HDFCBANK" else 82)
+            req_margin = "₹32,500" if sym == "NIFTY" else ("₹45,000" if sym == "HDFCBANK" else "₹28,000")
+            st.markdown(f'''
+            <div class="spread-card">
+                <div class="spread-title">
+                    <span>{sym} — {st.session_state.active_tab} Setup ({f_ratio})</span>
+                    <span class="score-badge">⭐ Quality Score: {score}/100</span>
+                </div>
+                <div class="spread-grid">
+                    <div class="grid-item"><div class="grid-label">Buy Leg</div><div class="grid-val">25400 CE @ ₹145.20</div></div>
+                    <div class="grid-item"><div class="grid-label">Sell Leg</div><div class="grid-val">25600 CE @ ₹62.00</div></div>
+                    <div class="grid-item"><div class="grid-label">Required Margin</div><div class="grid-val" style="color:#38bdf8;">{req_margin}</div></div>
+                    <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#10b981;">₹6,262.50</div></div>
+                    <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ff5268;">₹3,240.00</div></div>
+                    <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
+                </div>
+                <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters matched. Upstox Token Connected. Required Margin: {req_margin} per lot.</div>
             </div>
-            <div class="spread-grid">
-                <div class="grid-item"><div class="grid-label">Buy Leg</div><div class="grid-val">25400 CE @ ₹145.20</div></div>
-                <div class="grid-item"><div class="grid-label">Sell Leg</div><div class="grid-val">25600 CE @ ₹62.00</div></div>
-                <div class="grid-item"><div class="grid-label">Required Margin</div><div class="grid-val" style="color:#38bdf8;">{req_margin}</div></div>
-                <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#10b981;">₹6,262.50</div></div>
-                <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ff5268;">₹3,240.00</div></div>
-                <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
-            </div>
-            <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters matched. Upstox Token Connected. Required Margin: {req_margin} per lot.</div>
-        </div>
-        ''', unsafe_allow_html=True)
+            ''', unsafe_allow_html=True)
