@@ -52,10 +52,20 @@ def update_user_broker(uid, api_key, api_secret):
     except:
         return False
 
-def update_user_days(uid, days):
+def admin_update_user(uid, days, new_pass):
     try:
         v_date = (date.today() + timedelta(days=int(days))).strftime("%Y-%m-%d")
-        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json={"is_approved": True, "valid_until": v_date}, timeout=6)
+        payload = {"is_approved": True, "valid_until": v_date}
+        if new_pass and new_pass.strip():
+            payload["password"] = new_pass.strip()
+        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json=payload, timeout=6)
+        return r.status_code in [200, 204]
+    except:
+        return False
+
+def admin_delete_user(uid):
+    try:
+        r = requests.delete(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, timeout=6)
         return r.status_code in [200, 204]
     except:
         return False
@@ -145,23 +155,51 @@ if not st.session_state.logged_in:
                 else:
                     st.warning("Kripya sabhi zaroori fields bharein.")
 
-# ==================== 2. ADMIN PANEL ====================
+# ==================== 2. ADVANCED ADMIN CONTROL CENTER ====================
 elif st.session_state.is_admin:
     st.title("👑 Admin Control Center — Arham Traders")
     if st.button("Logout"):
         st.session_state.logged_in = False
         st.rerun()
+
+    st.markdown("### 👥 Registered Users Management")
     r = requests.get(f"{SUPABASE_URL}/rest/v1/users?order=created_at.desc", headers=HEADERS, timeout=6)
     if r.status_code == 200:
-        for u in r.json():
+        users_list = r.json()
+        st.info(f"Total Registered Users: {len([u for u in users_list if not u.get('is_admin')])}")
+        
+        for u in users_list:
             if u["username"].lower() in ["pratham1785", "admin"]: continue
-            rem = (datetime.strptime(u["valid_until"], "%Y-%m-%d").date() - date.today()).days if u.get("valid_until") else 0
-            with st.expander(f"👤 {u['username']} | 📞 {u.get('phone')} | API Key: {u.get('broker_api_key','Not Added')} | Active ({rem} Days)"):
-                c1, c2 = st.columns(2)
-                d_in = c1.number_input("Grant Days:", 1, 365, 30, key=f"d_{u['id']}")
-                if c2.button("Commit", key=f"b_{u['id']}"):
-                    update_user_days(u["id"], d_in)
-                    st.success("Updated!"); st.rerun()
+            rem_days = (datetime.strptime(u["valid_until"], "%Y-%m-%d").date() - date.today()).days if u.get("valid_until") else 0
+            status_text = f"🟢 Active ({rem_days} Days)" if u.get("is_approved") and rem_days > 0 else "⏳ Pending / Expired"
+            created_time = u.get('created_at', 'N/A').replace('T', ' ')[:19]
+            
+            with st.expander(f"👤 {u['username']} | 📞 {u.get('phone')} | {status_text}"):
+                st.markdown(f"""
+                - **User ID:** `{u['id']}`
+                - **Registered On:** `{created_time}`
+                - **Broker API Key:** `{u.get('broker_api_key') or 'Not Provided'}`
+                - **Current Validity:** `{u.get('valid_until') or 'No Active Validity'}`
+                """)
+                
+                c1, c2, c3 = st.columns(3)
+                grant_d = c1.number_input("Grant Days:", 1, 365, 30, key=f"days_{u['id']}")
+                new_p = c2.text_input("Reset Password:", type="password", key=f"pass_{u['id']}")
+                
+                col_btn1, col_btn2 = st.columns(2)
+                if col_btn1.button("💾 Update User Info", key=f"upd_{u['id']}"):
+                    if admin_update_user(u["id"], grant_d, new_p):
+                        st.success(f"User {u['username']} updated successfully!")
+                        st.rerun()
+                    else:
+                        st.error("Failed to update user.")
+                
+                if col_btn2.button("🗑️ Delete User", key=f"del_{u['id']}"):
+                    if admin_delete_user(u["id"]):
+                        st.warning(f"User {u['username']} deleted!")
+                        st.rerun()
+                    else:
+                        st.error("Failed to delete user.")
 
 # ==================== 3. TRADER TERMINAL WITH BROKER API SETTINGS ====================
 else:
