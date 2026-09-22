@@ -357,4 +357,13 @@ else:
                 <span class="score-badge">⭐ Quality Score: {score}/100</span>
             </div>
             <div class="spread-grid">
-                <div class="grid-item"><div class="grid-label">Buy Leg</div
+                <div class="grid-item"><div class="grid-label">Buy Leg</div><div class="grid-val">25400 CE @ ₹145.20</div></div>
+                <div class="grid-item"><div class="grid-label">Sell Leg</div><div class="grid-val">25600 CE @ ₹62.00</div></div>
+                <div class="grid-item"><div class="grid-label">Required Margin</div><div class="grid-val" style="color:#38bdf8;">{req_margin}</div></div>
+                <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#10b981;">₹6,262.50</div></div>
+                <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ff5268;">₹3,240.00</div></div>
+                <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
+            </div>
+            <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters matched. Upstox Token Connected. Required Margin: {req_margin} per lot.</div>
+        </div>
+        ''', unsafe_allow_html=True)
