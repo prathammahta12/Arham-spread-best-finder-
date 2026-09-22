@@ -318,7 +318,6 @@ else:
 
     rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.mode == "LIVE" and st.session_state.valid_until else 999
 
-    # Sidebar Navigation UI matching video reference
     with st.sidebar:
         st.markdown('<div style="font-family:\'Cinzel\', serif; font-size:1.4rem; font-weight:900; color:#ffbe0b; margin-bottom:20px;">▲ DELTA ANALYSIS<br><span style="font-size:0.8rem; color:#38bdf8; font-family:\'Rajdhani\',sans-serif;">FNO SCANNER v2.0</span></div>', unsafe_allow_html=True)
         
@@ -342,7 +341,6 @@ else:
             st.session_state.logged_in = False
             st.rerun()
 
-    # Top Header with Live Real-Time Clock
     h_col1, h_col2, h_col3 = st.columns([2.5, 1.5, 1])
     with h_col1:
         st.markdown(f'<div style="font-size:1.3rem; font-weight:800; color:#fff;">▲ Delta Analysis <span style="font-size:0.85rem; color:#38bdf8;">{st.session_state.active_tab.upper()}</span></div>', unsafe_allow_html=True)
