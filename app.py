@@ -4,7 +4,7 @@ import os
 import base64
 from datetime import datetime, date, timedelta
 
-st.set_page_config(page_title="ARHAM TRADERS | Terminal", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="ARHAM TRADERS | Delta Analysis", layout="wide", initial_sidebar_state="expanded")
 
 SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaWdpeGdxZGZ0YWpxa211b3VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTI0OTUsImV4cCI6MjEwNTYyODQ5NX0.pI7CPt9XdLG2zirwkisz5Ttzm3CZIQiL6qg7D70fKlc"
@@ -253,22 +253,37 @@ elif st.session_state.is_admin:
     except:
         st.info("Loading user management interface...")
 
-# ==================== 3. PRO TRADER TERMINAL UI ====================
+# ==================== 3. EXACT VIDEO MATCH UI (DELTA ANALYSIS TERMINAL) ====================
 else:
     st.markdown('''
     <style>
-        .stApp { background-color: #0b0f19 !important; color: #e2e8f0 !important; font-family: 'Rajdhani', sans-serif !important; }
-        [data-testid="stSidebar"] { background-color: #131b2e !important; border-right: 1px solid #1e293b !important; }
-        .filter-container { background: #131b2e; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 25px rgba(0,0,0,0.5); }
-        .section-title { font-size: 1.1rem; font-weight: 700; color: #ffbe0b; margin-bottom: 12px; border-bottom: 1px solid #1e293b; padding-bottom: 6px; }
-        .spread-card { background: #131b2e; border: 1px solid #1e293b; border-left: 4px solid #38bdf8; border-radius: 10px; padding: 18px; margin-bottom: 14px; }
-        .spread-title { font-size: 1.15rem; font-weight: 800; color: #ffbe0b; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .spread-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 12px 0; }
-        .grid-item { background: #0b0f19; padding: 10px 12px; border-radius: 8px; border: 1px solid #1e293b; }
-        .grid-label { color: #94a3b8; font-size: 0.72rem; text-transform: uppercase; font-weight: 700; }
-        .grid-val { color: #f8fafc; font-weight: 700; font-size: 0.95rem; margin-top: 3px; }
-        .score-badge { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; }
-        .advice-box { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 10px 14px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; margin-top: 10px; }
+        .stApp { background-color: #080d16 !important; color: #e2e8f0 !important; font-family: 'Rajdhani', sans-serif !important; }
+        [data-testid="stSidebar"] { background-color: #0e1626 !important; border-right: 1px solid #1e293b !important; }
+        
+        .filter-container {
+            background: #0f172a; border: 1px solid #1e293b; border-radius: 10px;
+            padding: 16px 20px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        }
+        
+        .section-title {
+            font-size: 1.05rem; font-weight: 700; color: #ffbe0b; margin-bottom: 10px;
+            border-bottom: 1px solid #1e293b; padding-bottom: 5px; letter-spacing: 0.5px;
+        }
+
+        .spread-card { 
+            background: #0f172a; border: 1px solid #1e293b; border-left: 4px solid #38bdf8; 
+            border-radius: 10px; padding: 16px; margin-bottom: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        .spread-title { font-size: 1.1rem; font-weight: 800; color: #ffbe0b; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        
+        .spread-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 10px 0; }
+        .grid-item { background: #080d16; padding: 8px 10px; border-radius: 6px; border: 1px solid #1e293b; }
+        .grid-label { color: #94a3b8; font-size: 0.7rem; text-transform: uppercase; font-weight: 700; }
+        .grid-val { color: #f8fafc; font-weight: 700; font-size: 0.9rem; margin-top: 2px; }
+        
+        .score-badge { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; }
+        .advice-box { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; margin-top: 8px; }
     </style>
     ''', unsafe_allow_html=True)
 
@@ -278,8 +293,9 @@ else:
 
     rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.mode == "LIVE" and st.session_state.valid_until else 999
 
+    # Sidebar matching video layout exactly
     with st.sidebar:
-        st.markdown('<div style="font-family:\'Cinzel\', serif; font-size:1.4rem; font-weight:900; color:#ffbe0b; margin-bottom:20px;">▲ DELTA ANALYSIS<br><span style="font-size:0.8rem; color:#38bdf8; font-family:\'Rajdhani\',sans-serif;">FNO SCANNER v2.0</span></div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-family:\'Cinzel\', serif; font-size:1.3rem; font-weight:900; color:#ffbe0b; margin-bottom:15px;">▲ DELTA ANALYSIS<br><span style="font-size:0.75rem; color:#38bdf8; font-family:\'Rajdhani\',sans-serif;">FNO SCANNER</span></div>', unsafe_allow_html=True)
         
         if st.button("📊 Spread Scanner", use_container_width=True, type="primary" if st.session_state.active_tab=="Spread Scanner" else "secondary"):
             st.session_state.active_tab = "Spread Scanner"
@@ -295,106 +311,24 @@ else:
             st.rerun()
             
         st.markdown("---")
-        st.markdown('<div style="color:#10b981; font-weight:700; font-size:0.9rem;">● Live Market Active</div>', unsafe_allow_html=True)
-        st.markdown(f'<div style="color:#94a3b8; font-size:0.8rem; margin-top:5px;">Mode: {st.session_state.mode}</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color:#10b981; font-weight:700; font-size:0.85rem;">● Live Market Active</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color:#94a3b8; font-size:0.75rem; margin-top:3px;">Mode: {st.session_state.mode}</div>', unsafe_allow_html=True)
         if st.button("🚪 Logout", use_container_width=True):
             st.session_state.logged_in = False
             st.rerun()
 
+    # Top Bar Header with Live Clock
     h_col1, h_col2, h_col3 = st.columns([2.5, 1.5, 1])
     with h_col1:
-        st.markdown(f'<div style="font-size:1.3rem; font-weight:800; color:#fff;">▲ Delta Analysis <span style="font-size:0.85rem; color:#38bdf8;">{st.session_state.active_tab.upper()}</span></div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="font-size:1.2rem; font-weight:800; color:#fff;">▲ Delta Analysis <span style="font-size:0.8rem; color:#38bdf8;">{st.session_state.active_tab.upper()}</span></div>', unsafe_allow_html=True)
     with h_col2:
         current_time_str = datetime.now().strftime("%H : %M : %S")
-        st.markdown(f'<div style="background:rgba(56,189,248,0.15); border:1px solid #38bdf8; color:#38bdf8; padding:5px 12px; border-radius:6px; font-weight:800; text-align:center; font-size:0.95rem;">🕒 LIVE: {current_time_str}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="background:rgba(56,189,248,0.12); border:1px solid #38bdf8; color:#38bdf8; padding:4px 10px; border-radius:6px; font-weight:800; text-align:center; font-size:0.9rem;">🕒 LIVE: {current_time_str}</div>', unsafe_allow_html=True)
     with h_col3:
-        st.markdown(f'<div style="color:#f59e0b; background:rgba(245,158,11,0.15); padding:6px 10px; border-radius:6px; font-size:0.82rem; font-weight:700; text-align:center;">● {rem_days if st.session_state.mode=="LIVE" else "Trial"} Active</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color:#f59e0b; background:rgba(245,158,11,0.12); padding:5px 8px; border-radius:6px; font-size:0.8rem; font-weight:700; text-align:center;">● {rem_days if st.session_state.mode=="LIVE" else "Trial"} Active</div>', unsafe_allow_html=True)
 
     st.write("")
 
     if st.session_state.active_tab == "Settings":
         st.markdown('<div class="filter-container">', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">🛠️ Upstox Analysis Token Configuration</div>', unsafe_allow_html=True)
-        new_token = st.text_input("Enter New Upstox Token", value=st.session_state.upstox_token)
-        if st.button("SAVE TOKEN", type="primary"):
-            if new_token:
-                if update_user_token(st.session_state.user_id, new_token):
-                    st.session_state.upstox_token = new_token
-                    st.success("✅ Upstox token successfully updated!")
-                    st.rerun()
-                else:
-                    st.error("Failed to update token.")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    else:
-        st.markdown('<div class="filter-container">', unsafe_allow_html=True)
-        
-        r1_1, r1_2, r1_3, r1_4, r1_5, r1_6 = st.columns(6)
-        f_stock = r1_1.selectbox("STOCK", ALL_FNO_STOCKS)
-        f_expiry = r1_2.selectbox("EXPIRY DATE", ["29 Sept 2026", "27 Oct 2026", "Nov 2026"])
-        f_ref = r1_3.selectbox("REFERENCE", ["Future LTP", "Equity LTP"])
-        f_type = r1_4.selectbox("TYPE", ["Both", "CE", "PE"])
-        f_price_gap_on = r1_5.selectbox("PRICE GAP", ["OFF", "ON"])
-        f_price_val = r1_6.number_input("GAP VAL", value=3.0, step=0.1)
-
-        r2_1, r2_2, r2_3, r2_4, r2_5 = st.columns(5)
-        f_delta_on = r2_1.selectbox("DELTA FILTER", ["ON (20-30)", "OFF"])
-        f_strike_gap = r2_2.number_input("STRIKE GAP %", value=5.0, step=0.5)
-        f_iv_gap = r2_3.number_input("IV GAP %", value=5.0, step=0.5)
-        f_min_vol = r2_4.number_input("MIN VOL (LOTS)", value=1, step=1)
-        f_ratio = r2_5.selectbox("RATIO", ["3:10", "1:1", "1:2", "1:4"])
-
-        st.markdown('<div class="section-title" style="margin-top:14px;">🎯 Custom Spread Alert — Specific Company / Strike</div>', unsafe_allow_html=True)
-        a1, a2, a3, a4, a5, a6 = st.columns(6)
-        a_comp = a1.selectbox("COMPANY", ALL_FNO_STOCKS[1:])
-        a_opt = a2.selectbox("OPTION", ["CE", "PE"])
-        a_buy = a3.number_input("BUY STRIKE", value=740.0, step=10.0)
-        a_sell = a4.number_input("SELL STRIKE", value=780.0, step=10.0)
-        a_ratio = a5.selectbox("RATIO B:S", ["3:10", "1:1", "1:2"])
-        a_debit = a6.number_input("TARGET DEBIT ₹", value=0.0, step=1.0)
-
-        c_b1, c_b2 = st.columns(2)
-        with c_b1:
-            st.button("🔔 START CUSTOM ALERT", use_container_width=True)
-        with c_b2:
-            st.button("CHECK NOW", use_container_width=True)
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        btn1, btn2, btn3, btn4, btn5 = st.columns([1.5, 1.5, 1.5, 1, 1])
-        with btn1:
-            if st.button("SCAN NOW", use_container_width=True, type="primary"):
-                st.toast("Scanning live orderbook with Spread filters...")
-        with btn2:
-            st.button("START AUTO SCAN", use_container_width=True)
-        with btn3:
-            st.button("🔔 NOTIFICATIONS ON", use_container_width=True)
-        with btn4:
-            st.button("STOP", use_container_width=True)
-        with btn5:
-            st.button("RESET", use_container_width=True)
-
-        st.write("---")
-        st.markdown(f"### 💎 Detected {st.session_state.active_tab} Opportunities & Required Margin")
-
-        display_stocks = [f_stock] if f_stock != "ALL STOCKS" else ["NIFTY", "HDFCBANK", "RELIANCE"]
-        for sym in display_stocks:
-            score = 94 if sym == "NIFTY" else (88 if sym == "HDFCBANK" else 82)
-            req_margin = "₹32,500" if sym == "NIFTY" else ("₹45,000" if sym == "HDFCBANK" else "₹28,000")
-            st.markdown(f'''
-            <div class="spread-card">
-                <div class="spread-title">
-                    <span>{sym} — {st.session_state.active_tab} Setup ({f_ratio})</span>
-                    <span class="score-badge">⭐ Quality Score: {score}/100</span>
-                </div>
-                <div class="spread-grid">
-                    <div class="grid-item"><div class="grid-label">Buy Leg</div><div class="grid-val">25400 CE @ ₹145.20</div></div>
-                    <div class="grid-item"><div class="grid-label">Sell Leg</div><div class="grid-val">25600 CE @ ₹62.00</div></div>
-                    <div class="grid-item"><div class="grid-label">Required Margin</div><div class="grid-val" style="color:#38bdf8;">{req_margin}</div></div>
-                    <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#10b981;">₹6,262.50</div></div>
-                    <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ff5268;">₹3,240.00</div></div>
-                    <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
-                </div>
-                <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters matched. Upstox Token Connected. Required Margin: {req_margin} per lot.</div>
-            </div>
-            ''', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">🛠️ Upstox Anal
