@@ -1,33 +1,34 @@
 import streamlit as st
 import requests
-import os
-import base64
+import pandas as pd
 from datetime import datetime, date, timedelta
 
 st.set_page_config(page_title="ARHAM TRADERS", layout="wide", initial_sidebar_state="collapsed")
 
-# --- GIRNAR BACKGROUND HANDLER ---
-def get_bg_style():
-    if os.path.exists("girnar.jpg"):
-        with open("girnar.jpg", "rb") as f:
-            b64 = base64.b64encode(f.read()).decode()
-        return f"data:image/jpeg;base64,{b64}"
-    return "https://images.unsplash.com/photo-1622396481304-4ad7343b6794?auto=format&fit=crop&w=1920&q=80"
+# Direct CDN Link of Girnar Ji Tirth
+GIRNAR_IMG = "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1600&q=80"
 
-bg_img_src = get_bg_style()
-
+# --- FULLSCREEN BACKGROUND & CYBER THEME CSS ---
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
     
-    /* Poore Background Me Girnar Ji Ki Photo Fit */
+    /* 100% Guaranteed Fullscreen Background Layer */
+    .bg-girnar {{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-image: linear-gradient(rgba(6, 11, 23, 0.85), rgba(6, 11, 23, 0.93)), url('{GIRNAR_IMG}');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        z-index: -999;
+    }}
+
     .stApp {{
-        background: linear-gradient(rgba(6, 11, 23, 0.85), rgba(6, 11, 23, 0.92)), 
-                    url('{bg_img_src}') !important;
-        background-size: cover !important;
-        background-position: center center !important;
-        background-attachment: fixed !important;
-        background-repeat: no-repeat !important;
+        background: transparent !important;
         color: #ffffff !important;
         font-family: 'Rajdhani', sans-serif !important;
     }}
@@ -164,9 +165,10 @@ st.markdown(f"""
         margin-top: 6px;
     }}
 </style>
+<div class="bg-girnar"></div>
 """, unsafe_allow_html=True)
 
-# --- SUPABASE CONFIG ---
+# --- SUPABASE REST CONFIG ---
 SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaWdpeGdxZGZ0YWpxa211b3VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTI0OTUsImV4cCI6MjEwNTYyODQ5NX0.pI7CPt9XdLG2zirwkisz5Ttzm3CZIQiL6qg7D70fKlc"
 HEADERS = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": "application/json"}
@@ -200,7 +202,7 @@ for key, default in [("logged_in", False), ("username", ""), ("is_admin", False)
     if key not in st.session_state:
         st.session_state[key] = default
 
-# ==================== 1. LOGIN SCREEN WITH JAIN GIRNAR JI ====================
+# ==================== 1. LOGIN SCREEN ====================
 if not st.session_state.logged_in:
     _, col_mid, _ = st.columns([1, 1.4, 1])
     with col_mid:
@@ -226,16 +228,16 @@ if not st.session_state.logged_in:
                             st.session_state.update(logged_in=True, username=usr["username"], is_admin=True)
                             st.rerun()
                         elif not usr.get("is_approved", False):
-                            st.warning("⏳ Aapka account pending hai! Admin approval ka intezar karein.")
+                            st.warning("⏳ आपका अकाउंट पेंडिंग है! एडमिन अप्रूवल का इंतज़ार करें।")
                         elif not usr.get("valid_until") or datetime.strptime(usr["valid_until"], "%Y-%m-%d").date() < date.today():
-                            st.error("⛔ Access validity khatam ho chuki hai!")
+                            st.error("⛔ आपका एक्सेस समाप्त हो चुका है! एडमिन से संपर्क करें।")
                         else:
                             st.session_state.update(logged_in=True, username=usr["username"], is_admin=False, valid_until=usr["valid_until"])
                             st.rerun()
                     else:
-                        st.error("Galat credentials!")
+                        st.error("गलत क्रेडेंशियल्स!")
                 else:
-                    st.warning("Dono fields bharein.")
+                    st.warning("दोनों फ़ील्ड भरें।")
 
         with tab_reg:
             ru = st.text_input("Desired Username", key="reg_u")
@@ -245,9 +247,9 @@ if not st.session_state.logged_in:
                 if ru and rph and rp:
                     res = register_user(ru, rp, rph)
                     if res and res.status_code in [200, 201]:
-                        st.success("✅ Request bhej di gayi hai! Admin approve karte hi login ho sakega.")
+                        st.success("✅ रिक्वेस्ट सबमिट हो गई! एडमिन अप्रूवल के बाद लॉगिन करें।")
                     else:
-                        st.error("Username already exist karta hai!")
+                        st.error("यह यूज़रनेम पहले से मौजूद है!")
 
 # ==================== 2. ADMIN CONTROL PANEL ====================
 elif st.session_state.is_admin:
@@ -270,7 +272,7 @@ elif st.session_state.is_admin:
                     st.success("Days Updated!")
                     st.rerun()
 
-# ==================== 3. TERMINAL WITH EXACT SCREENSHOT LAYOUT ====================
+# ==================== 3. TRADER TERMINAL ====================
 else:
     if st.session_state.valid_until and datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() < date.today():
         st.session_state.logged_in = False
