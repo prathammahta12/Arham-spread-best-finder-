@@ -45,13 +45,28 @@ def register_user(username, password, phone):
         st.error(f"रजिस्ट्रेशन एरर: {e}")
         return None
 
-def update_password(user_id, new_password):
+def update_user_full(user_id, username, phone, password, valid_until, is_approved):
     try:
         url = f"{SUPABASE_URL}/rest/v1/users?id=eq.{user_id}"
-        r = requests.patch(url, headers=HEADERS, json={"password": new_password.strip()}, timeout=8)
+        payload = {
+            "username": username.strip(),
+            "phone": str(phone).strip(),
+            "password": password.strip(),
+            "valid_until": valid_until,
+            "is_approved": is_approved
+        }
+        r = requests.patch(url, headers=HEADERS, json=payload, timeout=8)
         return r.status_code in [200, 204]
     except Exception as e:
-        st.error(f"पासवर्ड अपडेट एरर: {e}")
+        st.error(f"अपडेट एरर: {e}")
+        return False
+
+def delete_user(user_id):
+    try:
+        url = f"{SUPABASE_URL}/rest/v1/users?id=eq.{user_id}"
+        r = requests.delete(url, headers=HEADERS, timeout=8)
+        return r.status_code in [200, 204]
+    except:
         return False
 
 def log_activity(username, action):
@@ -86,14 +101,18 @@ if not st.session_state.logged_in:
             else:
                 user_data = get_user(u_name)
                 if not user_data:
-                    st.error("यूज़र नहीं मिला! कृपया सही Username या Mobile डालें।")
+                    st.error("यूज़र नहीं मिला! कृपया सही डिटेल्स डालें।")
                 else:
                     user = user_data[0]
                     if user["password"] != u_pass.strip():
-                        st.error("गलत पासवर्ड! कृपया दोबारा प्रयास करें।")
-                    elif not user.get("is_approved", False):
+                        st.error("गलत पासवर्ड!")
+                    elif not user.get("is_approved", False) and not user.get("is_admin", False):
                         st.warning("⚠️ आपका अकाउंट अभी पेंडिंग है! एडमिन से अप्रूवल का इंतज़ार करें।")
-                    elif user.get("valid_until") and datetime.strptime(user["valid_until"], "%Y-%m-%d").date() < date.today():
+                    elif (
+                        not user.get("is_admin", False) 
+                        and user.get("valid_until") 
+                        and datetime.strptime(user["valid_until"], "%Y-%m-%d").date() < date.today()
+                    ):
                         st.error("⛔ आपका एक्सेस समाप्त हो चुका है! एडमिन से संपर्क करें।")
                     else:
                         st.session_state.logged_in = True
@@ -118,7 +137,7 @@ if not st.session_state.logged_in:
                 st.warning("सभी फ़ील्ड भरना अनिवार्य है।")
 
     elif menu == "Forgot Password":
-        st.subheader("🔑 Reset Your Password")
+        st.subheader("🔑 Reset Password")
         verify_user = st.text_input("Registered Username")
         verify_phone = st.text_input("Registered Mobile Number")
         new_password = st.text_input("Enter New Password", type="password")
@@ -132,17 +151,16 @@ if not st.session_state.logged_in:
             else:
                 user_data = get_user(verify_user)
                 if not user_data:
-                    st.error("यूज़रनेम मौजूद नहीं है!")
+                    st.error("यूज़र नहीं मिला!")
                 else:
                     user = user_data[0]
                     if str(user.get("phone")).strip() != str(verify_phone).strip():
-                        st.error("मोबाइल नंबर मेल नहीं खा रहा है! कृपया सही नंबर दर्ज करें।")
+                        st.error("मोबाइल नंबर मेल नहीं खा रहा!")
                     else:
-                        if update_password(user["id"], new_password):
-                            st.success("✅ पासवर्ड सफलतापूर्वक बदल गया! अब Login टैब में जाकर नए पासवर्ड से लॉगिन करें।")
-                            log_activity(user["username"], "Password Reset by User")
+                        if update_user_full(user["id"], user["username"], user["phone"], new_password, user.get("valid_until"), user.get("is_approved", False)):
+                            st.success("✅ पासवर्ड अपडेट हो गया! अब Login करें।")
                         else:
-                            st.error("पासवर्ड अपडेट करने में कोई त्रुटि हुई।")
+                            st.error("त्रुटि हुई!")
 
 # ==================== 2. ADMIN DASHBOARD ====================
 elif st.session_state.is_admin:
@@ -152,47 +170,66 @@ elif st.session_state.is_admin:
         st.rerun()
 
     st.header("🛠️ Admin Control Center")
-    tab1, tab2 = st.tabs(["User Approvals & Management", "User Activity Logs"])
+    tab1, tab2 = st.tabs(["User Management & Edit", "User Activity Logs"])
 
     with tab1:
-        st.subheader("Manage Users")
+        st.subheader("Manage & Edit Users")
         try:
             res = requests.get(f"{SUPABASE_URL}/rest/v1/users?order=created_at.desc", headers=HEADERS, timeout=8)
             if res.status_code == 200:
-                for u in res.json():
-                    if u["username"].lower() == "admin":
+                users_list = res.json()
+                for u in users_list:
+                    # Protect main admin account from being altered here
+                    if u["username"].lower() in ["admin", "pratham1785"]:
                         continue
-                    with st.expander(f"User: {u['username']} | Phone: {u.get('phone')} | Status: {'✅ Approved' if u.get('is_approved') else '⏳ Pending'}"):
-                        col1, col2, col3 = st.columns(3)
-                        with col1:
-                            days = st.number_input("Validity Days", min_value=1, max_value=365, value=30, key=f"d_{u['id']}")
-                            if st.button("Approve / Grant Access", key=f"app_{u['id']}"):
-                                exp_date = (date.today() + timedelta(days=days)).strftime("%Y-%m-%d")
-                                requests.patch(
-                                    f"{SUPABASE_URL}/rest/v1/users?id=eq.{u['id']}",
-                                    headers=HEADERS,
-                                    json={"is_approved": True, "valid_until": exp_date}
-                                )
-                                st.success(f"{days} दिनों के लिए अप्रूव किया गया!")
-                                st.rerun()
-                        with col2:
-                            admin_new_pass = st.text_input("New Password", key=f"np_{u['id']}", placeholder="Enter new pass")
-                            if st.button("Force Reset Password", key=f"f_rst_{u['id']}"):
-                                if admin_new_pass:
-                                    update_password(u['id'], admin_new_pass)
-                                    st.success(f"{u['username']} का पासवर्ड अपडेट कर दिया गया!")
+
+                    status_badge = "✅ Approved" if u.get('is_approved') else "⏳ Pending"
+                    with st.expander(f"👤 {u['username']} | 📞 {u.get('phone')} | Status: {status_badge}"):
+                        with st.form(f"edit_form_{u['id']}"):
+                            c1, c2 = st.columns(2)
+                            with c1:
+                                edit_name = st.text_input("Username", value=u.get('username', ''))
+                                edit_phone = st.text_input("Mobile Number", value=u.get('phone', ''))
+                                edit_pass = st.text_input("Password", value=u.get('password', ''))
+                            with c2:
+                                edit_approved = st.checkbox("Access Approved", value=u.get('is_approved', False))
+                                
+                                # Date calculation
+                                curr_valid = date.today() + timedelta(days=30)
+                                if u.get('valid_until'):
+                                    try:
+                                        curr_valid = datetime.strptime(u['valid_until'], "%Y-%m-%d").date()
+                                    except:
+                                        pass
+                                edit_date = st.date_input("Validity Expiry Date", value=curr_valid)
+
+                            b_col1, b_col2 = st.columns(2)
+                            with b_col1:
+                                save_btn = st.form_submit_button("💾 Save All Changes", use_container_width=True)
+                            with b_col2:
+                                pass
+
+                            if save_btn:
+                                if update_user_full(u['id'], edit_name, edit_phone, edit_pass, edit_date.strftime("%Y-%m-%d"), edit_approved):
+                                    st.success("यूज़र डिटेल्स सफलतापूर्वक अपडेट हो गईं!")
+                                    st.rerun()
                                 else:
-                                    st.warning("नया पासवर्ड टाइप करें!")
-                        with col3:
-                            st.write("---")
-                            if st.button("Block Access", key=f"blk_{u['id']}"):
-                                requests.patch(
-                                    f"{SUPABASE_URL}/rest/v1/users?id=eq.{u['id']}",
-                                    headers=HEADERS,
-                                    json={"is_approved": False}
-                                )
-                                st.warning("यूज़र को ब्लॉक कर दिया गया!")
+                                    st.error("अपडेट करने में त्रुटि हुई।")
+
+                        # Direct quick action row
+                        col_q1, col_q2 = st.columns(2)
+                        with col_q1:
+                            if st.button("➕ Extend +30 Days", key=f"ext_{u['id']}", use_container_width=True):
+                                new_date = (date.today() + timedelta(days=30)).strftime("%Y-%m-%d")
+                                update_user_full(u['id'], u['username'], u['phone'], u['password'], new_date, True)
+                                st.success("30 दिन बढ़ा दिए गए!")
                                 st.rerun()
+                        with col_q2:
+                            if st.button("🗑️ Delete User Permanently", key=f"del_{u['id']}", use_container_width=True):
+                                delete_user(u['id'])
+                                st.warning("यूज़र को हटा दिया गया!")
+                                st.rerun()
+
         except Exception as e:
             st.error(f"यूज़र लोड करने में त्रुटि: {e}")
 
