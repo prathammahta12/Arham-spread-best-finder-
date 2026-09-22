@@ -97,24 +97,24 @@ if not st.session_state.logged_in:
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
         .girnar-bg-full {{
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: linear-gradient(rgba(6, 11, 23, 0.70), rgba(6, 11, 23, 0.85)), 
+            background: linear-gradient(rgba(6, 11, 23, 0.75), rgba(6, 11, 23, 0.90)), 
                         url('{girnar_bg_src}') no-repeat center center fixed !important;
             background-size: cover !important; z-index: -999;
         }}
         .stApp {{ background: transparent !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }}
         .brand-card {{
             display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-            margin: 25px auto 20px auto; padding: 18px 24px; background: rgba(11, 18, 36, 0.92);
-            backdrop-filter: blur(14px); border: 2.5px solid #f59e0b; border-radius: 16px;
-            box-shadow: 0 0 45px rgba(245, 158, 11, 0.55); width: fit-content !important; max-width: 95% !important; box-sizing: border-box;
+            margin: 30px auto 20px auto; padding: 20px 30px; background: rgba(11, 18, 36, 0.94);
+            backdrop-filter: blur(16px); border: 2.5px solid #f59e0b; border-radius: 16px;
+            box-shadow: 0 0 50px rgba(245, 158, 11, 0.45); width: fit-content !important; max-width: 95% !important; box-sizing: border-box;
         }}
         .brand-main {{
-            font-family: 'Cinzel', serif; font-size: clamp(1.7rem, 5.2vw, 2.4rem) !important; font-weight: 900 !important;
+            font-family: 'Cinzel', serif; font-size: clamp(1.8rem, 4vw, 2.5rem) !important; font-weight: 900 !important;
             font-style: italic !important; white-space: nowrap !important; letter-spacing: 1.5px !important;
             color: #ffbe0b !important; text-shadow: 0 0 25px rgba(255, 190, 11, 0.85); margin: 0 !important; line-height: 1.2 !important;
         }}
         .brand-dev {{
-            font-family: 'Teko', sans-serif; font-size: clamp(1.1rem, 3.8vw, 1.35rem) !important; font-weight: 700 !important;
+            font-family: 'Teko', sans-serif; font-size: clamp(1.1rem, 2.5vw, 1.4rem) !important; font-weight: 700 !important;
             letter-spacing: 1.5px !important; white-space: nowrap !important; color: #38bdf8 !important;
             text-shadow: 0 0 16px rgba(56, 189, 248, 0.85); margin-top: 4px !important;
         }}
@@ -122,7 +122,7 @@ if not st.session_state.logged_in:
     <div class="girnar-bg-full"></div>
     ''', unsafe_allow_html=True)
 
-    _, col_mid, _ = st.columns([1, 1.8, 1])
+    _, col_mid, _ = st.columns([1, 1.4, 1])
     with col_mid:
         st.markdown('''
         <div class="brand-card">
@@ -250,21 +250,45 @@ elif st.session_state.is_admin:
     except:
         st.info("Loading user management interface...")
 
-# ==================== 3. TRADER TERMINAL WITH REQUIRED MARGIN ====================
+# ==================== 3. PRO TRADER TERMINAL UI ====================
 else:
     st.markdown('''
     <style>
-        .stApp { background-color: #0f141c !important; color: #d1d5db !important; font-family: 'Rajdhani', sans-serif !important; }
-        .filter-panel { background: #171f2c; border: 1px solid #232f42; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
-        .custom-alert { margin-top: 14px; border: 1px solid #2b2b2b; border-radius: 10px; padding: 14px; background: #101010; }
-        .spread-card { background: #171f2c; border: 1px solid #232f42; border-left: 5px solid #38bdf8; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
-        .spread-title { font-size: 1.15rem; font-weight: 800; color: #ffbe0b; display: flex; justify-content: space-between; margin-bottom: 8px; }
-        .spread-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin: 10px 0; }
-        .grid-item { background: #101621; padding: 8px; border-radius: 6px; border: 1px solid #232f42; font-size: 0.85rem; }
-        .grid-label { color: #64748b; font-size: 0.72rem; text-transform: uppercase; font-weight: 700; }
-        .grid-val { color: #f8fafc; font-weight: 700; font-size: 0.92rem; margin-top: 2px; }
-        .score-badge { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; }
-        .advice-box { background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.30); padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 0.88rem; margin-top: 6px; }
+        .stApp { background-color: #0b0f19 !important; color: #e2e8f0 !important; font-family: 'Rajdhani', sans-serif !important; }
+        
+        /* Professional Compact Terminal Header */
+        .terminal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #131b2e; border: 1px solid #1e293b; border-radius: 10px;
+            padding: 12px 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        
+        /* Modern Filter Dashboard Container */
+        .filter-container {
+            background: #131b2e; border: 1px solid #1e293b; border-radius: 12px;
+            padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 25px rgba(0,0,0,0.5);
+        }
+        
+        .section-title {
+            font-size: 1.1rem; font-weight: 700; color: #ffbe0b; margin-bottom: 12px;
+            border-bottom: 1px solid #1e293b; padding-bottom: 6px; letter-spacing: 0.5px;
+        }
+
+        /* Sleek Spread Cards */
+        .spread-card { 
+            background: #131b2e; border: 1px solid #1e293b; border-left: 4px solid #38bdf8; 
+            border-radius: 10px; padding: 18px; margin-bottom: 14px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .spread-title { font-size: 1.15rem; font-weight: 800; color: #ffbe0b; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        
+        .spread-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 12px 0; }
+        .grid-item { background: #0b0f19; padding: 10px 12px; border-radius: 8px; border: 1px solid #1e293b; }
+        .grid-label { color: #94a3b8; font-size: 0.72rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        .grid-val { color: #f8fafc; font-weight: 700; font-size: 0.95rem; margin-top: 3px; }
+        
+        .score-badge { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; }
+        .advice-box { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 10px 14px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; margin-top: 10px; }
     </style>
     ''', unsafe_allow_html=True)
 
@@ -274,16 +298,17 @@ else:
 
     rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.mode == "LIVE" and st.session_state.valid_until else 999
 
-    n1, n2, n3, n4 = st.columns([2.5, 1.5, 1, 1])
-    with n1:
-        st.markdown(f'<div style="font-size:1.25rem; font-weight:800; color:#fff;">▲ Delta Analysis <span style="font-size:0.85rem; color:#64748b;">FNO SCANNER ({st.session_state.mode} MODE)</span></div>', unsafe_allow_html=True)
-    with n2:
-        st.markdown(f'<div style="color:#f59e0b; background:rgba(245,158,11,0.15); padding:4px 10px; border-radius:6px; font-size:0.80rem; font-weight:700; text-align:center;">● {rem_days if st.session_state.mode=="LIVE" else "Trial"} Active</div>', unsafe_allow_html=True)
-    with n3:
-        if st.session_state.mode == "LIVE" and st.button("⚙️ Change Token", use_container_width=True):
+    # Top Navigation Bar
+    t1, t2, t3, t4 = st.columns([2.6, 1.4, 1, 1])
+    with t1:
+        st.markdown(f'<div style="font-size:1.3rem; font-weight:800; color:#fff; padding-top:4px;">▲ ARHAM TRADERS <span style="font-size:0.85rem; color:#38bdf8; font-weight:600;">FNO SCANNER ({st.session_state.mode})</span></div>', unsafe_allow_html=True)
+    with t2:
+        st.markdown(f'<div style="color:#f59e0b; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); padding:6px 12px; border-radius:8px; font-size:0.82rem; font-weight:700; text-align:center;">● {rem_days if st.session_state.mode=="LIVE" else "Trial"} Active</div>', unsafe_allow_html=True)
+    with t3:
+        if st.session_state.mode == "LIVE" and st.button("⚙️ Token", use_container_width=True):
             st.session_state.show_settings = not st.session_state.show_settings
             st.rerun()
-    with n4:
+    with t4:
         if st.button("Logout", use_container_width=True):
             st.session_state.logged_in = False; st.rerun()
 
@@ -300,7 +325,9 @@ else:
                     else:
                         st.error("Failed to update token.")
 
-    st.markdown('<div class="filter-panel">', unsafe_allow_html=True)
+    # Main Filter Panel UI
+    st.markdown('<div class="filter-container">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">⚙️ ADVANCED SPREAD SCANNER & FILTERS</div>', unsafe_allow_html=True)
     
     r1_1, r1_2, r1_3 = st.columns(3)
     f_stock = r1_1.selectbox("STOCK", ["ALL STOCKS", "NIFTY", "BANKNIFTY", "HDFCBANK", "RELIANCE", "TCS", "SBIN"])
@@ -326,12 +353,7 @@ else:
     f_limit_val = r5_1.number_input("LIMIT VALUE ₹", min_value=0.0, max_value=100000.0, value=1000.0, step=100.0)
     f_dir = r5_2.selectbox("DIRECTION", ["Buy → Sell", "Sell → Buy"])
 
-    st.markdown('''
-    <div class="custom-alert">
-        <h4 style="margin:0 0 10px 0; font-size:15px; color:#fff;">🎯 Custom Spread Alert — Specific Company / Strike</h4>
-    </div>
-    ''', unsafe_allow_html=True)
-    
+    st.markdown('<div class="section-title" style="margin-top:16px;">🎯 CUSTOM SPREAD ALERT</div>', unsafe_allow_html=True)
     a1, a2, a3, a4, a5, a6 = st.columns(6)
     a_comp = a1.selectbox("COMPANY", ["Select Co..", "HDFCBANK", "NIFTY", "BANKNIFTY", "RELIANCE"])
     a_opt = a2.selectbox("OPTION", ["CE", "PE"])
@@ -340,26 +362,28 @@ else:
     a_ratio = a5.selectbox("RATIO BUY:SELL", ["1:2", "1:1", "3:10"])
     a_debit = a6.number_input("TARGET DEBIT ₹", value=0.0, step=1.0)
 
-    b1, b2 = st.columns(2)
-    with b1:
+    c_b1, c_b2 = st.columns(2)
+    with c_b1:
         st.button("🔔 START CUSTOM ALERT", use_container_width=True)
-    with b2:
+    with c_b2:
         st.button("CHECK NOW", use_container_width=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
+    # Action Toolbar
     btn1, btn2, btn3, btn4, btn5 = st.columns([1.5, 1.5, 1.5, 1, 1])
     with btn1:
-        if st.button("SCAN NOW", use_container_width=True, type="primary"):
+        if st.button("🚀 SCAN NOW", use_container_width=True, type="primary"):
             st.toast("Scanning live orderbook with Spread filters...")
     with btn2:
-        st.button("START AUTO SCAN", use_container_width=True)
+        st.button("AUTO SCAN", use_container_width=True)
     with btn3:
-        st.button("🔔 ENABLE NOTIFICATIONS", use_container_width=True)
+        st.button("🔔 ALERTS", use_container_width=True)
     with btn4:
         st.button("STOP", use_container_width=True)
     with btn5:
         st.button("RESET", use_container_width=True)
+
     st.write("---")
     st.markdown("### 💎 Detected Spread Opportunities & Required Margin")
 
