@@ -7,100 +7,93 @@ import time
 # Page Configuration
 st.set_page_config(page_title="ARHAM TRADERS | Terminal", layout="wide", initial_sidebar_state="expanded")
 
-# Temple Wallpaper Direct URL
-TEMPLE_IMG = "https://images.unsplash.com/photo-1622396481304-4ad7343b6794?auto=format&fit=crop&w=1920&q=80"
+# Direct High-Resolution Temple Image Link
+TEMPLE_IMG = "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1200&q=80"
 
-# --- STYLING: GOLDEN NEON & DARK CYBER THEME ---
-st.markdown(f"""
+# --- HIGH-CONTRAST GOLDEN & NEON THEME ---
+st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:ital,wght@0,800;1,900&family=Rajdhani:wght@600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Teko:wght@600;700&family=Rajdhani:wght@600;700;800&display=swap');
 
-    .stApp {{
-        background: linear-gradient(rgba(5, 10, 24, 0.90), rgba(5, 10, 24, 0.96)), url('{TEMPLE_IMG}');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
+    .stApp {
+        background-color: #060b17;
         color: #ffffff;
         font-family: 'Rajdhani', sans-serif;
-    }}
+    }
 
-    .brand-box {{
+    /* Branded Card Container */
+    .brand-box {
         text-align: center;
-        margin: 10px 0 25px 0;
-        padding: 22px;
-        background: rgba(10, 18, 38, 0.75);
-        border: 2.5px solid rgba(245, 158, 11, 0.6);
-        border-radius: 16px;
-        box-shadow: 0 0 40px rgba(245, 158, 11, 0.35);
-    }}
+        margin: 5px auto 20px auto;
+        padding: 16px 12px;
+        background: radial-gradient(circle at center, rgba(16, 26, 52, 0.95) 0%, rgba(8, 14, 28, 0.98) 100%);
+        border: 2px solid #f59e0b;
+        border-radius: 18px;
+        box-shadow: 0 0 35px rgba(245, 158, 11, 0.35);
+        max-width: 480px;
+    }
 
-    .brand-title {{
-        font-family: 'Cinzel', serif;
-        font-size: 3.5rem !important;
+    /* Fix for TRADERS splitting: Uses clamp + nowrap */
+    .brand-title {
+        font-family: 'Cinzel Decorative', 'Cinzel', serif;
+        font-size: clamp(1.8rem, 6.8vw, 2.7rem) !important;
         font-weight: 900 !important;
         font-style: italic !important;
-        letter-spacing: 3px !important;
+        white-space: nowrap !important;
         color: #ffbe0b !important;
-        text-shadow: 0 0 25px rgba(255, 190, 11, 0.8);
+        text-shadow: 0 0 20px rgba(255, 190, 11, 0.75), 0 0 40px rgba(234, 88, 12, 0.4);
         margin: 0 !important;
-        line-height: 1.1;
-    }}
+        line-height: 1.2 !important;
+        display: block !important;
+    }
 
-    .brand-sub {{
-        font-family: 'Montserrat', sans-serif;
-        font-size: 1.4rem !important;
-        font-weight: 900 !important;
-        font-style: italic !important;
-        letter-spacing: 2px !important;
+    .brand-sub {
+        font-family: 'Teko', sans-serif;
+        font-size: clamp(1.15rem, 4.5vw, 1.45rem) !important;
+        font-weight: 700 !important;
+        letter-spacing: 1.5px !important;
+        white-space: nowrap !important;
         color: #38bdf8 !important;
-        text-shadow: 0 0 20px rgba(56, 189, 248, 0.9);
-        margin-top: 8px !important;
-    }}
+        text-shadow: 0 0 15px rgba(56, 189, 248, 0.8);
+        margin-top: 6px !important;
+        margin-bottom: 0 !important;
+    }
 
-    .temple-header-img {{
-        width: 100%;
-        max-height: 220px;
-        object-fit: cover;
-        border-radius: 14px;
-        border: 2px solid rgba(245, 158, 11, 0.6);
-        box-shadow: 0 8px 30px rgba(0,0,0,0.7);
-        margin-bottom: 15px;
-    }}
-
-    .glass-panel {{
+    .glass-panel {
         background: rgba(13, 22, 45, 0.92);
         border: 1.5px solid rgba(56, 189, 248, 0.35);
         border-radius: 14px;
         padding: 20px;
         margin-bottom: 20px;
-    }}
+    }
 
-    label, p, span {{
+    label, p, span {
         font-family: 'Rajdhani', sans-serif !important;
-        font-size: 1.1rem !important;
+        font-size: 1.05rem !important;
         font-weight: 700 !important;
         color: #f1f5f9 !important;
-    }}
+    }
 
-    div[data-baseweb="select"] > div, .stTextInput > div > div > input, .stNumberInput input {{
+    div[data-baseweb="select"] > div, .stTextInput > div > div > input, .stNumberInput input {
         background-color: #0b1329 !important;
         color: #38bdf8 !important;
         font-size: 1.1rem !important;
         font-weight: 800 !important;
         border: 1.5px solid #2563eb !important;
         border-radius: 8px !important;
-    }}
+    }
 
-    .scan-glow > button {{
+    .scan-glow > button {
         background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%) !important;
         color: #ffffff !important;
-        font-family: 'Montserrat', sans-serif !important;
-        font-size: 1.15rem !important;
-        font-weight: 900 !important;
+        font-family: 'Teko', sans-serif !important;
+        font-size: 1.4rem !important;
+        letter-spacing: 1px !important;
+        font-weight: 700 !important;
         border: 1.5px solid #ffbe0b !important;
         box-shadow: 0 0 25px rgba(245, 158, 11, 0.7) !important;
         border-radius: 10px !important;
-    }}
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -183,7 +176,10 @@ if "auto_scan" not in st.session_state:
 if not st.session_state.logged_in:
     c_left, c_mid, c_right = st.columns([1, 1.4, 1])
     with c_mid:
-        st.markdown(f'<img src="{TEMPLE_IMG}" class="temple-header-img">', unsafe_allow_html=True)
+        # Native Streamlit Image Rendering
+        st.image(TEMPLE_IMG, use_container_width=True)
+
+        # Responsive Single-Line Brand Header
         st.markdown("""
         <div class="brand-box">
             <div class="brand-title">ARHAM TRADERS</div>
@@ -318,8 +314,8 @@ else:
             st.rerun()
 
     with st.sidebar:
-        st.markdown("<h1 style='color:#ffbe0b; font-family: Cinzel; font-size: 1.8rem; margin:0;'>ARHAM TRADERS</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='color:#38bdf8; font-size: 0.95rem; font-weight:800;'>DEV BY PRATHAM MEHTA</p>", unsafe_allow_html=True)
+        st.markdown("<h1 style='color:#ffbe0b; font-family: Cinzel Decorative, serif; font-size: 1.8rem; margin:0;'>ARHAM TRADERS</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#38bdf8; font-family: Teko, sans-serif; font-size: 1.15rem; font-weight:700; margin-bottom: 12px;'>DEV BY PRATHAM MEHTA</p>", unsafe_allow_html=True)
         st.write("---")
         rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.valid_until else 0
         st.markdown(f"Trader: **{st.session_state.username}**")
@@ -333,7 +329,7 @@ else:
     # Terminal Header
     h1, h2 = st.columns([3, 1])
     with h1:
-        st.markdown("<h2 style='color: #ffbe0b; font-family: Montserrat; font-weight:900; margin:0;'>DELTA ANALYSIS — FNO SPREAD SCANNER</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='color: #ffbe0b; font-family: Teko, sans-serif; font-size: 2.2rem; font-weight:700; margin:0; letter-spacing:1px;'>DELTA ANALYSIS — FNO SPREAD SCANNER</h2>", unsafe_allow_html=True)
         st.caption("Institutional Spread Analytics Engine | NSE Real-Time Feed Mode")
     with h2:
         st.markdown("<div style='text-align:right; margin-top: 10px;'><span style='color: #22c55e; font-weight: 900; font-size: 1.1rem;'>● FEED ACTIVE</span> | <span style='color:#94a3b8; font-weight:700;'>NSE F&O</span></div>", unsafe_allow_html=True)
@@ -426,94 +422,4 @@ else:
     underlyings = {
         "NIFTY": {"spot": 25350, "near_fut": 25380.50, "far_fut": 25515.20, "lot": 75, "step": 50, "iv": 13.2},
         "BANKNIFTY": {"spot": 53600, "near_fut": 53680.00, "far_fut": 53995.00, "lot": 35, "step": 100, "iv": 16.5},
-        "HDFCBANK": {"spot": 1660, "near_fut": 1664.20, "far_fut": 1678.80, "lot": 550, "step": 10, "iv": 18.4},
-        "RELIANCE": {"spot": 1395, "near_fut": 1399.10, "far_fut": 1413.50, "lot": 250, "step": 10, "iv": 21.0},
-        "ICICIBANK": {"spot": 1280, "near_fut": 1284.00, "far_fut": 1295.60, "lot": 700, "step": 10, "iv": 19.5},
-        "TCS": {"spot": 4250, "near_fut": 4265.00, "far_fut": 4302.00, "lot": 175, "step": 50, "iv": 15.0},
-        "INFY": {"spot": 1940, "near_fut": 1946.50, "far_fut": 1962.00, "lot": 400, "step": 20, "iv": 18.0},
-        "SBIN": {"spot": 820, "near_fut": 823.40, "far_fut": 831.20, "lot": 750, "step": 5, "iv": 22.5}
-    }
-
-    selected_stocks = list(underlyings.keys()) if f_stock == "ALL STOCKS" else [f_stock]
-    results = []
-
-    for s in selected_stocks:
-        u = underlyings[s]
-        lot = u["lot"]
-
-        if f_type == "Futures Calendar Spread":
-            near_p = u["near_fut"]
-            far_p = u["far_fut"]
-            spread_pts = round(far_p - near_p, 2)
-            total_spread_pnl = round(spread_pts * lot, 2)
-            spread_pct = round((spread_pts / near_p) * 100, 2)
-            annualized = round(spread_pct * 12, 1)
-
-            if spread_pct > 0.8:
-                action = "⭐ High Premium Carry! Sell Far / Buy Near"
-            elif spread_pct < 0.35:
-                action = "🔥 Cheap Carry! Buy Far / Sell Near"
-            else:
-                action = "✅ Balanced Arbitrage Range. Margin Benefit."
-
-            results.append({
-                "Stock": s,
-                "Strategy": "Futures Calendar Spread",
-                "Near Month Future": f"Current Expiry @ Rs {near_p}",
-                "Far Month Future": f"Next Expiry @ Rs {far_p}",
-                "Spread (Pts)": f"+{spread_pts} pts",
-                "Lot Size": lot,
-                "Total PnL / Lot": f"Rs {total_spread_pnl}",
-                "Carry % (Annualized)": f"{spread_pct}% ({annualized}% p.a.)",
-                "Best Action Advice": action
-            })
-        else:
-            spot = u["spot"]
-            step = u["step"]
-            gap = spot * (float(f_strike_gap) / 100.0)
-            buy_strike = int(round((spot - (gap * 0.5)) / step) * step)
-            sell_strike = int(round((spot + (gap * 0.5)) / step) * step)
-            prem_buy = round(max(6.0, (spot * 0.016) + (u["iv"] * 0.25)), 2)
-            prem_sell = round(max(2.5, prem_buy * 0.52), 2)
-            r_sell_mult = 2 if f_ratio == "1 : 2" else (10 if f_ratio == "3 : 10" else 1)
-            net_diff = round(prem_buy - (prem_sell * r_sell_mult), 2)
-            max_risk = round(abs(net_diff) * lot, 2)
-
-            if net_diff < 0:
-                action = "🔥 Net Credit Setup. Theta Decay Edge."
-            else:
-                action = "✅ Defined Risk Setup. Favorable Delta Gap."
-
-            results.append({
-                "Stock": s,
-                "Strategy": f"Option {f_type.split(' ')[0]} ({f_ratio})",
-                "Leg 1 (Buy Strike)": f"{buy_strike} @ Rs {prem_buy}",
-                "Leg 2 (Sell Strike)": f"{sell_strike} (x{r_sell_mult}) @ Rs {prem_sell}",
-                "Spread (Pts)": f"{'+' if net_diff > 0 else ''}Rs {net_diff}",
-                "Lot Size": lot,
-                "Total PnL / Lot": f"Rs {max_risk}",
-                "Carry % (Annualized)": f"{round(float(f_iv_gap), 1)}% IV Gap",
-                "Best Action Advice": action
-            })
-
-    if check_now_btn or start_alert_btn:
-        st.markdown(f"""
-        <div style='background: rgba(245, 158, 11, 0.2); border: 2px solid #ffbe0b; border-radius: 8px; padding: 14px; margin-bottom: 15px;'>
-            🔔 <b style='color:#ffbe0b; font-size:1.2rem;'>Custom Spread Evaluated:</b> {a_company} | Buy: {a_buy} vs Sell: {a_sell} | Target: Rs {a_debit} <br>
-            <span style='color: #22c55e; font-weight:800; font-size:1.1rem;'><b>Status:</b> Spread condition active. Favorable risk-reward detected!</span>
-        </div>
-        """, unsafe_allow_html=True)
-        play_alert_sound()
-
-    mode_text = "FUTURES CALENDAR SPREADS ONLY" if f_type == "Futures Calendar Spread" else "OPTIONS DELTA SPREADS"
-    st.markdown(f"<h3 style='color: #ffbe0b; font-family: Montserrat; font-weight:800;'>💎 BEST HIGH-PROBABILITY SPREADS FOUND — [{mode_text}]</h3>", unsafe_allow_html=True)
-    
-    if results:
-        st.dataframe(pd.DataFrame(results), use_container_width=True, hide_index=True)
-    else:
-        st.warning("कोई स्प्रेड मैच नहीं हुआ।")
-
-    if st.session_state.auto_scan:
-        st.caption("⚡ Auto-Scanning active (Refreshing market in 5 seconds)...")
-        time.sleep(5)
-        st.rerun()
+        "HDF
