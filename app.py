@@ -39,10 +39,10 @@ ALL_FNO_STOCKS = [
     "ESCORTS", "EXIDEIND", "FEDERALBNK", "GAIL", "GLENMARK", "GMRINFRA", "GODREJCP", "GODREJPROP", "GRANULES",
     "GUJGASLTD", "HAL", "HAVELLS", "HCL-INSYS", "HDFCAMC", "HINDALCO", "HINDCOPPER", "HINDPETRO", "IDBI",
     "IDFC", "IEX", "IGL", "INDHOTEL", "INDIACEM", "INDIAMART", "INDIGO", "IPCALAB", "IRCTC", "IRFC",
-    "JINDALSTEL", "JKCEMENT", "JSWENERGY", "JSWSTEEL", "JUBLFOOD", "KOTAKBANK", "LALPATHLAB", "LAURUSLABS",
+    "JINDALSTEL", "JKCEMENT", "JSWENERGY", "JSWSTEEL", "JUBLFOOD", "LALPATHLAB", "LAURUSLABS",
     "LICHSGFIN", "LTIM", "LTTS", "LUPIN", "M&MFIN", "MANAPPURAM", "MAXHEALTH", "MCX", "METROPOLIS",
     "MFSL", "MINDTREE", "MOTHERSUMI", "MPHASIS", "MRF", "MUTHOOTFIN", "NAM-INDIA", "NATIONALUM", "NAUKRI",
-    "NAVINFLUOR", "NESTLEIND", "NMDC", "NTPC", "OBEROIRLTY", "OFSS", "PAGEIND", "PEL", "PERSISTENT",
+    "NAVINFLUOR", "NESTLEIND", "NMDC", "OBEROIRLTY", "OFSS", "PAGEIND", "PEL", "PERSISTENT",
     "PETRONET", "PFC", "PIDILITIND", "PIIND", "POLYCAB", "PVRINOX", "RAMCOCEM", "RBLBANK", "RECLTD",
     "SBICARD", "SRF", "STAR", "SUNTV", "SYNGENE", "TATACOMM", "TATAPOWER", "TATAELXSI", "TORNTPHARM",
     "TORNTPOWER", "TRENT", "TVSMOTOR", "UPL", "VEDL", "VOLTAS", "WHIRLPOOL", "ZEEL", "ZYDUSLIFE"
@@ -274,7 +274,7 @@ elif st.session_state.is_admin:
     except:
         st.info("Loading user management interface...")
 
-# ==================== 3. PRO TRADER TERMINAL WITH SIDEBAR & REAL-TIME CLOCK ====================
+# ==================== 3. PRO TRADER TERMINAL UI ====================
 else:
     st.markdown('''
     <style>
@@ -318,7 +318,7 @@ else:
 
     rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.mode == "LIVE" and st.session_state.valid_until else 999
 
-    # Sidebar Navigation UI
+    # Sidebar Navigation UI matching video reference
     with st.sidebar:
         st.markdown('<div style="font-family:\'Cinzel\', serif; font-size:1.4rem; font-weight:900; color:#ffbe0b; margin-bottom:20px;">▲ DELTA ANALYSIS<br><span style="font-size:0.8rem; color:#38bdf8; font-family:\'Rajdhani\',sans-serif;">FNO SCANNER v2.0</span></div>', unsafe_allow_html=True)
         
@@ -342,7 +342,7 @@ else:
             st.session_state.logged_in = False
             st.rerun()
 
-    # Top Header with Real-Time Live Clock (Hours:Minutes:Seconds)
+    # Top Header with Live Real-Time Clock
     h_col1, h_col2, h_col3 = st.columns([2.5, 1.5, 1])
     with h_col1:
         st.markdown(f'<div style="font-size:1.3rem; font-weight:800; color:#fff;">▲ Delta Analysis <span style="font-size:0.85rem; color:#38bdf8;">{st.session_state.active_tab.upper()}</span></div>', unsafe_allow_html=True)
