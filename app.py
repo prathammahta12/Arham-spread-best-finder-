@@ -6,20 +6,6 @@ from datetime import datetime, date, timedelta
 
 st.set_page_config(page_title="ARHAM TRADERS | Terminal", layout="wide", initial_sidebar_state="expanded")
 
-def get_exact_girnar_bg():
-    target_files = ["Screenshot_20260922-172632_Google.png", "girnar.jpg", "girnar.png"]
-    for f in target_files:
-        if os.path.exists(f):
-            with open(f, "rb") as img:
-                return f"data:image/png;base64,{base64.b64encode(img.read()).decode()}"
-    for f in os.listdir("."):
-        if f.lower().startswith("screenshot") and f.lower().endswith((".png", ".jpg", ".jpeg")):
-            with open(f, "rb") as img:
-                return f"data:image/png;base64,{base64.b64encode(img.read()).decode()}"
-    return ""
-
-girnar_bg_src = get_exact_girnar_bg()
-
 SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaWdpeGdxZGZ0YWpxa211b3VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTI0OTUsImV4cCI6MjEwNTYyODQ5NX0.pI7CPt9XdLG2zirwkisz5Ttzm3CZIQiL6qg7D70fKlc"
 HEADERS = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": "application/json", "Prefer": "return=representation"}
@@ -116,34 +102,27 @@ for key, default in [("logged_in", False), ("username", ""), ("user_id", None), 
 
 # ==================== 1. LOGIN SCREEN ====================
 if not st.session_state.logged_in:
-    st.markdown(f'''
+    st.markdown('''
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
-        .girnar-bg-full {{
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: linear-gradient(rgba(6, 11, 23, 0.75), rgba(6, 11, 23, 0.90)), 
-                        url('{girnar_bg_src}') no-repeat center center fixed !important;
-            background-size: cover !important; z-index: -999;
-        }}
-        .stApp {{ background: transparent !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }}
-        .brand-card {{
+        .stApp { background-color: #0b0f19 !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }
+        .brand-card {
             display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
             margin: 30px auto 20px auto; padding: 20px 30px; background: rgba(11, 18, 36, 0.94);
             backdrop-filter: blur(16px); border: 2.5px solid #f59e0b; border-radius: 16px;
             box-shadow: 0 0 50px rgba(245, 158, 11, 0.45); width: fit-content !important; max-width: 95% !important; box-sizing: border-box;
-        }}
-        .brand-main {{
+        }
+        .brand-main {
             font-family: 'Cinzel', serif; font-size: clamp(1.8rem, 4vw, 2.5rem) !important; font-weight: 900 !important;
             font-style: italic !important; white-space: nowrap !important; letter-spacing: 1.5px !important;
             color: #ffbe0b !important; text-shadow: 0 0 25px rgba(255, 190, 11, 0.85); margin: 0 !important; line-height: 1.2 !important;
-        }}
-        .brand-dev {{
+        }
+        .brand-dev {
             font-family: 'Teko', sans-serif; font-size: clamp(1.1rem, 2.5vw, 1.4rem) !important; font-weight: 700 !important;
             letter-spacing: 1.5px !important; white-space: nowrap !important; color: #38bdf8 !important;
             text-shadow: 0 0 16px rgba(56, 189, 248, 0.85); margin-top: 4px !important;
-        }}
+        }
     </style>
-    <div class="girnar-bg-full"></div>
     ''', unsafe_allow_html=True)
 
     _, col_mid, _ = st.columns([1, 1.4, 1])
@@ -279,34 +258,15 @@ else:
     st.markdown('''
     <style>
         .stApp { background-color: #0b0f19 !important; color: #e2e8f0 !important; font-family: 'Rajdhani', sans-serif !important; }
-        
-        [data-testid="stSidebar"] {
-            background-color: #131b2e !important;
-            border-right: 1px solid #1e293b !important;
-        }
-        
-        .filter-container {
-            background: #131b2e; border: 1px solid #1e293b; border-radius: 12px;
-            padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 25px rgba(0,0,0,0.5);
-        }
-        
-        .section-title {
-            font-size: 1.1rem; font-weight: 700; color: #ffbe0b; margin-bottom: 12px;
-            border-bottom: 1px solid #1e293b; padding-bottom: 6px; letter-spacing: 0.5px;
-        }
-
-        .spread-card { 
-            background: #131b2e; border: 1px solid #1e293b; border-left: 4px solid #38bdf8; 
-            border-radius: 10px; padding: 18px; margin-bottom: 14px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
+        [data-testid="stSidebar"] { background-color: #131b2e !important; border-right: 1px solid #1e293b !important; }
+        .filter-container { background: #131b2e; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 25px rgba(0,0,0,0.5); }
+        .section-title { font-size: 1.1rem; font-weight: 700; color: #ffbe0b; margin-bottom: 12px; border-bottom: 1px solid #1e293b; padding-bottom: 6px; }
+        .spread-card { background: #131b2e; border: 1px solid #1e293b; border-left: 4px solid #38bdf8; border-radius: 10px; padding: 18px; margin-bottom: 14px; }
         .spread-title { font-size: 1.15rem; font-weight: 800; color: #ffbe0b; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        
         .spread-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 12px 0; }
         .grid-item { background: #0b0f19; padding: 10px 12px; border-radius: 8px; border: 1px solid #1e293b; }
-        .grid-label { color: #94a3b8; font-size: 0.72rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        .grid-label { color: #94a3b8; font-size: 0.72rem; text-transform: uppercase; font-weight: 700; }
         .grid-val { color: #f8fafc; font-weight: 700; font-size: 0.95rem; margin-top: 3px; }
-        
         .score-badge { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; }
         .advice-box { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 10px 14px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; margin-top: 10px; }
     </style>
@@ -335,7 +295,7 @@ else:
             st.rerun()
             
         st.markdown("---")
-        st.markdown(f'<div style="color:#10b981; font-weight:700; font-size:0.9rem;">● Live Market Active</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color:#10b981; font-weight:700; font-size:0.9rem;">● Live Market Active</div>', unsafe_allow_html=True)
         st.markdown(f'<div style="color:#94a3b8; font-size:0.8rem; margin-top:5px;">Mode: {st.session_state.mode}</div>', unsafe_allow_html=True)
         if st.button("🚪 Logout", use_container_width=True):
             st.session_state.logged_in = False
