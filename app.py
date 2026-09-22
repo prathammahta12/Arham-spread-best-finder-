@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import os
 import base64
-import random
 from datetime import datetime, date, timedelta
 
 st.set_page_config(page_title="ARHAM TRADERS | Terminal", layout="wide", initial_sidebar_state="collapsed")
@@ -77,7 +76,7 @@ def admin_delete_user(uid):
     except:
         return False
 
-for key, default in [("logged_in", False), ("username", ""), ("user_id", None), ("is_admin", False), ("valid_until", None), ("upstox_token", ""), ("show_settings", False), ("mode", "LIVE"), ("otp_sent", False), ("generated_otp", "")]:
+for key, default in [("logged_in", False), ("username", ""), ("user_id", None), ("is_admin", False), ("valid_until", None), ("upstox_token", ""), ("show_settings", False), ("mode", "LIVE")]:
     if key not in st.session_state:
         st.session_state[key] = default
 
@@ -122,7 +121,7 @@ if not st.session_state.logged_in:
         </div>
         ''', unsafe_allow_html=True)
         
-        tab_login, tab_reg, tab_demo = st.tabs(["🔐 Sign In", "📝 Register + OTP", "🚀 Demo Mode"])
+        tab_login, tab_reg, tab_demo = st.tabs(["🔐 Sign In", "📝 Register Account", "🚀 Demo Mode"])
         
         with tab_login:
             u_in = st.text_input("Username / Mobile", key="lin_u")
@@ -149,34 +148,21 @@ if not st.session_state.logged_in:
                     st.warning("Dono fields bharein.")
 
         with tab_reg:
-            st.markdown("<small style='color:#38bdf8;'>Upstox Analysis Token ke sath secure registration:</small>", unsafe_allow_html=True)
+            st.markdown("<small style='color:#38bdf8;'>Direct secure registration:</small>", unsafe_allow_html=True)
             ru = st.text_input("Desired Username", key="reg_u")
             rph = st.text_input("Mobile Number", key="reg_ph")
             rp = st.text_input("Create Password", type="password", key="reg_p")
             r_token = st.text_input("Upstox Analysis Token (Optional)", key="reg_token")
 
-            if not st.session_state.otp_sent:
-                if st.button("SEND OTP TO MOBILE", use_container_width=True):
-                    if rph and len(rph) >= 10:
-                        gen_otp = str(random.randint(100000, 999999))
-                        st.session_state.generated_otp = gen_otp
-                        st.session_state.otp_sent = True
-                        st.success(f"📲 OTP Sent Successfully! (Demo OTP: {gen_otp})")
-                        st.rerun()
+            if st.button("REGISTER NOW", use_container_width=True, type="primary"):
+                if ru and rph and rp:
+                    res = register_user(ru, rp, rph, r_token)
+                    if res and res.status_code in [200, 201]:
+                        st.success("✅ Registration successful! Admin approval ke baad login karein.")
                     else:
-                        st.warning("Kripya valid mobile number darj karein.")
-            else:
-                entered_otp = st.text_input("Enter 6-Digit OTP", max_chars=6)
-                if st.button("VERIFY OTP & REGISTER", use_container_width=True, type="primary"):
-                    if entered_otp == st.session_state.generated_otp:
-                        res = register_user(ru, rp, rph, r_token)
-                        if res and res.status_code in [200, 201]:
-                            st.success("✅ Mobile Verified & Registration successful! Admin approval ke baad login karein.")
-                            st.session_state.otp_sent = False
-                        else:
-                            st.error("Username already exists!")
-                    else:
-                        st.error("❌ Galat OTP! Dobara koshish karein.")
+                        st.error("Username already exists!")
+                else:
+                    st.warning("Kripya zaroori fields bharein.")
 
         with tab_demo:
             st.markdown("<p style='color:#cbd5e1; font-size:0.9rem;'>Bina registration ke turant app check karne ke liye Demo Mode me enter karein:</p>", unsafe_allow_html=True)
@@ -355,7 +341,7 @@ else:
                 <span>{sym} — Spread Setup ({f_ratio})</span>
                 <span class="score-badge">⭐ Quality Score: {score}/100</span>
             </div>
-               <div class="spread-grid">
+            <div class="spread-grid">
                 <div class="grid-item"><div class="grid-label">Buy Leg</div><div class="grid-val">25400 CE @ ₹145.20</div></div>
                 <div class="grid-item"><div class="grid-label">Sell Leg</div><div class="grid-val">25600 CE @ ₹62.00</div></div>
                 <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#10b981;">₹6,262.50</div></div>
