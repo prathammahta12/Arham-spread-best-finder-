@@ -442,4 +442,10 @@ else:
                     <div class="grid-item"><div class="grid-label">Total Max Risk / Lot</div><div class="grid-val" style="color:#10b981;">₹{round(diff * lot, 2)}</div></div>
                     <div class="grid-item"><div class="grid-label">Delta Target</div><div class="grid-val">20-30 Delta Edge</div></div>
                 </div>
-        
+                <div class="advice-box">🎯 <b>Action Advice:</b> ✅ Defined Risk Spread. Theta decay advantage on sell leg.</div>
+            </div>
+            ''', unsafe_allow_html=True)
+
+    if st.sidebar.button("Logout", use_container_width=True):
+        st.session_state.logged_in = False
+        st.rerun()
