@@ -6,31 +6,40 @@ from datetime import datetime, date, timedelta
 
 st.set_page_config(page_title="ARHAM TRADERS", layout="wide", initial_sidebar_state="collapsed")
 
-# --- STRICTLY LOCAL GIRNAR.JPG TO BASE64 BACKGROUND ---
-def get_local_girnar_bg():
-    target_files = ["girnar.jpg", "girnar.png", "girnar.jpeg", "Girnar.jpg", "GIRNAR.JPG"]
+# --- EXACT FILE NAME EMBEDDER ---
+def get_exact_girnar_bg():
+    target_files = [
+        "Screenshot_20260922-172632_Google.png",
+        "girnar.jpg",
+        "girnar.png"
+    ]
+    # Check exact uploaded filename first
     for f in target_files:
         if os.path.exists(f):
-            with open(f, "rb") as img_file:
-                b64_str = base64.b64encode(img_file.read()).decode()
-                return f"data:image/jpeg;base64,{b64_str}"
+            with open(f, "rb") as img:
+                return f"data:image/png;base64,{base64.b64encode(img.read()).decode()}"
+    # Fallback to search directory
+    for f in os.listdir("."):
+        if f.lower().startswith("screenshot") and f.lower().endswith((".png", ".jpg", ".jpeg")):
+            with open(f, "rb") as img:
+                return f"data:image/png;base64,{base64.b64encode(img.read()).decode()}"
     return ""
 
-girnar_base64_bg = get_local_girnar_bg()
+girnar_bg_src = get_exact_girnar_bg()
 
 st.markdown(f'''
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
     
-    /* Pura Background: Aapki Girnar.jpg File */
-    .girnar-full-screen-bg {{
+    /* Fullscreen Background Layer with Exact Uploaded Photo */
+    .girnar-bg-full {{
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: linear-gradient(rgba(6, 11, 23, 0.78), rgba(6, 11, 23, 0.88)), 
-                    url('{girnar_base64_bg}') no-repeat center center fixed !important;
+        background: linear-gradient(rgba(6, 11, 23, 0.75), rgba(6, 11, 23, 0.88)), 
+                    url('{girnar_bg_src}') no-repeat center center fixed !important;
         background-size: cover !important;
         z-index: -999;
     }}
@@ -173,7 +182,7 @@ st.markdown(f'''
         margin-top: 6px;
     }}
 </style>
-<div class="girnar-full-screen-bg"></div>
+<div class="girnar-bg-full"></div>
 ''', unsafe_allow_html=True)
 
 # --- SUPABASE CONFIG ---
@@ -257,7 +266,7 @@ if not st.session_state.logged_in:
                     if res and res.status_code in [200, 201]:
                         st.success("✅ रिक्वेस्ट सबमिट हो गई! एडमिन अप्रूवल के बाद लॉगिन करें।")
                     else:
-                        st.error("यूज़रनेम पहले से मौजूद है!")
+                        st.error("यह यूज़रनेम पहले से मौजूद है!")
 
 # ==================== 2. ADMIN CONTROL PANEL ====================
 elif st.session_state.is_admin:
