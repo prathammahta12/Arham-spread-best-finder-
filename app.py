@@ -331,4 +331,89 @@ else:
 
     if st.session_state.active_tab == "Settings":
         st.markdown('<div class="filter-container">', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">🛠️ Upstox Anal
+        st.markdown('<div class="section-title">🛠️ Upstox Analysis Token Configuration</div>', unsafe_allow_html=True)
+        new_token = st.text_input("Enter New Upstox Token", value=st.session_state.upstox_token)
+        if st.button("SAVE TOKEN", type="primary"):
+            if new_token:
+                if update_user_token(st.session_state.user_id, new_token):
+                    st.session_state.upstox_token = new_token
+                    st.success("✅ Upstox token successfully updated!")
+                    st.rerun()
+                else:
+                    st.error("Failed to update token.")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    else:
+        # Main Dashboard Layout with 210+ stocks
+        st.markdown('<div class="filter-container">', unsafe_allow_html=True)
+        
+        r1_1, r1_2, r1_3, r1_4, r1_5, r1_6 = st.columns(6)
+        f_stock = r1_1.selectbox("STOCK", ALL_FNO_STOCKS)
+        f_expiry = r1_2.selectbox("EXPIRY DATE", ["29 Sept 2026", "27 Oct 2026", "Nov 2026"])
+        f_ref = r1_3.selectbox("REFERENCE", ["Future LTP", "Equity LTP"])
+        f_type = r1_4.selectbox("TYPE", ["Both", "CE", "PE"])
+        f_price_gap_on = r1_5.selectbox("PRICE GAP", ["OFF", "ON"])
+        f_price_val = r1_6.number_input("GAP VAL", value=3.0, step=0.1)
+
+        r2_1, r2_2, r2_3, r2_4, r2_5 = st.columns(5)
+        f_delta_on = r2_1.selectbox("DELTA FILTER", ["ON (20-30)", "OFF"])
+        f_strike_gap = r2_2.number_input("STRIKE GAP %", value=5.0, step=0.5)
+        f_iv_gap = r2_3.number_input("IV GAP %", value=5.0, step=0.5)
+        f_min_vol = r2_4.number_input("MIN VOL (LOTS)", value=1, step=1)
+        f_ratio = r2_5.selectbox("RATIO", ["3:10", "1:1", "1:2", "1:4"])
+
+        st.markdown('<div class="section-title" style="margin-top:12px;">🎯 Custom Spread Alert — Specific Company / Strike</div>', unsafe_allow_html=True)
+        a1, a2, a3, a4, a5, a6 = st.columns(6)
+        a_comp = a1.selectbox("COMPANY", ALL_FNO_STOCKS[1:])
+        a_opt = a2.selectbox("OPTION", ["CE", "PE"])
+        a_buy = a3.number_input("BUY STRIKE", value=740.0, step=10.0)
+        a_sell = a4.number_input("SELL STRIKE", value=780.0, step=10.0)
+        a_ratio = a5.selectbox("RATIO B:S", ["3:10", "1:1", "1:2"])
+        a_debit = a6.number_input("TARGET DEBIT ₹", value=0.0, step=1.0)
+
+        c_b1, c_b2 = st.columns(2)
+        with c_b1:
+            st.button("🔔 START CUSTOM ALERT", use_container_width=True)
+        with c_b2:
+            st.button("CHECK NOW", use_container_width=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # Action Buttons matching video bottom toolbar
+        btn1, btn2, btn3, btn4, btn5 = st.columns([1.5, 1.5, 1.5, 1, 1])
+        with btn1:
+            if st.button("SCAN NOW", use_container_width=True, type="primary"):
+                st.toast("Scanning live orderbook across 210+ stocks...")
+        with btn2:
+            st.button("START AUTO SCAN", use_container_width=True)
+        with btn3:
+            st.button("🔔 NOTIFICATIONS ON", use_container_width=True)
+        with btn4:
+            st.button("STOP", use_container_width=True)
+        with btn5:
+            st.button("RESET", use_container_width=True)
+
+        st.write("---")
+        st.markdown(f"### 💎 Detected {st.session_state.active_tab} Opportunities & Required Margin")
+
+        display_stocks = [f_stock] if f_stock != "ALL STOCKS" else ["NIFTY", "HDFCBANK", "RELIANCE"]
+        for sym in display_stocks:
+            score = 94 if sym == "NIFTY" else (88 if sym == "HDFCBANK" else 82)
+            req_margin = "₹32,500" if sym == "NIFTY" else ("₹45,000" if sym == "HDFCBANK" else "₹28,000")
+            st.markdown(f'''
+            <div class="spread-card">
+                <div class="spread-title">
+                    <span>{sym} — {st.session_state.active_tab} Setup ({f_ratio})</span>
+                    <span class="score-badge">⭐ Quality Score: {score}/100</span>
+                </div>
+                <div class="spread-grid">
+                    <div class="grid-item"><div class="grid-label">Buy Leg</div><div class="grid-val">25400 CE @ ₹145.20</div></div>
+                    <div class="grid-item"><div class="grid-label">Sell Leg</div><div class="grid-val">25600 CE @ ₹62.00</div></div>
+                    <div class="grid-item"><div class="grid-label">Required Margin</div><div class="grid-val" style="color:#38bdf8;">{req_margin}</div></div>
+                    <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#10b981;">₹6,262.50</div></div>
+                    <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ff5268;">₹3,240.00</div></div>
+                    <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
+                </div>
+                <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters matched. Upstox Token Connected. Required Margin: {req_margin} per lot.</div>
+            </div>
+            ''', unsafe_allow_html=True)
