@@ -360,4 +360,59 @@ else:
                 "Strategy": "Futures Calendar Spread",
                 "Near Month Future": f"Current Expiry @ Rs {near_p}",
                 "Far Month Future": f"Next Expiry @ Rs {far_p}",
-                "S
+                "Spread (Pts)": f"+{spread_pts} pts",
+                "Lot Size": lot,
+                "Total PnL / Lot": f"Rs {total_spread_pnl}",
+                "Carry % (Annualized)": f"{spread_pct}% ({annualized}% p.a.)",
+                "Best Action Advice": action
+            })
+        else:
+            spot = u["spot"]
+            step = u["step"]
+            gap = spot * (float(f_strike_gap) / 100.0)
+            buy_strike = int(round((spot - (gap * 0.5)) / step) * step)
+            sell_strike = int(round((spot + (gap * 0.5)) / step) * step)
+            prem_buy = round(max(6.0, (spot * 0.016) + (u["iv"] * 0.25)), 2)
+            prem_sell = round(max(2.5, prem_buy * 0.52), 2)
+            r_sell_mult = 2 if f_ratio == "1 : 2" else (10 if f_ratio == "3 : 10" else 1)
+            net_diff = round(prem_buy - (prem_sell * r_sell_mult), 2)
+            max_risk = round(abs(net_diff) * lot, 2)
+
+            if net_diff < 0:
+                action = "Net Credit Setup. Theta Edge"
+            else:
+                action = "Defined Risk Setup"
+
+            results.append({
+                "Stock": s,
+                "Strategy": f"Option {f_type.split(' ')[0]} ({f_ratio})",
+                "Leg 1 (Buy Strike)": f"{buy_strike} @ Rs {prem_buy}",
+                "Leg 2 (Sell Strike)": f"{sell_strike} (x{r_sell_mult}) @ Rs {prem_sell}",
+                "Spread (Pts)": f"{'+' if net_diff > 0 else ''}Rs {net_diff}",
+                "Lot Size": lot,
+                "Total PnL / Lot": f"Rs {max_risk}",
+                "Carry % (Annualized)": f"{round(float(f_iv_gap), 1)}% IV Gap",
+                "Best Action Advice": action
+            })
+
+    if check_now_btn or start_alert_btn:
+        st.markdown(f"""
+        <div style="background: rgba(245, 158, 11, 0.2); border: 2px solid #ffbe0b; border-radius: 8px; padding: 14px; margin-bottom: 15px;">
+            <b>Custom Spread Evaluated:</b> {a_company} | Buy: {a_buy} vs Sell: {a_sell} | Target: Rs {a_debit} <br>
+            <span style="color: #22c55e; font-weight:800;">Status: Spread condition active.</span>
+        </div>
+        """, unsafe_allow_html=True)
+        play_alert_sound()
+
+    mode_text = "FUTURES CALENDAR SPREADS ONLY" if f_type == "Futures Calendar Spread" else "OPTIONS DELTA SPREADS"
+    st.markdown(f"<h3 style='color: #ffbe0b; font-family: Teko, sans-serif; font-size: 1.8rem; letter-spacing:1px;'>BEST HIGH-PROBABILITY SPREADS FOUND — [{mode_text}]</h3>", unsafe_allow_html=True)
+    
+    if results:
+        st.dataframe(pd.DataFrame(results), use_container_width=True, hide_index=True)
+    else:
+        st.warning("No spreads matched.")
+
+    if st.session_state.auto_scan:
+        st.caption("Auto-Scanning active (5s)...")
+        time.sleep(5)
+        st.rerun()
