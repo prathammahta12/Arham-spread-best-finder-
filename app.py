@@ -29,33 +29,32 @@ def db_get_user(identifier):
     try:
         clean_id = identifier.strip()
         url = f"{SUPABASE_URL}/rest/v1/users?or=(username.ilike.{clean_id},phone.eq.{clean_id})&select=*"
-        r = requests.get(url, headers=HEADERS, timeout=6)
+        r = requests.get(url, headers=HEADERS, timeout=5)
         return r.json() if r.status_code == 200 and r.json() else None
     except:
         return None
 
-def register_user(u, p, ph, api_key, api_secret):
+def register_user(u, p, ph, token):
     try:
         payload = {
             "username": u.strip(), "password": p.strip(), "phone": ph.strip(),
             "is_approved": False, "is_admin": False, "valid_until": None,
-            "broker_api_key": api_key.strip() if api_key else "NONE",
-            "broker_secret": api_secret.strip() if api_secret else "NONE",
+            "upstox_token": token.strip() if token else "NONE",
             "last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
-        return requests.post(f"{SUPABASE_URL}/rest/v1/users", headers=HEADERS, json=payload, timeout=6)
+        return requests.post(f"{SUPABASE_URL}/rest/v1/users", headers=HEADERS, json=payload, timeout=5)
     except:
         return None
 
 def update_user_login_time(uid):
     try:
-        requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json={"last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}, timeout=6)
+        requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json={"last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}, timeout=5)
     except:
         pass
 
-def update_user_broker(uid, api_key, api_secret):
+def update_user_token(uid, token):
     try:
-        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json={"broker_api_key": api_key.strip(), "broker_secret": api_secret.strip()}, timeout=6)
+        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json={"upstox_token": token.strip()}, timeout=5)
         return r.status_code in [200, 204]
     except:
         return False
@@ -66,19 +65,19 @@ def admin_update_user(uid, days, new_pass):
         payload = {"is_approved": True, "valid_until": v_date}
         if new_pass and new_pass.strip():
             payload["password"] = new_pass.strip()
-        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json=payload, timeout=6)
+        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json=payload, timeout=5)
         return r.status_code in [200, 204]
     except:
         return False
 
 def admin_delete_user(uid):
     try:
-        r = requests.delete(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, timeout=6)
+        r = requests.delete(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, timeout=5)
         return r.status_code in [200, 204]
     except:
         return False
 
-for key, default in [("logged_in", False), ("username", ""), ("user_id", None), ("is_admin", False), ("valid_until", None), ("broker_api_key", ""), ("show_settings", False), ("mode", "LIVE"), ("otp_sent", False), ("generated_otp", "")]:
+for key, default in [("logged_in", False), ("username", ""), ("user_id", None), ("is_admin", False), ("valid_until", None), ("upstox_token", ""), ("show_settings", False), ("mode", "LIVE"), ("otp_sent", False), ("generated_otp", "")]:
     if key not in st.session_state:
         st.session_state[key] = default
 
@@ -142,7 +141,7 @@ if not st.session_state.logged_in:
                         elif not usr.get("valid_until") or datetime.strptime(usr["valid_until"], "%Y-%m-%d").date() < date.today():
                             st.error("⛔ Access validity samapt ho chuki hai!")
                         else:
-                            st.session_state.update(logged_in=True, username=usr["username"], user_id=usr["id"], is_admin=False, valid_until=usr["valid_until"], broker_api_key=usr.get("broker_api_key", ""), mode="LIVE")
+                            st.session_state.update(logged_in=True, username=usr["username"], user_id=usr["id"], is_admin=False, valid_until=usr["valid_until"], upstox_token=usr.get("upstox_token", ""), mode="LIVE")
                             st.rerun()
                     else:
                         st.error("Galat credentials!")
@@ -150,12 +149,11 @@ if not st.session_state.logged_in:
                     st.warning("Dono fields bharein.")
 
         with tab_reg:
-            st.markdown("<small style='color:#38bdf8;'>Mobile OTP verification ke sath secure registration:</small>", unsafe_allow_html=True)
+            st.markdown("<small style='color:#38bdf8;'>Upstox Analysis Token ke sath secure registration:</small>", unsafe_allow_html=True)
             ru = st.text_input("Desired Username", key="reg_u")
             rph = st.text_input("Mobile Number", key="reg_ph")
             rp = st.text_input("Create Password", type="password", key="reg_p")
-            r_apikey = st.text_input("Broker API Key (Optional)", key="reg_apikey")
-            r_apisecret = st.text_input("Broker API Secret (Optional)", type="password", key="reg_apisecret")
+            r_token = st.text_input("Upstox Analysis Token (Optional)", key="reg_token")
 
             if not st.session_state.otp_sent:
                 if st.button("SEND OTP TO MOBILE", use_container_width=True):
@@ -171,7 +169,7 @@ if not st.session_state.logged_in:
                 entered_otp = st.text_input("Enter 6-Digit OTP", max_chars=6)
                 if st.button("VERIFY OTP & REGISTER", use_container_width=True, type="primary"):
                     if entered_otp == st.session_state.generated_otp:
-                        res = register_user(ru, rp, rph, r_apikey, r_apisecret)
+                        res = register_user(ru, rp, rph, r_token)
                         if res and res.status_code in [200, 201]:
                             st.success("✅ Mobile Verified & Registration successful! Admin approval ke baad login karein.")
                             st.session_state.otp_sent = False
@@ -183,7 +181,7 @@ if not st.session_state.logged_in:
         with tab_demo:
             st.markdown("<p style='color:#cbd5e1; font-size:0.9rem;'>Bina registration ke turant app check karne ke liye Demo Mode me enter karein:</p>", unsafe_allow_html=True)
             if st.button("ENTER DEMO TRIAL MODE", use_container_width=True):
-                st.session_state.update(logged_in=True, username="Demo_Trader", user_id=0, is_admin=False, valid_until="2030-01-01", broker_api_key="", mode="DEMO")
+                st.session_state.update(logged_in=True, username="Demo_Trader", user_id=0, is_admin=False, valid_until="2030-01-01", upstox_token="", mode="DEMO")
                 st.rerun()
 
 # ==================== 2. ADMIN CONTROL CENTER ====================
@@ -194,44 +192,47 @@ elif st.session_state.is_admin:
         st.rerun()
 
     st.markdown("### 🟢 Registered Users & Live Activity")
-    r = requests.get(f"{SUPABASE_URL}/rest/v1/users?order=created_at.desc", headers=HEADERS, timeout=6)
-    if r.status_code == 200:
-        users_list = r.json()
-        st.info(f"Total Database Users: {len([u for u in users_list if not u.get('is_admin')])}")
-        
-        for u in users_list:
-            if u["username"].lower() in ["pratham1785", "admin"]: continue
-            rem_days = (datetime.strptime(u["valid_until"], "%Y-%m-%d").date() - date.today()).days if u.get("valid_until") else 0
-            status_text = f"🟢 Active ({rem_days} Days)" if u.get("is_approved") and rem_days > 0 else "⏳ Pending / Expired"
-            last_seen = u.get('last_login', 'Never')
+    try:
+        r = requests.get(f"{SUPABASE_URL}/rest/v1/users?order=created_at.desc", headers=HEADERS, timeout=5)
+        if r.status_code == 200:
+            users_list = r.json()
+            st.info(f"Total Database Users: {len([u for u in users_list if not u.get('is_admin')])}")
             
-            with st.expander(f"👤 {u['username']} | 📞 {u.get('phone')} | Last Login: {last_seen}"):
-                st.markdown(f"""
-                - **User ID:** `{u['id']}`
-                - **Broker API Key:** `{u.get('broker_api_key') or 'Not Provided'}`
-                - **Current Validity:** `{u.get('valid_until') or 'No Active Validity'}`
-                """)
+            for u in users_list:
+                if u["username"].lower() in ["pratham1785", "admin"]: continue
+                rem_days = (datetime.strptime(u["valid_until"], "%Y-%m-%d").date() - date.today()).days if u.get("valid_until") else 0
+                status_text = f"🟢 Active ({rem_days} Days)" if u.get("is_approved") and rem_days > 0 else "⏳ Pending / Expired"
+                last_seen = u.get('last_login', 'Never')
                 
-                c1, c2, c3 = st.columns(3)
-                grant_d = c1.number_input("Grant Days:", 1, 365, 30, key=f"days_{u['id']}")
-                new_p = c2.text_input("Reset Password:", type="password", key=f"pass_{u['id']}")
-                
-                col_btn1, col_btn2 = st.columns(2)
-                if col_btn1.button("💾 Update User", key=f"upd_{u['id']}"):
-                    if admin_update_user(u["id"], grant_d, new_p):
-                        st.success(f"User {u['username']} updated successfully!")
-                        st.rerun()
-                    else:
-                        st.error("Failed to update user.")
-                
-                if col_btn2.button("🗑️ Delete User", key=f"del_{u['id']}"):
-                    if admin_delete_user(u["id"]):
-                        st.warning(f"User {u['username']} deleted!")
-                        st.rerun()
-                    else:
-                        st.error("Failed to delete user.")
+                with st.expander(f"👤 {u['username']} | 📞 {u.get('phone')} | Last Login: {last_seen}"):
+                    st.markdown(f"""
+                    - **User ID:** `{u['id']}`
+                    - **Upstox Token:** `{u.get('upstox_token') or 'Not Provided'}`
+                    - **Current Validity:** `{u.get('valid_until') or 'No Active Validity'}`
+                    """)
+                    
+                    c1, c2, c3 = st.columns(3)
+                    grant_d = c1.number_input("Grant Days:", 1, 365, 30, key=f"days_{u['id']}")
+                    new_p = c2.text_input("Reset Password:", type="password", key=f"pass_{u['id']}")
+                    
+                    col_btn1, col_btn2 = st.columns(2)
+                    if col_btn1.button("💾 Update User", key=f"upd_{u['id']}"):
+                        if admin_update_user(u["id"], grant_d, new_p):
+                            st.success(f"User {u['username']} updated successfully!")
+                            st.rerun()
+                        else:
+                            st.error("Failed to update user.")
+                    
+                    if col_btn2.button("🗑️ Delete User", key=f"del_{u['id']}"):
+                        if admin_delete_user(u["id"]):
+                            st.warning(f"User {u['username']} deleted!")
+                            st.rerun()
+                        else:
+                            st.error("Failed to delete user.")
+    except:
+        st.error("Failed to fetch users list.")
 
-# ==================== 3. TRADER TERMINAL WITH COMPLETE SPREAD SCANNER UI ====================
+# ==================== 3. TRADER TERMINAL ====================
 else:
     st.markdown('''
     <style>
@@ -261,7 +262,7 @@ else:
     with n2:
         st.markdown(f'<div style="color:#f59e0b; background:rgba(245,158,11,0.15); padding:4px 10px; border-radius:6px; font-size:0.80rem; font-weight:700; text-align:center;">● {rem_days if st.session_state.mode=="LIVE" else "Trial"} Active</div>', unsafe_allow_html=True)
     with n3:
-        if st.session_state.mode == "LIVE" and st.button("⚙️ Change API", use_container_width=True):
+        if st.session_state.mode == "LIVE" and st.button("⚙️ Change Token", use_container_width=True):
             st.session_state.show_settings = not st.session_state.show_settings
             st.rerun()
     with n4:
@@ -269,20 +270,18 @@ else:
             st.session_state.logged_in = False; st.rerun()
 
     if st.session_state.show_settings:
-        with st.expander("🛠️ Update Broker API Configuration", expanded=True):
-            new_key = st.text_input("New Broker API Key", value=st.session_state.broker_api_key)
-            new_secret = st.text_input("New Broker API Secret", type="password")
-            if st.button("SAVE NEW API DETAILS"):
-                if new_key:
-                    if update_user_broker(st.session_state.user_id, new_key, new_secret):
-                        st.session_state.broker_api_key = new_key
-                        st.success("✅ API details successfully updated!")
+        with st.expander("🛠️ Update Upstox Analysis Token", expanded=True):
+            new_token = st.text_input("New Upstox Token", value=st.session_state.upstox_token)
+            if st.button("SAVE NEW TOKEN"):
+                if new_token:
+                    if update_user_token(st.session_state.user_id, new_token):
+                        st.session_state.upstox_token = new_token
+                        st.success("✅ Upstox token successfully updated!")
                         st.session_state.show_settings = False
                         st.rerun()
                     else:
-                        st.error("Failed to update API details.")
+                        st.error("Failed to update token.")
 
-    # --- FULL SPREAD SCANNER FILTERS MATCHING HTML SPEC ---
     st.markdown('<div class="filter-panel">', unsafe_allow_html=True)
     
     r1_1, r1_2, r1_3 = st.columns(3)
@@ -309,7 +308,6 @@ else:
     f_limit_val = r5_1.number_input("LIMIT VALUE ₹", min_value=0.0, max_value=100000.0, value=1000.0, step=100.0)
     f_dir = r5_2.selectbox("DIRECTION", ["Buy → Sell", "Sell → Buy"])
 
-    # Custom Spread Alert Section matching HTML
     st.markdown('''
     <div class="custom-alert">
         <h4 style="margin:0 0 10px 0; font-size:15px; color:#fff;">🎯 Custom Spread Alert — Specific Company / Strike</h4>
@@ -332,7 +330,6 @@ else:
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Action Toolbar Buttons matching HTML spec
     btn1, btn2, btn3, btn4, btn5 = st.columns([1.5, 1.5, 1.5, 1, 1])
     with btn1:
         if st.button("SCAN NOW", use_container_width=True, type="primary"):
@@ -357,14 +354,14 @@ else:
             <div class="spread-title">
                 <span>{sym} — Spread Setup ({f_ratio})</span>
                 <span class="score-badge">⭐ Quality Score: {score}/100</span>
-  </div>
-            <div class="spread-grid">
+            </div>
+               <div class="spread-grid">
                 <div class="grid-item"><div class="grid-label">Buy Leg</div><div class="grid-val">25400 CE @ ₹145.20</div></div>
                 <div class="grid-item"><div class="grid-label">Sell Leg</div><div class="grid-val">25600 CE @ ₹62.00</div></div>
                 <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#10b981;">₹6,262.50</div></div>
                 <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ff5268;">₹3,240.00</div></div>
                 <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
             </div>
-            <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters matched (Strike Gap: {f_strike_gap}%, IV Gap: {f_iv_gap}%). Mode: {st.session_state.mode}.</div>
+            <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters matched (Strike Gap: {f_strike_gap}%, IV Gap: {f_iv_gap}%). Upstox Token: {st.session_state.upstox_token[:6] if st.session_state.upstox_token else 'Default'}...</div>
         </div>
         ''', unsafe_allow_html=True)
