@@ -8,7 +8,7 @@ st.set_page_config(page_title="ARHAM TRADERS | Terminal", layout="wide", initial
 
 TEMPLE_URL = "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1000&q=80"
 
-st.markdown('''
+st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
     .stApp { background-color: #070d1e; color: #ffffff; font-family: 'Rajdhani', sans-serif; }
@@ -20,10 +20,10 @@ st.markdown('''
     div[data-baseweb="select"] > div, .stTextInput input, .stNumberInput input { background-color: #0b1329 !important; color: #38bdf8 !important; font-size: 1.1rem !important; font-weight: 800 !important; border: 1.5px solid #2563eb !important; border-radius: 8px !important; }
     .scan-glow > button { background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%) !important; color: #ffffff !important; font-family: 'Teko', sans-serif !important; font-size: 1.4rem !important; font-weight: 700 !important; border: 1.5px solid #ffbe0b !important; box-shadow: 0 0 25px rgba(245, 158, 11, 0.7) !important; border-radius: 10px !important; }
 </style>
-''', unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 def play_alert_sound():
-    st.markdown('''<audio autoplay><source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg"></audio>''', unsafe_allow_html=True)
+    st.markdown("""<audio autoplay><source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg"></audio>""", unsafe_allow_html=True)
 
 SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaWdpeGdxZGZ0YWpxa211b3VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTI0OTUsImV4cCI6MjEwNTYyODQ5NX0.pI7CPt9XdLG2zirwkisz5Ttzm3CZIQiL6qg7D70fKlc"
@@ -92,12 +92,12 @@ if not st.session_state.logged_in:
     c1, c2, c3 = st.columns([1, 1.4, 1])
     with c2:
         st.image(TEMPLE_URL, use_container_width=True)
-        st.markdown('''
+        st.markdown("""
         <div class="brand-card">
             <div class="brand-main">ARHAM TRADERS</div>
-            <div class="brand-dev">DEVELOPED BY PRATHAM MEHTA</div>
+            <div class="brand-dev">⚡ DEVELOPED BY PRATHAM MEHTA ⚡</div>
         </div>
-        ''', unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
         tab_log, tab_reg, tab_rst = st.tabs(["Trader Login", "New Registration", "Reset Password"])
         
@@ -360,4 +360,4 @@ else:
                 "Strategy": "Futures Calendar Spread",
                 "Near Month Future": f"Current Expiry @ Rs {near_p}",
                 "Far Month Future": f"Next Expiry @ Rs {far_p}",
-                "Sprea
+                "S
