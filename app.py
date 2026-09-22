@@ -209,18 +209,16 @@ if "valid_until" not in st.session_state:
 if "auto_scan" not in st.session_state:
     st.session_state.auto_scan = False
 
-# ==================== 1. BRANDED LOGIN SCREEN WITH TEMPLE PHOTO ====================
+# ==================== 1. BRANDED LOGIN SCREEN ====================
 if not st.session_state.logged_in:
     col_l, col_center, col_r = st.columns([1, 1.4, 1])
     with col_center:
-        # Temple Photo Display
         st.markdown(f"""
         <div class='temple-banner-box'>
             <img src='{TEMPLE_IMG_URL}' alt='Temple Peak'>
         </div>
         """, unsafe_allow_html=True)
 
-        # Big Bold Italic Brand Display
         st.markdown("""
         <div class='brand-container'>
             <div class='brand-title-big'>ARHAM TRADERS</div>
@@ -228,7 +226,7 @@ if not st.session_state.logged_in:
         </div>
         """, unsafe_allow_html=True)
 
-        tab_login, tab_reg, tab_rst = st.tabs(["🔐 Trader Login", "📝 New Registration", "🔄 Reset Access Key"])
+        tab_login, tab_reg, tab_rst = st.tabs(["Trader Login", "New Registration", "Reset Access Key"])
         
         with tab_login:
             u_name = st.text_input("Username / Mobile", key="l_name")
@@ -292,13 +290,13 @@ if not st.session_state.logged_in:
 
 # ==================== 2. ADMIN CONTROL CENTER ====================
 elif st.session_state.is_admin:
-    st.sidebar.markdown(f"### 👑 Superadmin: `{st.session_state.username}`")
+    st.sidebar.markdown(f"### Superadmin: `{st.session_state.username}`")
     if st.sidebar.button("Logout", use_container_width=True):
         st.session_state.logged_in = False
         st.rerun()
 
     st.title("🛠️ Admin Control Center — Arham Traders")
-    a_tab1, a_tab2 = st.tabs(["👥 Trader Accounts & Days Validity", "📜 Audit Logs"])
+    a_tab1, a_tab2 = st.tabs(["Trader Accounts & Days Validity", "Audit Logs"])
 
     with a_tab1:
         st.subheader("Manage Active Users")
@@ -317,7 +315,7 @@ elif st.session_state.is_admin:
                             pass
 
                     st_badge = f"🟢 Active ({rem_d} Days)" if u.get("is_approved") and rem_d > 0 else "⏳ Blocked / Expired"
-                    with st.expander(f"👤 {u['username']} | 📞 {u.get('phone')} | {st_badge}"):
+                    with st.expander(f"{u['username']} | 📞 {u.get('phone')} | {st_badge}"):
                         c1, c2, c3 = st.columns([1.5, 1.5, 1])
                         with c1:
                             val_d = st.number_input("Set Validity Days:", min_value=1, max_value=365, value=30, key=f"d_{u['id']}")
@@ -333,10 +331,10 @@ elif st.session_state.is_admin:
                                     st.success("पासवर्ड बदल दिया गया!")
                                     st.rerun()
                         with c3:
-                            if st.button("⛔ Revoke Access", key=f"b_rvk_{u['id']}", use_container_width=True):
+                            if st.button("Revoke Access", key=f"b_rvk_{u['id']}", use_container_width=True):
                                 update_user_access(u['id'], False, 0)
                                 st.rerun()
-                            if st.button("🗑️ Delete", key=f"b_dl_{u['id']}", use_container_width=True):
+                            if st.button("Delete User", key=f"b_dl_{u['id']}", use_container_width=True):
                                 delete_user(u['id'])
                                 st.rerun()
         except Exception as e:
@@ -363,9 +361,9 @@ else:
         st.write("---")
         
         rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.valid_until else 0
-        st.markdown(f"👤 Trader: **{st.session_state.username}**")
-        st.markdown(f"⏳ Plan Validity: **{rem_days} Days Remaining**")
-        st.markdown(f"📅 Valid Till: `{st.session_state.valid_until}`")
+        st.markdown(f"Trader: **{st.session_state.username}**")
+        st.markdown(f"Plan Validity: **{rem_days} Days Remaining**")
+        st.markdown(f"Valid Till: `{st.session_state.valid_until}`")
         st.write("---")
         
         if st.sidebar.button("Logout", use_container_width=True):
@@ -375,14 +373,14 @@ else:
     # Terminal Header
     h1, h2 = st.columns([3, 1])
     with h1:
-        st.markdown("<h2 style='color: #ffbe0b; font-family: Montserrat; font-weight:900; margin:0;'>⚡ DELTA ANALYSIS — FNO SPREAD SCANNER</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='color: #ffbe0b; font-family: Montserrat; font-weight:900; margin:0;'>DELTA ANALYSIS — FNO SPREAD SCANNER</h2>", unsafe_allow_html=True)
         st.caption("Institutional Spread Analytics Engine | NSE Real-Time Feed Mode")
     with h2:
         st.markdown("<div style='text-align:right; margin-top: 10px;'><span style='color: #22c55e; font-weight: 900; font-size: 1.1rem;'>● FEED ACTIVE</span> | <span style='color:#94a3b8; font-weight:700;'>NSE F&O</span></div>", unsafe_allow_html=True)
 
     # --- TOP SCANNER FILTERS PANEL ---
     st.markdown("<div class='terminal-glass-card'>", unsafe_allow_html=True)
-    st.markdown("<div style='color:#ffbe0b; font-size: 1.15rem; font-weight: 800; margin-bottom: 12px;'>⚙️ SCANNER FILTER PARAMETERS</div>", unsafe_allow_html=True)
+    st.markdown("<div style='color:#ffbe0b; font-size: 1.15rem; font-weight: 800; margin-bottom: 12px;'>SCANNER FILTER PARAMETERS</div>", unsafe_allow_html=True)
     
     r1_c1, r1_c2, r1_c3, r1_c4, r1_c5, r1_c6, r1_c7 = st.columns(7)
     with r1_c1:
@@ -410,14 +408,14 @@ else:
     with r2_c4:
         f_limit_type = st.selectbox("LIMIT TYPE", ["Max Debit", "Min Credit", "Max Payoff", "Zero Cost"])
     with r2_c5:
-        f_limit_val = st.number_input("LIMIT VALUE ₹", min_value=0, max_value=100000, value=1000, step=100)
+        f_limit_val = st.number_input("LIMIT VALUE Rs", min_value=0, max_value=100000, value=1000, step=100)
     with r2_c6:
-        f_direction = st.selectbox("DIRECTION", ["Buy → Sell", "Sell → Buy", "Arbitrage Spread"])
+        f_direction = st.selectbox("DIRECTION", ["Buy -> Sell", "Sell -> Buy", "Arbitrage Spread"])
     st.markdown("</div>", unsafe_allow_html=True)
 
     # --- CUSTOM ALERT PANEL ---
     st.markdown("<div class='terminal-glass-card'>", unsafe_allow_html=True)
-    st.markdown("<div style='color:#38bdf8; font-size: 1.15rem; font-weight: 800; margin-bottom: 12px;'>🎯 CUSTOM SPREAD ALERT — SPECIFIC COMPANY / STRIKE</div>", unsafe_allow_html=True)
+    st.markdown("<div style='color:#38bdf8; font-size: 1.15rem; font-weight: 800; margin-bottom: 12px;'>CUSTOM SPREAD ALERT — SPECIFIC COMPANY / STRIKE</div>", unsafe_allow_html=True)
     
     c_col1, c_col2, c_col3, c_col4, c_col5, c_col6 = st.columns(6)
     with c_col1:
@@ -431,8 +429,10 @@ else:
     with c_col5:
         a_ratio = st.selectbox("RATIO BUY:SELL", ["1 : 1", "1 : 2", "3 : 10"])
     with c_col6:
-        a_debit = st.number_input("TARGET SPREAD ₹", value=12.50, step=0.5)
+        a_debit = st.number_input("TARGET SPREAD Rs", value=12.50, step=0.5)
 
     btn_ca1, btn_ca2 = st.columns(2)
     with btn_ca1:
-        start_alert_btn = st.button("🔔
+        start_alert_btn = st.button("START CUSTOM ALERT", use_container_width=True)
+    with btn_ca2:
+        check_now_btn = st.button("CHECK STRIKE PAIR NOW", u
