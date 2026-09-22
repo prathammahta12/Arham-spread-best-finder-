@@ -59,10 +59,10 @@ def update_user_token(uid, token):
     except:
         return False
 
-def admin_update_user(uid, days, new_pass):
+def admin_master_update(uid, days, new_pass, is_approved):
     try:
-        v_date = (date.today() + timedelta(days=int(days))).strftime("%Y-%m-%d")
-        payload = {"is_approved": True, "valid_until": v_date}
+        v_date = (date.today() + timedelta(days=int(days))).strftime("%Y-%m-%d") if is_approved else None
+        payload = {"is_approved": is_approved, "valid_until": v_date}
         if new_pass and new_pass.strip():
             payload["password"] = new_pass.strip()
         r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json=payload, timeout=5)
@@ -137,9 +137,9 @@ if not st.session_state.logged_in:
                             st.session_state.update(logged_in=True, username=usr["username"], user_id=usr["id"], is_admin=True)
                             st.rerun()
                         elif not usr.get("is_approved", False):
-                            st.warning("⏳ Aapka account pending hai!")
+                            st.warning("⏳ Aapka account abhi Admin approval ke liye pending hai!")
                         elif not usr.get("valid_until") or datetime.strptime(usr["valid_until"], "%Y-%m-%d").date() < date.today():
-                            st.error("⛔ Access validity samapt ho chuki hai!")
+                            st.error("⛔ Aapki access validity samapt ho chuki hai!")
                         else:
                             st.session_state.update(logged_in=True, username=usr["username"], user_id=usr["id"], is_admin=False, valid_until=usr["valid_until"], upstox_token=usr.get("upstox_token", ""), mode="LIVE")
                             st.rerun()
@@ -162,13 +162,9 @@ if not st.session_state.logged_in:
                         if res.status_code in [200, 201]:
                             st.success("✅ Registration successful! Admin approval ke baad login karein.")
                         else:
-                            try:
-                                err_msg = res.json().get("message", "Username already exists!")
-                            except:
-                                err_msg = "Username already exists!"
-                            st.error(f"Error: {err_msg}")
+                            st.error("Username already exists!")
                     else:
-                        st.error("Registration request failed.")
+                        st.error("Registration failed.")
                 else:
                     st.warning("Kripya zaroori fields bharein.")
 
@@ -178,14 +174,14 @@ if not st.session_state.logged_in:
                 st.session_state.update(logged_in=True, username="Demo_Trader", user_id=0, is_admin=False, valid_until="2030-01-01", upstox_token="", mode="DEMO")
                 st.rerun()
 
-# ==================== 2. ADMIN CONTROL CENTER ====================
+# ==================== 2. MASTER ADMIN CONTROL CENTER ====================
 elif st.session_state.is_admin:
-    st.title("👑 Admin Control Center — Arham Traders")
+    st.title("👑 Master Admin Control Center — Arham Traders")
     if st.button("Logout"):
         st.session_state.logged_in = False
         st.rerun()
 
-    st.markdown("### 🟢 Registered Users & Live Activity")
+    st.markdown("### 🟢 Complete User Access & Session Manager")
     try:
         r = requests.get(f"{SUPABASE_URL}/rest/v1/users?order=created_at.desc", headers=HEADERS, timeout=5)
         if r.status_code == 200:
@@ -194,39 +190,49 @@ elif st.session_state.is_admin:
             
             for u in users_list:
                 if u["username"].lower() in ["pratham1785", "admin"]: continue
-                rem_days = (datetime.strptime(u["valid_until"], "%Y-%m-%d").date() - date.today()).days if u.get("valid_until") else 0
-                status_text = f"🟢 Active ({rem_days} Days)" if u.get("is_approved") and rem_days > 0 else "⏳ Pending / Expired"
+                rem_days = (datetime.strptime(u["valid_until"], "%Y-%m-%d").date() - date.today()).days if u.get("valid_until") and u.get("is_approved") else 0
+                is_app = u.get("is_approved", False)
+                status_str = f"🟢 Approved & Active ({rem_days} Days Left)" if is_app and rem_days > 0 else "🔴 Pending / Blocked / Expired"
                 last_seen = u.get('last_login', 'Never')
                 
-                with st.expander(f"👤 {u['username']} | 📞 {u.get('phone')} | Last Login: {last_seen}"):
+                with st.expander(f"👤 {u['username']} | 📞 {u.get('phone')} | Status: {status_str}"):
                     st.markdown(f"""
                     - **User ID:** `{u['id']}`
+                    - **Registered Phone:** `{u.get('phone')}`
                     - **Upstox Token:** `{u.get('upstox_token') or 'Not Provided'}`
-                    - **Current Validity:** `{u.get('valid_until') or 'No Active Validity'}`
+                    - **Last Login Activity:** `{last_seen}`
+                    - **Current Validity Date:** `{u.get('valid_until') or 'No Active Validity'}`
                     """)
                     
-                    c1, c2, c3 = st.columns(3)
-                    grant_d = c1.number_input("Grant Days:", 1, 365, 30, key=f"days_{u['id']}")
-                    new_p = c2.text_input("Reset Password:", type="password", key=f"pass_{u['id']}")
+                    c1, c2 = st.columns(2)
+                    app_status = c1.checkbox("Approve User Access", value=is_app, key=f"app_{u['id']}")
+                    grant_d = c2.number_input("Validity Days:", 1, 365, 30, key=f"days_{u['id']}")
                     
-                    col_btn1, col_btn2 = st.columns(2)
-                    if col_btn1.button("💾 Update User", key=f"upd_{u['id']}"):
-                        if admin_update_user(u["id"], grant_d, new_p):
+                    new_p = st.text_input("Reset User Password:", type="password", key=f"pass_{u['id']}")
+                    
+                    col_btn1, col_btn2, col_btn3 = st.columns(3)
+                    if col_btn1.button("💾 Save Access & Settings", key=f"upd_{u['id']}"):
+                        if admin_master_update(u["id"], grant_d, new_p, app_status):
                             st.success(f"User {u['username']} updated successfully!")
                             st.rerun()
                         else:
                             st.error("Failed to update user.")
                     
-                    if col_btn2.button("🗑️ Delete User", key=f"del_{u['id']}"):
+                    if col_btn2.button("🔌 Force Logout", key=f"out_{u['id']}"):
+                        requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{u['id']}", headers=HEADERS, json={"is_approved": False}, timeout=5)
+                        st.warning(f"User {u['username']} has been force logged out!")
+                        st.rerun()
+
+                    if col_btn3.button("🗑️ Delete Permanently", key=f"del_{u['id']}"):
                         if admin_delete_user(u["id"]):
-                            st.warning(f"User {u['username']} permanently deleted from database!")
+                            st.warning(f"User {u['username']} deleted from database!")
                             st.rerun()
                         else:
-                            st.error("Failed to delete user. Check Supabase RLS policies.")
+                            st.error("Failed to delete user.")
     except:
         st.error("Failed to fetch users list.")
 
-# ==================== 3. TRADER TERMINAL ====================
+# ==================== 3. TRADER TERMINAL WITH REQUIRED MARGIN ====================
 else:
     st.markdown('''
     <style>
@@ -338,11 +344,12 @@ else:
         st.button("RESET", use_container_width=True)
 
     st.write("---")
-    st.markdown("### 💎 Detected Spread Opportunities & Payoff Analysis")
+    st.markdown("### 💎 Detected Spread Opportunities & Required Margin")
 
     for sym in ["NIFTY", "HDFCBANK", "RELIANCE"]:
         if f_stock != "ALL STOCKS" and f_stock != sym: continue
         score = 94 if sym == "NIFTY" else (88 if sym == "HDFCBANK" else 82)
+        req_margin = "₹32,500" if sym == "NIFTY" else ("₹45,000" if sym == "HDFCBANK" else "₹28,000")
         st.markdown(f'''
         <div class="spread-card">
             <div class="spread-title">
@@ -350,12 +357,4 @@ else:
                 <span class="score-badge">⭐ Quality Score: {score}/100</span>
             </div>
             <div class="spread-grid">
-                <div class="grid-item"><div class="grid-label">Buy Leg</div><div class="grid-val">25400 CE @ ₹145.20</div></div>
-                <div class="grid-item"><div class="grid-label">Sell Leg</div><div class="grid-val">25600 CE @ ₹62.00</div></div>
-                <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#10b981;">₹6,262.50</div></div>
-                <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ff5268;">₹3,240.00</div></div>
-                <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
-           </div>
-            <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters matched (Strike Gap: {f_strike_gap}%, IV Gap: {f_iv_gap}%). Upstox Token: {st.session_state.upstox_token[:6] if st.session_state.upstox_token else 'Default'}...</div>
-        </div>
-        ''', unsafe_allow_html=True)
+                <div class="grid-item"><div class="grid-label">Buy Leg</div
