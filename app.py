@@ -1,21 +1,29 @@
 import streamlit as st
 import requests
+import os
+import base64
 from datetime import datetime, date, timedelta
 
 st.set_page_config(page_title="ARHAM TRADERS", layout="wide", initial_sidebar_state="collapsed")
 
-# Pavithra Jain Tirth Girnar Ji (Neminath Bhagwan Shikhar) Direct HD Image
-GIRNAR_BG = "https://images.unsplash.com/photo-1622396481304-4ad7343b6794?auto=format&fit=crop&w=1920&q=80"
+# --- GIRNAR BACKGROUND HANDLER ---
+def get_bg_style():
+    if os.path.exists("girnar.jpg"):
+        with open("girnar.jpg", "rb") as f:
+            b64 = base64.b64encode(f.read()).decode()
+        return f"data:image/jpeg;base64,{b64}"
+    return "https://images.unsplash.com/photo-1622396481304-4ad7343b6794?auto=format&fit=crop&w=1920&q=80"
 
-# --- FULLSCREEN GIRNAR BACKGROUND & CYBER FINTECH CSS ---
+bg_img_src = get_bg_style()
+
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
     
-    /* Poore App ke Background me Girnar Ji Fit */
+    /* Poore Background Me Girnar Ji Ki Photo Fit */
     .stApp {{
-        background: linear-gradient(rgba(6, 11, 23, 0.88), rgba(6, 11, 23, 0.94)), 
-                    url('{GIRNAR_BG}') !important;
+        background: linear-gradient(rgba(6, 11, 23, 0.85), rgba(6, 11, 23, 0.92)), 
+                    url('{bg_img_src}') !important;
         background-size: cover !important;
         background-position: center center !important;
         background-attachment: fixed !important;
@@ -28,11 +36,11 @@ st.markdown(f"""
         text-align: center;
         margin: 15px auto 20px auto;
         padding: 16px 12px;
-        background: rgba(11, 18, 36, 0.85);
-        backdrop-filter: blur(10px);
+        background: rgba(11, 18, 36, 0.88);
+        backdrop-filter: blur(12px);
         border: 2px solid #f59e0b;
         border-radius: 16px;
-        box-shadow: 0 0 35px rgba(245, 158, 11, 0.35);
+        box-shadow: 0 0 35px rgba(245, 158, 11, 0.4);
         max-width: 480px;
     }}
     .brand-main {{
@@ -57,8 +65,7 @@ st.markdown(f"""
         margin-top: 5px !important;
     }}
     
-    /* Transparent Cyber Glass Panels */
-    .filter-panel, .card-box {{
+    .filter-panel {{
         background: rgba(11, 18, 36, 0.88);
         backdrop-filter: blur(12px);
         border: 1px solid rgba(56, 189, 248, 0.35);
@@ -104,7 +111,6 @@ st.markdown(f"""
         border-radius: 6px !important;
     }}
     
-    /* Individual Spread Cards */
     .spread-card {{
         background: rgba(13, 23, 46, 0.92);
         backdrop-filter: blur(10px);
@@ -160,7 +166,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# --- SUPABASE REST CONFIG ---
+# --- SUPABASE CONFIG ---
 SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaWdpeGdxZGZ0YWpxa211b3VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTI0OTUsImV4cCI6MjEwNTYyODQ5NX0.pI7CPt9XdLG2zirwkisz5Ttzm3CZIQiL6qg7D70fKlc"
 HEADERS = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": "application/json"}
@@ -194,7 +200,7 @@ for key, default in [("logged_in", False), ("username", ""), ("is_admin", False)
     if key not in st.session_state:
         st.session_state[key] = default
 
-# ==================== 1. LOGIN SCREEN (PURE GIRNAR BACKGROUND) ====================
+# ==================== 1. LOGIN SCREEN WITH JAIN GIRNAR JI ====================
 if not st.session_state.logged_in:
     _, col_mid, _ = st.columns([1, 1.4, 1])
     with col_mid:
@@ -202,7 +208,7 @@ if not st.session_state.logged_in:
         <div class="brand-card">
             <div class="brand-main">ARHAM TRADERS</div>
             <div class="brand-dev">⚡ DEVELOPED BY PRATHAM MEHTA ⚡</div>
-            <div style='color:#f59e0b; font-size:0.85rem; margin-top:4px;'>🙏 Jai Girnar Ji Maha Tirth 🙏</div>
+            <div style='color:#f59e0b; font-size:0.9rem; margin-top:6px; font-weight:700;'>🙏 Jai Girnar Ji Maha Tirth 🙏</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -220,16 +226,16 @@ if not st.session_state.logged_in:
                             st.session_state.update(logged_in=True, username=usr["username"], is_admin=True)
                             st.rerun()
                         elif not usr.get("is_approved", False):
-                            st.warning("⏳ आपका अकाउंट पेंडिंग है! एडमिन अप्रूवल का इंतज़ार करें।")
+                            st.warning("⏳ Aapka account pending hai! Admin approval ka intezar karein.")
                         elif not usr.get("valid_until") or datetime.strptime(usr["valid_until"], "%Y-%m-%d").date() < date.today():
-                            st.error("⛔ आपका एक्सेस समाप्त हो चुका है! एडमिन से संपर्क करें।")
+                            st.error("⛔ Access validity khatam ho chuki hai!")
                         else:
                             st.session_state.update(logged_in=True, username=usr["username"], is_admin=False, valid_until=usr["valid_until"])
                             st.rerun()
                     else:
-                        st.error("गलत क्रेडेंशियल्स!")
+                        st.error("Galat credentials!")
                 else:
-                    st.warning("सभी फ़ील्ड भरें।")
+                    st.warning("Dono fields bharein.")
 
         with tab_reg:
             ru = st.text_input("Desired Username", key="reg_u")
@@ -239,9 +245,9 @@ if not st.session_state.logged_in:
                 if ru and rph and rp:
                     res = register_user(ru, rp, rph)
                     if res and res.status_code in [200, 201]:
-                        st.success("✅ रिक्वेस्ट सबमिट हो गई! एडमिन अप्रूवल के बाद लॉगिन करें।")
+                        st.success("✅ Request bhej di gayi hai! Admin approve karte hi login ho sakega.")
                     else:
-                        st.error("यूज़रनेम पहले से मौजूद है!")
+                        st.error("Username already exist karta hai!")
 
 # ==================== 2. ADMIN CONTROL PANEL ====================
 elif st.session_state.is_admin:
@@ -272,7 +278,6 @@ else:
 
     rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.valid_until else 0
     
-    # Top Header matching image
     st.markdown(f"""
     <div style='display:flex; justify-content:space-between; align-items:center; padding:4px 0 12px 0; border-bottom:1px solid #131c31; margin-bottom:15px;'>
         <div style='font-size:1.25rem; font-weight:800; color:#fff;'>▲ Delta Analysis <span style='font-size:0.85rem; color:#64748b;'>FNO SCANNER</span></div>
@@ -286,34 +291,28 @@ else:
     # Filter Box
     st.markdown('<div class="filter-panel">', unsafe_allow_html=True)
     
-    # Row 1
     r1_1, r1_2, r1_3 = st.columns(3)
     f_stock = r1_1.selectbox("STOCK", ["ALL STOCKS", "NIFTY", "BANKNIFTY", "HDFCBANK", "RELIANCE", "TCS", "SBIN"])
     f_expiry = r1_2.selectbox("EXPIRY DATE", ["CURRENT MONTH", "NEXT MONTH", "FAR MONTH"])
     f_ref = r1_3.selectbox("REFERENCE", ["Future LTP", "Spot Index", "VWAP"])
 
-    # Row 2
     r2_1, r2_2, r2_3 = st.columns(3)
     f_type = r2_1.selectbox("TYPE", ["Futures Calendar Spread", "Both (CE & PE)", "Call Spread (CE)", "Put Spread (PE)"])
     f_price_gap = r2_2.selectbox("PRICE GAP", ["OFF", "1 pt", "2 pts", "3 pts", "5 pts"])
     f_delta = r2_3.selectbox("DELTA FILTER", ["ON (20-30 Delta)", "ON (30-40 Delta)", "OFF"])
 
-    # Row 3
     r3_1, r3_2, r3_3 = st.columns(3)
     f_strike_gap = r3_1.number_input("STRIKE GAP %", min_value=1.0, max_value=20.0, value=5.0, step=0.5)
     f_iv_gap = r3_2.number_input("IV GAP %", min_value=1.0, max_value=50.0, value=5.0, step=0.5)
     f_min_vol = r3_3.number_input("MIN VOLUME (LOTS)", min_value=1, max_value=10000, value=1, step=1)
 
-    # Row 4
     r4_1, r4_2, r4_3 = st.columns(3)
     f_ratio = r4_1.selectbox("RATIO", ["3:10", "1:1", "1:2", "2:1"])
     f_limit_type = r4_2.selectbox("LIMIT TYPE", ["Max Debit", "Min Credit", "Zero Cost"])
     f_limit_val = r4_3.number_input("LIMIT VALUE ₹", min_value=0, max_value=100000, value=1000, step=100)
 
-    # Row 5
     f_dir = st.selectbox("DIRECTION", ["Buy → Sell", "Sell → Buy", "Arbitrage Spread"])
 
-    # Custom Alert Box
     st.markdown("""
     <div class="alert-panel">
         <div style='color:#ef4444; font-size:0.9rem; font-weight:800; margin-bottom:10px;'>
