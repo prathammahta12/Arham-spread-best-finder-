@@ -105,22 +105,50 @@ if not st.session_state.logged_in:
     st.markdown(f'''
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
-        .stApp {{ background-color: #080d16 !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }}
+        
+        .stApp {{
+            background: linear-gradient(135deg, #05080f 0%, #0a1120 50%, #03060a 100%) !important;
+            color: #ffffff !important;
+            font-family: 'Rajdhani', sans-serif !important;
+        }}
+        
         .brand-card {{
             display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-            margin: 30px auto 20px auto; padding: 20px 30px; background: rgba(11, 18, 36, 0.94);
-            backdrop-filter: blur(16px); border: 2.5px solid #f59e0b; border-radius: 16px;
+            margin: 25px auto 15px auto; padding: 22px 35px; background: rgba(11, 18, 36, 0.95);
+            backdrop-filter: blur(16px); border: 3px solid #f59e0b; border-radius: 18px;
             box-shadow: 0 0 50px rgba(245, 158, 11, 0.45); width: fit-content !important; max-width: 95% !important; box-sizing: border-box;
         }}
         .brand-main {{
             font-family: 'Cinzel', serif; font-size: clamp(1.8rem, 4vw, 2.5rem) !important; font-weight: 900 !important;
             font-style: italic !important; white-space: nowrap !important; letter-spacing: 1.5px !important;
-            color: #ffbe0b !important; text-shadow: 0 0 25px rgba(255, 190, 11, 0.85); margin: 0 !important; line-height: 1.2 !important;
+            color: #ffffff !important; text-shadow: 0 0 25px rgba(255, 255, 255, 0.9); margin: 0 !important; line-height: 1.2 !important;
+            text-decoration: underline !important; text-decoration-color: #ffbe0b !important; text-underline-offset: 6px !important;
         }}
         .brand-dev {{
-            font-family: 'Teko', sans-serif; font-size: clamp(1.1rem, 2.5vw, 1.4rem) !important; font-weight: 700 !important;
-            letter-spacing: 1.5px !important; white-space: nowrap !important; color: #38bdf8 !important;
-            text-shadow: 0 0 16px rgba(56, 189, 248, 0.85); margin-top: 4px !important;
+            font-family: 'Teko', sans-serif; font-size: clamp(1.2rem, 2.5vw, 1.5rem) !important; font-weight: 800 !important;
+            letter-spacing: 1.5px !important; white-space: nowrap !important; color: #ffffff !important;
+            text-shadow: 0 0 16px rgba(56, 189, 248, 0.9); margin-top: 6px !important;
+            text-decoration: underline !important; text-decoration-color: #38bdf8 !important; text-underline-offset: 4px !important;
+        }}
+
+        /* EXTREME WHITE, BOLD & UNDERLINE FOR ALL TEXT/LABELS/TABS IN LOGIN */
+        label, p, span, div, .stTabs [data-baseweb="tab"] {{
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4) !important;
+        }}
+        
+        .stTabs [data-baseweb="tab"] {{
+            text-decoration: underline !important;
+            text-decoration-color: #38bdf8 !important;
+            font-size: 1.05rem !important;
+        }}
+
+        input {{
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            background-color: #0b1224 !important;
+            border: 2px solid #38bdf8 !important;
         }}
     </style>
     ''', unsafe_allow_html=True)
@@ -161,7 +189,6 @@ if not st.session_state.logged_in:
                     st.warning("Dono fields bharein.")
 
         with tab_reg:
-            st.markdown("<small style='color:#38bdf8;'>Direct secure registration:</small>", unsafe_allow_html=True)
             ru = st.text_input("Desired Username", key="reg_u")
             rph = st.text_input("Mobile Number", key="reg_ph")
             rp = st.text_input("Create Password", type="password", key="reg_p")
@@ -178,7 +205,7 @@ if not st.session_state.logged_in:
                     st.warning("Kripya zaroori fields bharein.")
 
         with tab_demo:
-            st.markdown("<p style='color:#cbd5e1; font-size:0.9rem;'>Bina registration ke turant app check karne ke liye Demo Mode me enter karein:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color:#ffffff; font-size:0.95rem; font-weight:800; text-decoration:underline;'>Bina registration ke turant app check karne ke liye Demo Mode me enter karein:</p>", unsafe_allow_html=True)
             if st.button("ENTER DEMO TRIAL MODE", use_container_width=True):
                 st.session_state.update(logged_in=True, username="Demo_Trader", user_id=0, is_admin=False, valid_until="2030-01-01", upstox_token="", mode="DEMO")
                 st.rerun()
@@ -257,7 +284,7 @@ elif st.session_state.is_admin:
 else:
     st.markdown('''
     <style>
-        .stApp { background-color: #080d16 !important; color: #e2e8f0 !important; font-family: 'Rajdhani', sans-serif !important; }
+        .stApp { background-color: #080d16 !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }
         [data-testid="stSidebar"] { background-color: #0e1626 !important; border-right: 1px solid #1e293b !important; }
         
         .filter-container {
@@ -266,8 +293,9 @@ else:
         }
         
         .section-title {
-            font-size: 1.05rem; font-weight: 700; color: #ffbe0b; margin-bottom: 10px;
-            border-bottom: 1px solid #1e293b; padding-bottom: 5px; letter-spacing: 0.5px;
+            font-size: 1.1rem; font-weight: 800; color: #ffffff; margin-bottom: 10px;
+            border-bottom: 2px solid #ffbe0b; padding-bottom: 5px; letter-spacing: 0.5px;
+            text-decoration: underline; text-decoration-color: #ffbe0b; text-underline-offset: 4px;
         }
 
         .spread-card { 
@@ -275,15 +303,21 @@ else:
             border-radius: 10px; padding: 16px; margin-bottom: 12px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
-        .spread-title { font-size: 1.1rem; font-weight: 800; color: #ffbe0b; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .spread-title { font-size: 1.15rem; font-weight: 900; color: #ffffff; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; text-decoration: underline; text-decoration-color: #ffbe0b; text-underline-offset: 4px; }
         
         .spread-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 10px 0; }
         .grid-item { background: #080d16; padding: 8px 10px; border-radius: 6px; border: 1px solid #1e293b; }
-        .grid-label { color: #94a3b8; font-size: 0.7rem; text-transform: uppercase; font-weight: 700; }
-        .grid-val { color: #f8fafc; font-weight: 700; font-size: 0.9rem; margin-top: 2px; }
+        .grid-label { color: #ffffff; font-size: 0.75rem; text-transform: uppercase; font-weight: 800; text-decoration: underline; text-decoration-color: #94a3b8; }
+        .grid-val { color: #ffffff; font-weight: 900; font-size: 0.95rem; margin-top: 2px; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
         
-        .score-badge { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; }
-        .advice-box { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; margin-top: 8px; }
+        .score-badge { background: rgba(56, 189, 248, 0.2); color: #ffffff; border: 1.5px solid #38bdf8; padding: 3px 8px; border-radius: 6px; font-weight: 900; font-size: 0.85rem; text-decoration: underline; }
+        .advice-box { background: rgba(16, 185, 129, 0.15); color: #ffffff; border: 1.5px solid #10b981; padding: 8px 12px; border-radius: 6px; font-weight: 800; font-size: 0.9rem; margin-top: 8px; }
+
+        /* DASHBOARD EXTREME WHITE, BOLD & UNDERLINE */
+        label, p, span, div, .stSelectbox label, .stNumberInput label {
+            color: #ffffff !important;
+            font-weight: 800 !important;
+        }
     </style>
     ''', unsafe_allow_html=True)
 
@@ -294,11 +328,11 @@ else:
     rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.mode == "LIVE" and st.session_state.valid_until else 999
 
     # Always show Developer Tag at top
-    st.markdown('<div style="font-family:\'Teko\',sans-serif; font-size:1.1rem; color:#38bdf8; font-weight:700; letter-spacing:1px; margin-bottom:4px;">⚡ DEVELOPED BY PRATHAM MEHTA ⚡</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-family:\'Teko\',sans-serif; font-size:1.2rem; color:#ffffff; font-weight:900; letter-spacing:1px; margin-bottom:6px; text-decoration:underline; text-decoration-color:#38bdf8; text-underline-offset:4px;">⚡ DEVELOPED BY PRATHAM MEHTA ⚡</div>', unsafe_allow_html=True)
 
     # Sidebar matching video layout exactly
     with st.sidebar:
-        st.markdown('<div style="font-family:\'Cinzel\', serif; font-size:1.3rem; font-weight:900; color:#ffbe0b; margin-bottom:15px;">▲ DELTA ANALYSIS<br><span style="font-size:0.75rem; color:#38bdf8; font-family:\'Rajdhani\',sans-serif;">FNO SCANNER</span></div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-family:\'Cinzel\', serif; font-size:1.35rem; font-weight:900; color:#ffffff; margin-bottom:15px; text-decoration:underline; text-decoration-color:#ffbe0b;">▲ DELTA ANALYSIS<br><span style="font-size:0.8rem; color:#ffffff; font-family:\'Rajdhani\',sans-serif;">FNO SCANNER</span></div>', unsafe_allow_html=True)
         
         if st.button("📊 Spread Scanner", use_container_width=True, type="primary" if st.session_state.active_tab=="Spread Scanner" else "secondary"):
             st.session_state.active_tab = "Spread Scanner"
@@ -314,8 +348,8 @@ else:
             st.rerun()
             
         st.markdown("---")
-        st.markdown('<div style="color:#10b981; font-weight:700; font-size:0.85rem;">● Live Market Active</div>', unsafe_allow_html=True)
-        st.markdown(f'<div style="color:#94a3b8; font-size:0.75rem; margin-top:3px;">Mode: {st.session_state.mode}</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color:#ffffff; font-weight:900; font-size:0.9rem; text-decoration:underline; text-decoration-color:#10b981;">● Live Market Active</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color:#ffffff; font-size:0.8rem; margin-top:4px; font-weight:800;">Mode: {st.session_state.mode}</div>', unsafe_allow_html=True)
         if st.button("🚪 Logout", use_container_width=True):
             st.session_state.logged_in = False
             st.rerun()
@@ -328,18 +362,18 @@ else:
     
     is_weekday = now_dt.weekday() < 5
     if is_weekday and market_open_time <= current_time_val <= market_close_time:
-        market_status_html = '<div style="background:rgba(16,185,129,0.15); border:1px solid #10b981; color:#10b981; padding:4px 10px; border-radius:6px; font-weight:800; text-align:center; font-size:0.9rem;">🟢 Market Open</div>'
+        market_status_html = '<div style="background:rgba(16,185,129,0.2); border:1.5px solid #10b981; color:#ffffff; padding:4px 10px; border-radius:6px; font-weight:900; text-align:center; font-size:0.95rem; text-decoration:underline;">🟢 Market Open</div>'
     else:
-        market_status_html = '<div style="background:rgba(239,68,68,0.15); border:1px solid #ef4444; color:#ef4444; padding:4px 10px; border-radius:6px; font-weight:800; text-align:center; font-size:0.9rem;">🔴 Market Closed</div>'
+        market_status_html = '<div style="background:rgba(239,68,68,0.2); border:1.5px solid #ef4444; color:#ffffff; padding:4px 10px; border-radius:6px; font-weight:900; text-align:center; font-size:0.95rem; text-decoration:underline;">🔴 Market Closed</div>'
 
-    # Top Bar Header with Market Status (Clock Removed)
+    # Top Bar Header with Market Status
     h_col1, h_col2, h_col3 = st.columns([3, 2, 1])
     with h_col1:
-        st.markdown(f'<div style="font-size:1.2rem; font-weight:800; color:#fff; padding-top:4px;">▲ Delta Analysis <span style="font-size:0.8rem; color:#38bdf8;">{st.session_state.active_tab.upper()}</span></div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="font-size:1.3rem; font-weight:900; color:#ffffff; padding-top:4px; text-decoration:underline; text-decoration-color:#ffbe0b;">▲ Delta Analysis <span style="font-size:0.85rem; color:#ffffff;">{st.session_state.active_tab.upper()}</span></div>', unsafe_allow_html=True)
     with h_col2:
         st.markdown(market_status_html, unsafe_allow_html=True)
     with h_col3:
-        st.markdown(f'<div style="color:#f59e0b; background:rgba(245,158,11,0.12); padding:5px 8px; border-radius:6px; font-size:0.8rem; font-weight:700; text-align:center;">● {rem_days if st.session_state.mode=="LIVE" else "Trial"} Active</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color:#ffffff; background:rgba(245,158,11,0.2); border:1px solid #f59e0b; padding:5px 8px; border-radius:6px; font-size:0.85rem; font-weight:900; text-align:center; text-decoration:underline;">● {rem_days if st.session_state.mode=="LIVE" else "Trial"} Active</div>', unsafe_allow_html=True)
 
     st.write("")
 
@@ -408,7 +442,7 @@ else:
             st.button("RESET", use_container_width=True)
 
         st.write("---")
-        st.markdown(f"### 💎 Detected {st.session_state.active_tab} Opportunities & Required Margin")
+        st.markdown(f"### <span style='color:#ffffff; text-decoration:underline;'>💎 Detected {st.session_state.active_tab} Opportunities & Required Margin</span>", unsafe_allow_html=True)
 
         display_stocks = [f_stock] if f_stock != "ALL STOCKS" else ["NIFTY", "HDFCBANK", "RELIANCE"]
         for sym in display_stocks:
@@ -423,11 +457,11 @@ else:
                 <div class="spread-grid">
                     <div class="grid-item"><div class="grid-label">Buy Leg</div><div class="grid-val">25400 CE @ ₹145.20</div></div>
                     <div class="grid-item"><div class="grid-label">Sell Leg</div><div class="grid-val">25600 CE @ ₹62.00</div></div>
-                    <div class="grid-item"><div class="grid-label">Required Margin</div><div class="grid-val" style="color:#38bdf8;">{req_margin}</div></div>
-                    <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#10b981;">₹6,262.50</div></div>
-                    <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ff5268;">₹3,240.00</div></div>
+                    <div class="grid-item"><div class="grid-label">Required Margin</div><div class="grid-val" style="color:#ffffff;">{req_margin}</div></div>
+                    <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#ffffff;">₹6,262.50</div></div>
+                    <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ffffff;">₹3,240.00</div></div>
                     <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
                 </div>
                 <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters matched. Upstox Token Connected. Required Margin: {req_margin} per lot.</div>
             </div>
-            ''', unsafe_allow_html=True)
+            ''', unsafe_allow_html=True) 
