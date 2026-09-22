@@ -23,7 +23,7 @@ girnar_bg_src = get_exact_girnar_bg()
 
 SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaWdpeGdxZGZ0YWpxa211b3VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTI0OTUsImV4cCI6MjEwNTYyODQ5NX0.pI7CPt9XdLG2zirwkisz5Ttzm3CZIQiL6qg7D70fKlc"
-HEADERS = {"apikey": SUPABASE_URL, "Authorization": f"Bearer {SUPABASE_URL}", "Content-Type": "application/json"}
+HEADERS = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": "application/json"}
 
 def db_get_user(identifier):
     try:
@@ -34,12 +34,23 @@ def db_get_user(identifier):
     except:
         return None
 
-def register_user(u, p, ph):
+def register_user(u, p, ph, api_key, api_secret):
     try:
-        payload = {"username": u.strip(), "password": p.strip(), "phone": ph.strip(), "is_approved": False, "is_admin": False, "valid_until": None}
+        payload = {
+            "username": u.strip(), "password": p.strip(), "phone": ph.strip(),
+            "is_approved": False, "is_admin": False, "valid_until": None,
+            "broker_api_key": api_key.strip(), "broker_secret": api_secret.strip()
+        }
         return requests.post(f"{SUPABASE_URL}/rest/v1/users", headers=HEADERS, json=payload, timeout=6)
     except:
         return None
+
+def update_user_broker(uid, api_key, api_secret):
+    try:
+        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json={"broker_api_key": api_key.strip(), "broker_secret": api_secret.strip()}, timeout=6)
+        return r.status_code in [200, 204]
+    except:
+        return False
 
 def update_user_days(uid, days):
     try:
@@ -49,7 +60,7 @@ def update_user_days(uid, days):
     except:
         return False
 
-for key, default in [("logged_in", False), ("username", ""), ("is_admin", False), ("valid_until", None), ("scanner_tab", "Spread")]:
+for key, default in [("logged_in", False), ("username", ""), ("user_id", None), ("is_admin", False), ("valid_until", None), ("broker_api_key", ""), ("show_settings", False)]:
     if key not in st.session_state:
         st.session_state[key] = default
 
@@ -94,7 +105,7 @@ if not st.session_state.logged_in:
         </div>
         ''', unsafe_allow_html=True)
         
-        tab_login, tab_reg = st.tabs(["🔐 Sign In", "📝 Register Access"])
+        tab_login, tab_reg = st.tabs(["🔐 Sign In", "📝 Register with Broker API"])
         with tab_login:
             u_in = st.text_input("Username / Mobile", key="lin_u")
             p_in = st.text_input("Access Password", type="password", key="lin_p")
@@ -104,30 +115,35 @@ if not st.session_state.logged_in:
                     if u_data and u_data[0]["password"] == p_in.strip():
                         usr = u_data[0]
                         if usr.get("is_admin", False):
-                            st.session_state.update(logged_in=True, username=usr["username"], is_admin=True)
+                            st.session_state.update(logged_in=True, username=usr["username"], user_id=usr["id"], is_admin=True)
                             st.rerun()
                         elif not usr.get("is_approved", False):
-                            st.warning("⏳ Aapka account pending hai!")
+                            st.warning("⏳ आपका अकाउंट पेंडिंग है!")
                         elif not usr.get("valid_until") or datetime.strptime(usr["valid_until"], "%Y-%m-%d").date() < date.today():
-                            st.error("⛔ Access validity samapt ho chuki hai!")
+                            st.error("⛔ एक्सेस समाप्त हो चुका है!")
                         else:
-                            st.session_state.update(logged_in=True, username=usr["username"], is_admin=False, valid_until=usr["valid_until"])
+                            st.session_state.update(logged_in=True, username=usr["username"], user_id=usr["id"], is_admin=False, valid_until=usr["valid_until"], broker_api_key=usr.get("broker_api_key", ""))
                             st.rerun()
                     else:
                         st.error("Galat credentials!")
                 else:
                     st.warning("Dono fields bharein.")
         with tab_reg:
+            st.markdown("<small style='color:#38bdf8;'>Apne broker (Upstox/Zerodha/Angel) ki API details ek baar darj karein:</small>", unsafe_allow_html=True)
             ru = st.text_input("Desired Username", key="reg_u")
             rph = st.text_input("Mobile Number", key="reg_ph")
             rp = st.text_input("Create Password", type="password", key="reg_p")
-            if st.button("SEND ACCESS REQUEST", use_container_width=True):
-                if ru and rph and rp:
-                    res = register_user(ru, rp, rph)
+            r_apikey = st.text_input("Broker API Key", key="reg_apikey")
+            r_apisecret = st.text_input("Broker API Secret", type="password", key="reg_apisecret")
+            if st.button("REGISTER & SAVE API", use_container_width=True):
+                if ru and rph and rp and r_apikey:
+                    res = register_user(ru, rp, rph, r_apikey, r_apisecret)
                     if res and res.status_code in [200, 201]:
-                        st.success("✅ Request submit ho gayi!")
+                        st.success("✅ Registration successful! Admin approval ke baad login karein.")
                     else:
-                        st.error("Username already exist karta hai!")
+                        st.error("Username already exists!")
+                else:
+                    st.warning("Kripya sabhi zaroori fields bharein.")
 
 # ==================== 2. ADMIN PANEL ====================
 elif st.session_state.is_admin:
@@ -140,14 +156,14 @@ elif st.session_state.is_admin:
         for u in r.json():
             if u["username"].lower() in ["pratham1785", "admin"]: continue
             rem = (datetime.strptime(u["valid_until"], "%Y-%m-%d").date() - date.today()).days if u.get("valid_until") else 0
-            with st.expander(f"👤 {u['username']} | 📞 {u.get('phone')} | Active ({rem} Days)"):
+            with st.expander(f"👤 {u['username']} | 📞 {u.get('phone')} | API Key: {u.get('broker_api_key','Not Added')} | Active ({rem} Days)"):
                 c1, c2 = st.columns(2)
                 d_in = c1.number_input("Grant Days:", 1, 365, 30, key=f"d_{u['id']}")
                 if c2.button("Commit", key=f"b_{u['id']}"):
                     update_user_days(u["id"], d_in)
                     st.success("Updated!"); st.rerun()
 
-# ==================== 3. TRADER TERMINAL WITH PAYOFF & QUALITY SCORE ====================
+# ==================== 3. TRADER TERMINAL WITH BROKER API SETTINGS ====================
 else:
     st.markdown('''
     <style>
@@ -170,14 +186,32 @@ else:
 
     rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.valid_until else 0
 
-    n1, n2, n3 = st.columns([3, 1.5, 1])
+    n1, n2, n3, n4 = st.columns([2.5, 1.5, 1, 1])
     with n1:
         st.markdown(f'<div style="font-size:1.25rem; font-weight:800; color:#fff;">▲ Delta Analysis <span style="font-size:0.85rem; color:#64748b;">FNO SCANNER</span></div>', unsafe_allow_html=True)
     with n2:
-        st.markdown(f'<div style="color:#f59e0b; background:rgba(245,158,11,0.15); padding:4px 10px; border-radius:6px; font-size:0.8rem; font-weight:700; text-align:center;">● LIVE MARKET | {rem_days} Days Left</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color:#f59e0b; background:rgba(245,158,11,0.15); padding:4px 10px; border-radius:6px; font-size:0.8rem; font-weight:700; text-align:center;">● {rem_days} Days Left</div>', unsafe_allow_html=True)
     with n3:
+        if st.button("⚙️ Change API", use_container_width=True):
+            st.session_state.show_settings = not st.session_state.show_settings
+            st.rerun()
+    with n4:
         if st.button("Logout", use_container_width=True):
             st.session_state.logged_in = False; st.rerun()
+
+    if st.session_state.show_settings:
+        with st.expander("🛠️ Update Broker API Configuration", expanded=True):
+            new_key = st.text_input("New Broker API Key", value=st.session_state.broker_api_key)
+            new_secret = st.text_input("New Broker API Secret", type="password")
+            if st.button("SAVE NEW API DETAILS"):
+                if new_key:
+                    if update_user_broker(st.session_state.user_id, new_key, new_secret):
+                        st.session_state.broker_api_key = new_key
+                        st.success("✅ API details successfully updated!")
+                        st.session_state.show_settings = False
+                        st.rerun()
+                    else:
+                        st.error("Failed to update API details.")
 
     tab_choice = st.radio("Scanner Mode", ["Spread Scanner", "ATM Premium Scanner", "OTM Premium Scanner"], horizontal=True, label_visibility="collapsed")
     
@@ -195,17 +229,15 @@ else:
     st.markdown("</div>", unsafe_allow_html=True)
 
     if st.button("🚀 SCAN BEST SPREADS NOW", use_container_width=True, type="primary"):
-        st.toast("Scanning live orderbook with AI Quality Score...")
+        api_status = "Connected with custom API Key" if st.session_state.broker_api_key else "Using default server API"
+        st.toast(f"Scanning live orderbook... ({api_status})")
 
     st.write("---")
     st.markdown("### 💎 High-Probability Setups (Payoff & Quality Score)")
 
-    # Enhanced interactive cards with Quality Score & Payoff Estimator
     for sym in ["NIFTY", "HDFCBANK", "RELIANCE"]:
         if f_stock != "ALL STOCKS" and f_stock != sym: continue
-        
         score = 94 if sym == "NIFTY" else (88 if sym == "HDFCBANK" else 82)
-        
         st.markdown(f'''
         <div class="spread-card">
             <div class="spread-title">
@@ -219,6 +251,6 @@ else:
                 <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ff5268;">₹3,240.00</div></div>
                 <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
             </div>
-            <div class="advice-box">🎯 <b>Payoff & Edge Analysis:</b> High probability carry setup. Break-even at 25,443.20. Upstox margin required: ₹48,200.</div>
+            <div class="advice-box">🎯 <b>Payoff & Edge Analysis:</b> High probability carry setup. Break-even at 25,443.20. Active Broker API Key: {st.session_state.broker_api_key[:6] if st.session_state.broker_api_key else 'Default'}...</div>
         </div>
         ''', unsafe_allow_html=True)
