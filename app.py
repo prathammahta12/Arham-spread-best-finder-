@@ -24,6 +24,30 @@ SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaWdpeGdxZGZ0YWpxa211b3VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTI0OTUsImV4cCI6MjEwNTYyODQ5NX0.pI7CPt9XdLG2zirwkisz5Ttzm3CZIQiL6qg7D70fKlc"
 HEADERS = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": "application/json", "Prefer": "return=representation"}
 
+ALL_FNO_STOCKS = [
+    "ALL STOCKS", "NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCAPNIFTY",
+    "RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK", "SBIN", "BHARTIARTL", "LICI", "ITC", "HINDUNILVR",
+    "LT", "BAJFINANCE", "MARUTI", "SUNPHARMA", "HCLTECH", "TITAN", "ADANIENT", "ASIANPAINT", "AXISBANK",
+    "KOTAKBANK", "TATASTEEL", "NTPC", "POWERGRID", "M&M", "TATAMOTORS", "COALINDIA", "BAJAJFINSV", "ONGC",
+    "JIOFIN", "ADANIPORTS", "WIPRO", "HDFCLIFE", "SBILIFE", "GRASIM", "BRITANNIA", "TECHM", "INDUSINDBK",
+    "DRREDDY", "CIPLA", "TATACONSUM", "APOLLOHOSP", "HEROMOTOCO", "EICHERMOT", "DIVISLAB", "BPCL", "ULTRACEMCO",
+    "ADANIGREEN", "ATGL", "AMBUJACEM", "BANKBARODA", "CANBK", "PNB", "IDFCFIRSTB", "AARTIIND", "ABBOTINDIA",
+    "ABFRL", "ACC", "ADANIPOWER", "ALKEM", "ALOKINDS", "AMARAJABAT", "APLLTD", "ASHOKLEY", "ASTRAL", "ATUL",
+    "AUBANK", "AUROPHARMA", "BAJAJ-AUTO", "BAJAJHLDNG", "BALKRISIND", "BALRAMCHIN", "BANDHANBNK", "BANKINDIA",
+    "BATAINDIA", "BEL", "BHARATFORG", "BHEL", "BIOCON", "BOSCHLTD", "CANFINHOME", "CHOLAFIN", "CUB",
+    "CONCOR", "COROMANDEL", "CROMPTON", "CUMMINSIND", "DABUR", "DEEPAKNTR", "DELHIVERY", "DIXON", "DLF",
+    "ESCORTS", "EXIDEIND", "FEDERALBNK", "GAIL", "GLENMARK", "GMRINFRA", "GODREJCP", "GODREJPROP", "GRANULES",
+    "GUJGASLTD", "HAL", "HAVELLS", "HCL-INSYS", "HDFCAMC", "HINDALCO", "HINDCOPPER", "HINDPETRO", "IDBI",
+    "IDFC", "IEX", "IGL", "INDHOTEL", "INDIACEM", "INDIAMART", "INDIGO", "IPCALAB", "IRCTC", "IRFC",
+    "JINDALSTEL", "JKCEMENT", "JSWENERGY", "JSWSTEEL", "JUBLFOOD", "KOTAKBANK", "LALPATHLAB", "LAURUSLABS",
+    "LICHSGFIN", "LTIM", "LTTS", "LUPIN", "M&MFIN", "MANAPPURAM", "MAXHEALTH", "MCX", "METROPOLIS",
+    "MFSL", "MINDTREE", "MOTHERSUMI", "MPHASIS", "MRF", "MUTHOOTFIN", "NAM-INDIA", "NATIONALUM", "NAUKRI",
+    "NAVINFLUOR", "NESTLEIND", "NMDC", "NTPC", "OBEROIRLTY", "OFSS", "PAGEIND", "PEL", "PERSISTENT",
+    "PETRONET", "PFC", "PIDILITIND", "PIIND", "POLYCAB", "PVRINOX", "RAMCOCEM", "RBLBANK", "RECLTD",
+    "SBICARD", "SRF", "STAR", "SUNTV", "SYNGENE", "TATACOMM", "TATAPOWER", "TATAELXSI", "TORNTPHARM",
+    "TORNTPOWER", "TRENT", "TVSMOTOR", "UPL", "VEDL", "VOLTAS", "WHIRLPOOL", "ZEEL", "ZYDUSLIFE"
+]
+
 def db_get_user(identifier):
     try:
         clean_id = identifier.strip()
@@ -250,13 +274,12 @@ elif st.session_state.is_admin:
     except:
         st.info("Loading user management interface...")
 
-# ==================== 3. PRO TRADER TERMINAL WITH SIDEBAR & LIVE CLOCK ====================
+# ==================== 3. PRO TRADER TERMINAL WITH SIDEBAR & REAL-TIME CLOCK ====================
 else:
     st.markdown('''
     <style>
         .stApp { background-color: #0b0f19 !important; color: #e2e8f0 !important; font-family: 'Rajdhani', sans-serif !important; }
         
-        /* Sidebar Styling */
         [data-testid="stSidebar"] {
             background-color: #131b2e !important;
             border-right: 1px solid #1e293b !important;
@@ -295,7 +318,7 @@ else:
 
     rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.mode == "LIVE" and st.session_state.valid_until else 999
 
-    # Sidebar Navigation UI matching user reference screenshot
+    # Sidebar Navigation UI
     with st.sidebar:
         st.markdown('<div style="font-family:\'Cinzel\', serif; font-size:1.4rem; font-weight:900; color:#ffbe0b; margin-bottom:20px;">▲ DELTA ANALYSIS<br><span style="font-size:0.8rem; color:#38bdf8; font-family:\'Rajdhani\',sans-serif;">FNO SCANNER v2.0</span></div>', unsafe_allow_html=True)
         
@@ -324,7 +347,6 @@ else:
     with h_col1:
         st.markdown(f'<div style="font-size:1.3rem; font-weight:800; color:#fff;">▲ Delta Analysis <span style="font-size:0.85rem; color:#38bdf8;">{st.session_state.active_tab.upper()}</span></div>', unsafe_allow_html=True)
     with h_col2:
-        # Real-time ticking clock using streamlit autorefresh component or dynamic render
         current_time_str = datetime.now().strftime("%H : %M : %S")
         st.markdown(f'<div style="background:rgba(56,189,248,0.15); border:1px solid #38bdf8; color:#38bdf8; padding:5px 12px; border-radius:6px; font-weight:800; text-align:center; font-size:0.95rem;">🕒 LIVE: {current_time_str}</div>', unsafe_allow_html=True)
     with h_col3:
@@ -347,11 +369,10 @@ else:
         st.markdown('</div>', unsafe_allow_html=True)
 
     else:
-        # Main Filter Dashboard UI matching the reference screenshot
         st.markdown('<div class="filter-container">', unsafe_allow_html=True)
         
         r1_1, r1_2, r1_3, r1_4, r1_5, r1_6 = st.columns(6)
-        f_stock = r1_1.selectbox("STOCK", ["ALL STOCKS", "NIFTY", "BANKNIFTY", "HDFCBANK", "RELIANCE", "TCS", "SBIN"])
+        f_stock = r1_1.selectbox("STOCK", ALL_FNO_STOCKS)
         f_expiry = r1_2.selectbox("EXPIRY DATE", ["29 Sept 2026", "27 Oct 2026", "Nov 2026"])
         f_ref = r1_3.selectbox("REFERENCE", ["Future LTP", "Equity LTP"])
         f_type = r1_4.selectbox("TYPE", ["Both", "CE", "PE"])
@@ -367,7 +388,7 @@ else:
 
         st.markdown('<div class="section-title" style="margin-top:14px;">🎯 Custom Spread Alert — Specific Company / Strike</div>', unsafe_allow_html=True)
         a1, a2, a3, a4, a5, a6 = st.columns(6)
-        a_comp = a1.selectbox("COMPANY", ["HDFCBANK", "NIFTY", "BANKNIFTY", "RELIANCE"])
+        a_comp = a1.selectbox("COMPANY", ALL_FNO_STOCKS[1:])
         a_opt = a2.selectbox("OPTION", ["CE", "PE"])
         a_buy = a3.number_input("BUY STRIKE", value=740.0, step=10.0)
         a_sell = a4.number_input("SELL STRIKE", value=780.0, step=10.0)
@@ -382,7 +403,6 @@ else:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # Action Toolbar matching reference layout
         btn1, btn2, btn3, btn4, btn5 = st.columns([1.5, 1.5, 1.5, 1, 1])
         with btn1:
             if st.button("SCAN NOW", use_container_width=True, type="primary"):
@@ -399,8 +419,8 @@ else:
         st.write("---")
         st.markdown(f"### 💎 Detected {st.session_state.active_tab} Opportunities & Required Margin")
 
-        for sym in ["NIFTY", "HDFCBANK", "RELIANCE"]:
-            if f_stock != "ALL STOCKS" and f_stock != sym: continue
+        display_stocks = [f_stock] if f_stock != "ALL STOCKS" else ["NIFTY", "HDFCBANK", "RELIANCE"]
+        for sym in display_stocks:
             score = 94 if sym == "NIFTY" else (88 if sym == "HDFCBANK" else 82)
             req_margin = "₹32,500" if sym == "NIFTY" else ("₹45,000" if sym == "HDFCBANK" else "₹28,000")
             st.markdown(f'''
