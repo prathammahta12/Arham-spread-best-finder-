@@ -166,7 +166,7 @@ if not st.session_state.logged_in:
                         st.success(f"📲 OTP Sent Successfully! (Demo OTP: {gen_otp})")
                         st.rerun()
                     else:
-                    	st.warning("Kripya valid mobile number darj karein.")
+                        st.warning("Kripya valid mobile number darj karein.")
             else:
                 entered_otp = st.text_input("Enter 6-Digit OTP", max_chars=6)
                 if st.button("VERIFY OTP & REGISTER", use_container_width=True, type="primary"):
@@ -231,12 +231,13 @@ elif st.session_state.is_admin:
                     else:
                         st.error("Failed to delete user.")
 
-# ==================== 3. TRADER TERMINAL ====================
+# ==================== 3. TRADER TERMINAL WITH COMPLETE SPREAD SCANNER UI ====================
 else:
     st.markdown('''
     <style>
         .stApp { background-color: #0f141c !important; color: #d1d5db !important; font-family: 'Rajdhani', sans-serif !important; }
         .filter-panel { background: #171f2c; border: 1px solid #232f42; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+        .custom-alert { margin-top: 14px; border: 1px solid #2b2b2b; border-radius: 10px; padding: 14px; background: #101010; }
         .spread-card { background: #171f2c; border: 1px solid #232f42; border-left: 5px solid #38bdf8; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
         .spread-title { font-size: 1.15rem; font-weight: 800; color: #ffbe0b; display: flex; justify-content: space-between; margin-bottom: 8px; }
         .spread-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin: 10px 0; }
@@ -281,27 +282,72 @@ else:
                     else:
                         st.error("Failed to update API details.")
 
-    tab_choice = st.radio("Scanner Mode", ["Spread Scanner", "ATM Premium Scanner", "OTM Premium Scanner"], horizontal=True, label_visibility="collapsed")
-    
+    # --- FULL SPREAD SCANNER FILTERS MATCHING HTML SPEC ---
     st.markdown('<div class="filter-panel">', unsafe_allow_html=True)
-    c1, c2, c3 = st.columns(3)
-    f_stock = c1.selectbox("STOCK", ["ALL STOCKS", "NIFTY", "BANKNIFTY", "HDFCBANK", "RELIANCE", "TCS", "SBIN"])
-    f_expiry = c2.selectbox("EXPIRY DATE", ["CURRENT MONTH", "NEXT MONTH", "FAR MONTH"])
-    f_ref = c3.selectbox("REFERENCE", ["Future LTP", "Equity LTP"])
+    
+    r1_1, r1_2, r1_3 = st.columns(3)
+    f_stock = r1_1.selectbox("STOCK", ["ALL STOCKS", "NIFTY", "BANKNIFTY", "HDFCBANK", "RELIANCE", "TCS", "SBIN"])
+    f_expiry = r1_2.selectbox("EXPIRY DATE", ["CURRENT MONTH", "NEXT MONTH", "FAR MONTH"])
+    f_ref = r1_3.selectbox("REFERENCE", ["Future LTP", "Equity LTP"])
 
-    if "Spread" in tab_choice:
-        r1, r2, r3 = st.columns(3)
-        f_type = r1.selectbox("TYPE", ["Both", "CE", "PE"])
-        f_price_gap = r2.selectbox("PRICE GAP", ["OFF", "ON"])
-        f_delta = r3.selectbox("DELTA FILTER", ["ON (20-30)", "OFF"])
+    r2_1, r2_2, r2_3 = st.columns(3)
+    f_type = r2_1.selectbox("TYPE", ["Both", "CE", "PE"])
+    f_price_gap_on = r2_2.selectbox("PRICE GAP", ["OFF", "ON"])
+    f_price_val = r2_3.number_input("PRICE GAP VALUE", value=3.0, step=0.1)
+
+    r3_1, r3_2, r3_3 = st.columns(3)
+    f_delta_on = r3_1.selectbox("DELTA FILTER", ["ON (20-30)", "OFF"])
+    f_strike_gap = r3_2.number_input("STRIKE GAP %", min_value=0.0, max_value=20.0, value=5.0, step=0.5)
+    f_iv_gap = r3_3.number_input("IV GAP %", min_value=0.0, max_value=50.0, value=5.0, step=0.5)
+
+    r4_1, r4_2, r4_3 = st.columns(3)
+    f_min_vol = r4_1.number_input("MIN VOLUME (LOTS)", min_value=0, max_value=10000, value=1, step=1)
+    f_ratio = r4_2.selectbox("RATIO", ["3:10", "1:1", "1:2", "1:4", "CUSTOM"])
+    f_limit_type = r4_3.selectbox("LIMIT TYPE", ["Max Debit", "Min Credit"])
+
+    r5_1, r5_2 = st.columns(2)
+    f_limit_val = r5_1.number_input("LIMIT VALUE ₹", min_value=0.0, max_value=100000.0, value=1000.0, step=100.0)
+    f_dir = r5_2.selectbox("DIRECTION", ["Buy → Sell", "Sell → Buy"])
+
+    # Custom Spread Alert Section matching HTML
+    st.markdown('''
+    <div class="custom-alert">
+        <h4 style="margin:0 0 10px 0; font-size:15px; color:#fff;">🎯 Custom Spread Alert — Specific Company / Strike</h4>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    a1, a2, a3, a4, a5, a6 = st.columns(6)
+    a_comp = a1.selectbox("COMPANY", ["Select Co..", "HDFCBANK", "NIFTY", "BANKNIFTY", "RELIANCE"])
+    a_opt = a2.selectbox("OPTION", ["CE", "PE"])
+    a_buy = a3.number_input("BUY STRIKE", value=1900.0, step=50.0)
+    a_sell = a4.number_input("SELL STRIKE", value=2000.0, step=50.0)
+    a_ratio = a5.selectbox("RATIO BUY:SELL", ["1:2", "1:1", "3:10"])
+    a_debit = a6.number_input("TARGET DEBIT ₹", value=0.0, step=1.0)
+
+    b1, b2 = st.columns(2)
+    with b1:
+        st.button("🔔 START CUSTOM ALERT", use_container_width=True)
+    with b2:
+        st.button("CHECK NOW", use_container_width=True)
+
     st.markdown("</div>", unsafe_allow_html=True)
 
-    if st.button("🚀 SCAN BEST SPREADS NOW", use_container_width=True, type="primary"):
-        api_status = "Custom API Connected" if st.session_state.broker_api_key else ("Demo Mode" if st.session_state.mode=="DEMO" else "Default Server API")
-        st.toast(f"Scanning live orderbook... ({api_status})")
+    # Action Toolbar Buttons matching HTML spec
+    btn1, btn2, btn3, btn4, btn5 = st.columns([1.5, 1.5, 1.5, 1, 1])
+    with btn1:
+        if st.button("SCAN NOW", use_container_width=True, type="primary"):
+            st.toast("Scanning live orderbook with Spread filters...")
+    with btn2:
+        st.button("START AUTO SCAN", use_container_width=True)
+    with btn3:
+        st.button("🔔 ENABLE NOTIFICATIONS", use_container_width=True)
+    with btn4:
+        st.button("STOP", use_container_width=True)
+    with btn5:
+        st.button("RESET", use_container_width=True)
 
     st.write("---")
-    st.markdown("### 💎 High-Probability Setups (Payoff & Quality Score)")
+    st.markdown("### 💎 Detected Spread Opportunities & Payoff Analysis")
 
     for sym in ["NIFTY", "HDFCBANK", "RELIANCE"]:
         if f_stock != "ALL STOCKS" and f_stock != sym: continue
@@ -309,16 +355,16 @@ else:
         st.markdown(f'''
         <div class="spread-card">
             <div class="spread-title">
-                <span>{sym} — Advanced Spread Setup</span>
+                <span>{sym} — Spread Setup ({f_ratio})</span>
                 <span class="score-badge">⭐ Quality Score: {score}/100</span>
-            </div>
+  </div>
             <div class="spread-grid">
-                <div class="grid-item"><div class="grid-label">Leg 1 (Buy)</div><div class="grid-val">25400 CE @ ₹145.20</div></div>
-                <div class="grid-item"><div class="grid-label">Leg 2 (Sell)</div><div class="grid-val">25600 CE @ ₹62.00</div></div>
+                <div class="grid-item"><div class="grid-label">Buy Leg</div><div class="grid-val">25400 CE @ ₹145.20</div></div>
+                <div class="grid-item"><div class="grid-label">Sell Leg</div><div class="grid-val">25600 CE @ ₹62.00</div></div>
                 <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#10b981;">₹6,262.50</div></div>
                 <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ff5268;">₹3,240.00</div></div>
                 <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
             </div>
-            <div class="advice-box">🎯 <b>Payoff & Edge Analysis:</b> High probability carry setup. Mode: {st.session_state.mode}. Active API: {st.session_state.broker_api_key[:6] if st.session_state.broker_api_key else 'None'}</div>
+            <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters matched (Strike Gap: {f_strike_gap}%, IV Gap: {f_iv_gap}%). Mode: {st.session_state.mode}.</div>
         </div>
         ''', unsafe_allow_html=True)
