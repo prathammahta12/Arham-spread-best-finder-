@@ -8,35 +8,38 @@ import time
 # Page Configuration
 st.set_page_config(page_title="ARHAM TRADERS | Terminal", layout="wide", initial_sidebar_state="expanded")
 
-# --- HIGH-CONTRAST GOLDEN & NEON THEME WITH TEMPLE BACKGROUND ---
-st.markdown("""
+# Direct Image Link (Palitana / Jain Temple)
+TEMPLE_IMG_URL = "https://images.unsplash.com/photo-1622396481304-4ad7343b6794?auto=format&fit=crop&w=1920&q=80"
+
+# --- HIGH-CONTRAST GOLDEN & NEON THEME ---
+st.markdown(f"""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:ital,wght@0,800;1,900&family=Rajdhani:wght@600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:ital,wght@0,800;1,900&family=Rajdhani:wght@600;700;800&display=swap');
 
     /* Global Dark Cyber & Temple Overlay Background */
-    .stApp {
-        background: linear-gradient(rgba(5, 10, 24, 0.88), rgba(5, 10, 24, 0.94)), 
-                    url('https://images.unsplash.com/photo-1622396481304-4ad7343b6794?auto=format&fit=crop&w=1920&q=80');
+    .stApp {{
+        background: linear-gradient(rgba(5, 10, 24, 0.90), rgba(5, 10, 24, 0.95)), 
+                    url('{TEMPLE_IMG_URL}');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
         color: #ffffff;
         font-family: 'Rajdhani', sans-serif;
-    }
+    }}
 
     /* Main Big Brand Header */
-    .brand-container {
+    .brand-container {{
         text-align: center;
-        margin-top: 15px;
-        margin-bottom: 25px;
-        padding: 20px;
-        background: rgba(10, 18, 38, 0.7);
-        border: 2px solid rgba(245, 158, 11, 0.4);
+        margin-top: 10px;
+        margin-bottom: 22px;
+        padding: 22px;
+        background: rgba(10, 18, 38, 0.75);
+        border: 2.5px solid rgba(245, 158, 11, 0.6);
         border-radius: 16px;
-        box-shadow: 0 0 35px rgba(245, 158, 11, 0.25);
-    }
+        box-shadow: 0 0 40px rgba(245, 158, 11, 0.35);
+    }}
 
-    .brand-title-big {
+    .brand-title-big {{
         font-family: 'Cinzel', serif;
         font-size: 3.6rem !important;
         font-weight: 900 !important;
@@ -46,9 +49,9 @@ st.markdown("""
         text-shadow: 0 0 25px rgba(255, 190, 11, 0.8), 0 0 50px rgba(255, 110, 0, 0.5);
         margin: 0 !important;
         line-height: 1.1;
-    }
+    }}
 
-    .brand-sub-big {
+    .brand-sub-big {{
         font-family: 'Montserrat', sans-serif;
         font-size: 1.45rem !important;
         font-weight: 900 !important;
@@ -58,24 +61,24 @@ st.markdown("""
         text-shadow: 0 0 20px rgba(56, 189, 248, 0.9);
         margin-top: 8px !important;
         margin-bottom: 0px !important;
-    }
+    }}
 
-    /* Temple Header Banner Image Container */
-    .temple-banner-box {
+    /* Temple Header Banner Image Box */
+    .temple-banner-box {{
         text-align: center;
-        margin-bottom: 18px;
-    }
-    .temple-banner-box img {
+        margin-bottom: 15px;
+    }}
+    .temple-banner-box img {{
         width: 100%;
-        max-height: 220px;
+        max-height: 230px;
         object-fit: cover;
         border-radius: 14px;
-        border: 2px solid rgba(245, 158, 11, 0.5);
-        box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-    }
+        border: 2px solid rgba(245, 158, 11, 0.6);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+    }}
 
     /* High Visibility Input Form Styling */
-    .terminal-glass-card {
+    .terminal-glass-card {{
         background: rgba(13, 22, 45, 0.92);
         backdrop-filter: blur(14px);
         border: 1.5px solid rgba(56, 189, 248, 0.35);
@@ -83,29 +86,29 @@ st.markdown("""
         padding: 22px;
         margin-bottom: 20px;
         box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7);
-    }
+    }}
 
     /* Labels & Texts */
-    label, p, span {
+    label, p, span {{
         font-family: 'Rajdhani', sans-serif !important;
         font-size: 1.1rem !important;
         font-weight: 700 !important;
         color: #f1f5f9 !important;
         letter-spacing: 0.5px !important;
-    }
+    }}
 
     /* Input Fields */
-    div[data-baseweb="select"] > div, .stTextInput > div > div > input, .stNumberInput input {
+    div[data-baseweb="select"] > div, .stTextInput > div > div > input, .stNumberInput input {{
         background-color: #0b1329 !important;
         color: #38bdf8 !important;
         font-size: 1.15rem !important;
         font-weight: 800 !important;
         border: 1.5px solid #2563eb !important;
         border-radius: 8px !important;
-    }
+    }}
 
     /* Scan Now High Glow Action Button */
-    .scan-glow > button {
+    .scan-glow > button {{
         background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%) !important;
         color: #ffffff !important;
         font-family: 'Montserrat', sans-serif !important;
@@ -114,11 +117,11 @@ st.markdown("""
         border: 1.5px solid #ffbe0b !important;
         box-shadow: 0 0 25px rgba(245, 158, 11, 0.7) !important;
         border-radius: 10px !important;
-    }
-    .scan-glow > button:hover {
+    }}
+    .scan-glow > button:hover {{
         box-shadow: 0 0 35px rgba(255, 190, 11, 1) !important;
         transform: scale(1.02);
-    }
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -211,14 +214,11 @@ if not st.session_state.logged_in:
     col_l, col_center, col_r = st.columns([1, 1.4, 1])
     with col_center:
         # Temple Photo Display
-        if os.path.exists("bg_temple.png"):
-            st.image("bg_temple.png", use_container_width=True)
-        else:
-            st.markdown("""
-            <div class='temple-banner-box'>
-                <img src='https://images.unsplash.com/photo-1622396481304-4ad7343b6794?auto=format&fit=crop&w=1200&q=80' alt='Temple Peak'>
-            </div>
-            """, unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class='temple-banner-box'>
+            <img src='{TEMPLE_IMG_URL}' alt='Temple Peak'>
+        </div>
+        """, unsafe_allow_html=True)
 
         # Big Bold Italic Brand Display
         st.markdown("""
@@ -431,4 +431,8 @@ else:
     with c_col5:
         a_ratio = st.selectbox("RATIO BUY:SELL", ["1 : 1", "1 : 2", "3 : 10"])
     with c_col6:
-        a_debit = st.number_input("T
+        a_debit = st.number_input("TARGET SPREAD ₹", value=12.50, step=0.5)
+
+    btn_ca1, btn_ca2 = st.columns(2)
+    with btn_ca1:
+        start_alert_btn = st.button("🔔
