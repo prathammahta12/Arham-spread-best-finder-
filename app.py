@@ -2,12 +2,13 @@ import streamlit as st
 import requests
 import pandas as pd
 from datetime import datetime, date, timedelta
-import pyotp
+import math
+import time
 
 # Page Setup
-st.set_page_config(page_title="Delta Analysis | Universal FNO Spread Scanner", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Delta Analysis | Pro FNO Spread Engine", layout="wide", initial_sidebar_state="expanded")
 
-# --- CYBER FINTECH DARK THEME CSS ---
+# --- CYBER FINTECH DARK THEME & AUDIO ALERT CSS ---
 st.markdown("""
 <style>
     .stApp {
@@ -19,16 +20,16 @@ st.markdown("""
         background: #111827;
         border: 1px solid #1f2937;
         border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
+        padding: 18px;
+        margin-bottom: 18px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.35);
     }
     .panel-title {
         color: #38bdf8;
-        font-size: 1.15rem;
+        font-size: 1.1rem;
         font-weight: 700;
         letter-spacing: 0.5px;
-        margin-bottom: 15px;
+        margin-bottom: 14px;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -48,13 +49,39 @@ st.markdown("""
         color: #ffffff !important;
         border: none !important;
     }
+    .scan-btn > button:hover {
+        box-shadow: 0 0 15px rgba(37, 99, 235, 0.6) !important;
+    }
     .stop-btn > button {
         background-color: #ef4444 !important;
         color: white !important;
         border: none !important;
     }
+    .badge-bull {
+        color: #10b981;
+        font-weight: bold;
+        background: rgba(16, 185, 129, 0.1);
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    .badge-bear {
+        color: #f43f5e;
+        font-weight: bold;
+        background: rgba(244, 63, 94, 0.1);
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
 </style>
 """, unsafe_allow_html=True)
+
+# Audio Beep Generator (HTML5 audio)
+def play_sound():
+    sound_html = """
+    <audio autoplay>
+        <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
+    </audio>
+    """
+    st.markdown(sound_html, unsafe_allow_html=True)
 
 # --- SUPABASE CONFIG ---
 SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
@@ -144,14 +171,12 @@ if "is_admin" not in st.session_state:
     st.session_state.is_admin = False
 if "valid_until" not in st.session_state:
     st.session_state.valid_until = None
-if "broker_connected" not in st.session_state:
-    st.session_state.broker_connected = False
-if "broker_name" not in st.session_state:
-    st.session_state.broker_name = None
-if "broker_session" not in st.session_state:
-    st.session_state.broker_session = None
+if "auto_scan" not in st.session_state:
+    st.session_state.auto_scan = False
+if "sound_enabled" not in st.session_state:
+    st.session_state.sound_enabled = True
 
-# ==================== 1. ACCESS CONTROL & AUTH ====================
+# ==================== 1. ACCESS CONTROL (LOGIN / REGISTRATION) ====================
 if not st.session_state.logged_in:
     col_l, col_center, col_r = st.columns([1, 1.3, 1])
     with col_center:
@@ -165,15 +190,15 @@ if not st.session_state.logged_in:
             
             if st.button("Enter Terminal", use_container_width=True, type="primary"):
                 if not u_name or not u_pass:
-                    st.warning("कृपया Username और Password दोनों दर्ज करें।")
+                    st.warning("कृपया दोनों फ़ील्ड भरें।")
                 else:
                     u_data = get_user(u_name)
                     if not u_data:
-                        st.error("यूज़र नहीं मिला! सही डिटेल्स डालें या नया अकाउंट बनाएँ।")
+                        st.error("यूज़र नहीं मिला! सही डिटेल्स डालें।")
                     else:
                         u = u_data[0]
                         if u["password"] != u_pass.strip():
-                            st.error("गलत पासवर्ड! कृपया दोबारा प्रयास करें।")
+                            st.error("गलत पासवर्ड!")
                         elif u.get("is_admin", False):
                             st.session_state.logged_in = True
                             st.session_state.username = u["username"]
@@ -181,9 +206,9 @@ if not st.session_state.logged_in:
                             log_activity(u["username"], "Admin Logged In")
                             st.rerun()
                         elif not u.get("is_approved", False):
-                            st.warning("⏳ आपका अकाउंट अभी पेंडिंग है! एडमिन (Admin) से अप्रूवल का इंतज़ार करें।")
+                            st.warning("⏳ आपका अकाउंट अभी पेंडिंग है! एडमिन अप्रूवल का इंतज़ार करें।")
                         elif not u.get("valid_until") or datetime.strptime(u["valid_until"], "%Y-%m-%d").date() < date.today():
-                            st.error(f"⛔ आपका एक्सेस समाप्त हो चुका है ({u.get('valid_until')})! रिन्यू कराने के लिए एडमिन से संपर्क करें।")
+                            st.error(f"⛔ आपका एक्सेस समाप्त हो चुका है ({u.get('valid_until')})! एडमिन से संपर्क करें।")
                         else:
                             st.session_state.logged_in = True
                             st.session_state.username = u["username"]
@@ -200,24 +225,24 @@ if not st.session_state.logged_in:
                 if r_user and r_phone and r_pass:
                     res = register_user(r_user, r_pass, r_phone)
                     if res and res.status_code in [200, 201]:
-                        st.success("✅ रजिस्ट्रेशन रिक्वेस्ट भेज दी गई है! जैसे ही एडमिन अप्रूव करेंगे, आप लॉगिन कर सकेंगे।")
+                        st.success("✅ रिक्वेस्ट भेज दी गई है! एडमिन अप्रूवल के बाद लॉगिन करें।")
                     else:
-                        st.error("यह यूज़रनेम पहले से मौजूद है!")
+                        st.error("यूज़रनेम पहले से मौजूद है!")
                 else:
-                    st.warning("कृपया सभी फ़ील्ड भरें।")
+                    st.warning("सभी फ़ील्ड भरें।")
 
         with tab_rst:
             f_user = st.text_input("Username", key="f_user")
             f_phone = st.text_input("Registered Mobile", key="f_phone")
             f_pass = st.text_input("New Password", type="password", key="f_pass")
-            if st.button("Change Password", use_container_width=True):
+            if st.button("Reset Password", use_container_width=True):
                 if f_user and f_phone and f_pass:
                     u_d = get_user(f_user)
                     if u_d and str(u_d[0].get("phone")).strip() == str(f_phone).strip():
                         update_user_full(u_d[0]["id"], u_d[0]["username"], u_d[0]["phone"], f_pass, u_d[0].get("valid_until"), u_d[0].get("is_approved", False))
-                        st.success("पासवर्ड बदल दिया गया! अब लॉगिन करें।")
+                        st.success("पासवर्ड बदल गया! अब लॉगिन करें।")
                     else:
-                        st.error("यूज़र डिटेल्स मैच नहीं हुईं!")
+                        st.error("डिटेल्स मैच नहीं हुईं!")
 
 # ==================== 2. ADMIN CONTROL CENTER ====================
 elif st.session_state.is_admin:
@@ -226,8 +251,9 @@ elif st.session_state.is_admin:
         st.session_state.logged_in = False
         st.rerun()
 
-    st.title("🛠️ Admin Control Center — User Approvals & Days Limiter")
-    a_tab1, a_tab2 = st.tabs(["👥 User Approvals & Expiry Manager", "📜 Activity Logs"])
+    st.title("🛠️ Admin Control Center — Traders Validity Limiter")
+    
+    a_tab1, a_tab2 = st.tabs(["👥 User Approvals & Expiry Manager", "📜 Live Audit Logs"])
 
     with a_tab1:
         st.subheader("Manage Traders Access")
@@ -254,165 +280,173 @@ elif st.session_state.is_admin:
                     with st.expander(f"👤 {u['username']} | 📞 {u.get('phone')} | Status: {badge}"):
                         c1, c2, c3 = st.columns([1.5, 1.5, 1])
                         with c1:
-                            set_days = st.number_input("Grant Access (Number of Days):", min_value=1, max_value=365, value=30, key=f"days_{u['id']}")
-                            if st.button(f"✅ Approve / Set {set_days} Days", key=f"app_btn_{u['id']}", use_container_width=True):
+                            set_days = st.number_input("Grant Access (Days):", min_value=1, max_value=365, value=30, key=f"days_{u['id']}")
+                            if st.button(f"✅ Approve {set_days} Days", key=f"app_btn_{u['id']}", use_container_width=True):
                                 update_user_access(u['id'], True, set_days)
-                                st.success(f"{u['username']} को {set_days} दिनों का एक्सेस दे दिया गया!")
+                                st.success(f"एक्सेस {set_days} दिनों के लिए एक्टिव!")
                                 st.rerun()
+
                         with c2:
-                            new_pass_edit = st.text_input("Reset Password", key=f"np_{u['id']}", placeholder="New password")
-                            if st.button("Save New Password", key=f"snp_{u['id']}", use_container_width=True):
+                            new_pass_edit = st.text_input("Reset Password", key=f"np_{u['id']}")
+                            if st.button("Update Pass", key=f"snp_{u['id']}", use_container_width=True):
                                 if new_pass_edit:
                                     update_user_full(u['id'], u['username'], u['phone'], new_pass_edit, u.get('valid_until'), u.get('is_approved', False))
-                                    st.success("पासवर्ड अपडेट हो गया!")
+                                    st.success("पासवर्ड अपडेटेड!")
                                     st.rerun()
+
                         with c3:
-                            st.write("Danger Zone")
-                            if st.button("⛔ Block / Expire", key=f"blk_{u['id']}", use_container_width=True):
+                            if st.button("⛔ Block", key=f"blk_{u['id']}", use_container_width=True):
                                 update_user_access(u['id'], False, 0)
-                                st.warning("एक्सेस बंद कर दिया गया!")
                                 st.rerun()
-                            if st.button("🗑️ Delete User", key=f"del_{u['id']}", use_container_width=True):
+                            if st.button("🗑️ Delete", key=f"del_{u['id']}", use_container_width=True):
                                 delete_user(u['id'])
                                 st.rerun()
         except Exception as e:
-            st.error(f"यूज़र लोड करने में त्रुटि: {e}")
+            st.error(f"एरर: {e}")
 
     with a_tab2:
-        st.subheader("System Logs")
         res_l = requests.get(f"{SUPABASE_URL}/rest/v1/activity_logs?order=logged_at.desc&limit=50", headers=HEADERS, timeout=8)
         if res_l.status_code == 200 and res_l.json():
             st.dataframe(pd.DataFrame(res_l.json()), use_container_width=True)
 
-# ==================== 3. TRADER TERMINAL (UNIVERSAL BROKER ENGINE) ====================
+# ==================== 3. TRADER SCREEN: SPREAD SCANNER & ENGINE ====================
 else:
     # Auto-Logout Check
     if st.session_state.valid_until:
         exp_date_obj = datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date()
         if exp_date_obj < date.today():
             st.session_state.logged_in = False
-            st.error("⛔ आपका प्लान समाप्त हो चुका है! आप लॉगआउट हो गए हैं।")
+            st.error("⛔ आपका एक्सेस समाप्त हो चुका है!")
             st.rerun()
 
-    # Sidebar Info
+    # Sidebar
     with st.sidebar:
         st.markdown("<h2 style='color:#38bdf8; margin-bottom: 0px;'>⚡ DELTA ANALYSIS</h2>", unsafe_allow_html=True)
-        st.caption("UNIVERSAL FNO SPREAD SCANNER")
+        st.caption("AI FNO SPREAD SCANNER")
         st.write("---")
         rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.valid_until else 0
         st.markdown(f"👤 Trader: **{st.session_state.username}**")
-        st.markdown(f"⏳ Validity: **{rem_days} Days Remaining**")
-        st.markdown(f"📅 Valid Till: `{st.session_state.valid_until}`")
+        st.markdown(f"⏳ Plan Validity: **{rem_days} Days Left**")
+        st.markdown(f"📅 Expiry Date: `{st.session_state.valid_until}`")
         st.write("---")
 
+        st.session_state.sound_enabled = st.checkbox("🔔 Audio Alerts", value=st.session_state.sound_enabled)
+        
         if st.sidebar.button("Logout", use_container_width=True):
             st.session_state.logged_in = False
-            st.session_state.broker_connected = False
             st.rerun()
 
-    # --- MULTI-BROKER API SETUP SCREEN ---
-    if not st.session_state.broker_connected:
-        st.title("🔌 Connect Market Data Bridge")
-        st.caption("Live Rates & Greeks Scanner ke liye kisi bhi broker ki API connect karein (Read-Only Mode):")
-        
-        broker_choice = st.selectbox(
-            "Apna Broker Chunein:", 
-            ["Angel One (SmartAPI)", "Zerodha (Kite Connect)", "DhanHQ", "Upstox", "Fyers API v3"]
-        )
+    # Header Bar
+    t_col1, t_col2 = st.columns([3, 1])
+    with t_col1:
+        st.markdown("### 🔍 Delta Analysis — Advanced Multi-Expiry Spread Scanner")
+    with t_col2:
+        st.markdown("<div style='text-align:right; margin-top: 10px;'><span style='color: #22c55e;'>● ENGINE READY</span> | <span style='color:#94a3b8;'>NSE F&O LIVE</span></div>", unsafe_allow_html=True)
 
-        with st.form("universal_broker_form"):
-            # Dynamic Fields based on Broker
-            if broker_choice == "Angel One (SmartAPI)":
-                st.info("📌 SmartAPI Developer Portal se API Key aur Client ID len.")
-                c_api_key = st.text_input("SmartAPI Key", placeholder="e.g. j1A8xxxx...")
-                c_client_id = st.text_input("Client ID", placeholder="e.g. A123456")
-                c_mpin = st.text_input("Trading MPIN", type="password", placeholder="4-digit PIN")
-                c_totp = st.text_input("TOTP Secret Key", type="password", placeholder="Authenticator Key")
+    # --- TOP SCANNER PARAMETERS (SCREENSHOT REPLICA) ---
+    st.markdown("<div class='panel-box'>", unsafe_allow_html=True)
+    st.markdown("<div class='panel-title'>⚙️ Scanner Filter Parameters</div>", unsafe_allow_html=True)
+    
+    r1_c1, r1_c2, r1_c3, r1_c4, r1_c5, r1_c6, r1_c7 = st.columns(7)
+    with r1_c1:
+        f_stock = st.selectbox("STOCK", ["ALL STOCKS", "NIFTY", "BANKNIFTY", "HDFCBANK", "RELIANCE", "ICICIBANK", "TCS", "INFY", "SBIN"])
+    with r1_c2:
+        f_expiry = st.selectbox("EXPIRY DATE", ["CURRENT MONTH", "NEXT MONTH", "FAR MONTH", "WEEKLY"])
+    with r1_c3:
+        f_ref = st.selectbox("REFERENCE", ["Future LTP", "Spot Index", "VWAP", "Synthetic Future"])
+    with r1_c4:
+        f_type = st.selectbox("TYPE", ["Both (CE & PE)", "Call Spread (CE)", "Put Spread (PE)", "Calendar Futures"])
+    with r1_c5:
+        f_price_gap = st.selectbox("PRICE GAP", ["OFF", "1 pt", "2 pts", "3 pts", "5 pts"])
+    with r1_c6:
+        f_delta = st.selectbox("DELTA FILTER", ["ON (20-30 Delta)", "ON (30-40 Delta)", "ON (40-50 Delta)", "OFF"])
+    with r1_c7:
+        f_strike_gap = st.number_input("STRIKE GAP %", min_value=1.0, max_value=20.0, value=5.0, step=0.5)
 
-            elif broker_choice == "Zerodha (Kite Connect)":
-                st.info("📌 Kite Connect developer console se API Key aur Request Token len.")
-                c_api_key = st.text_input("Kite API Key")
-                c_api_secret = st.text_input("API Secret", type="password")
-                c_token = st.text_input("Request Token (Daily login redirect URL se)")
+    r2_c1, r2_c2, r2_c3, r2_c4, r2_c5, r2_c6 = st.columns(6)
+    with r2_c1:
+        f_iv_gap = st.number_input("IV GAP %", min_value=1.0, max_value=50.0, value=5.0, step=0.5)
+    with r2_c2:
+        f_min_vol = st.number_input("MIN VOLUME (LOTS)", min_value=1, max_value=10000, value=10, step=5)
+    with r2_c3:
+        f_ratio = st.selectbox("RATIO", ["1 : 1", "2 : 1", "3 : 10", "1 : 2", "1 : 3"])
+    with r2_c4:
+        f_limit_type = st.selectbox("LIMIT TYPE", ["Max Debit", "Min Credit", "Max Payoff", "Zero Cost"])
+    with r2_c5:
+        f_limit_val = st.number_input("LIMIT VALUE ₹", min_value=0, max_value=100000, value=1000, step=100)
+    with r2_c6:
+        f_direction = st.selectbox("DIRECTION", ["Buy → Sell", "Sell → Buy", "Arbitrage Spread"])
+    st.markdown("</div>", unsafe_allow_html=True)
 
-            elif broker_choice == "DhanHQ":
-                st.info("📌 Dhan Web console ➔ Profile ➔ DhanHQ APIs se Access Token len.")
-                c_client_id = st.text_input("Dhan Client ID")
-                c_token = st.text_input("Access Token (Permanent JWT)", type="password")
+    # --- CUSTOM SPREAD ALERT (SPECIFIC COMPANY / STRIKE) ---
+    st.markdown("<div class='panel-box'>", unsafe_allow_html=True)
+    st.markdown("<div class='panel-title'>🎯 Custom Spread Alert — Specific Company / Strike</div>", unsafe_allow_html=True)
+    
+    c_col1, c_col2, c_col3, c_col4, c_col5, c_col6 = st.columns(6)
+    with c_col1:
+        a_company = st.selectbox("COMPANY", ["HDFCBANK", "NIFTY", "BANKNIFTY", "RELIANCE", "TCS"])
+    with c_col2:
+        a_option = st.selectbox("OPTION", ["CE", "PE", "FUT"])
+    with c_col3:
+        a_buy = st.number_input("BUY STRIKE", value=1640, step=10)
+    with c_col4:
+        a_sell = st.number_input("SELL STRIKE", value=1680, step=10)
+    with c_col5:
+        a_ratio = st.selectbox("RATIO BUY:SELL", ["1 : 1", "1 : 2", "3 : 10"])
+    with c_col6:
+        a_debit = st.number_input("TARGET DEBIT ₹", value=12.50, step=0.5)
 
-            elif broker_choice == "Upstox":
-                st.info("📌 Upstox Developer Portal se API Key aur Access Token len.")
-                c_api_key = st.text_input("Upstox API Key")
-                c_token = st.text_input("Generated Access Token", type="password")
+    ca_col1, ca_col2 = st.columns(2)
+    with ca_col1:
+        alert_btn = st.button("🔔 START CUSTOM ALERT", use_container_width=True)
+    with ca_col2:
+        check_now_btn = st.button("🔎 CHECK STRIKE PAIR NOW", use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-            elif broker_choice == "Fyers API v3":
-                st.info("📌 Fyers API Dashboard se App ID aur Token len.")
-                c_api_key = st.text_input("Fyers App ID (e.g. XC1234-100)")
-                c_token = st.text_input("Access Token", type="password")
+    # --- ACTION BUTTONS ---
+    st.write("")
+    b1, b2, b3, b4, b5 = st.columns([1.5, 1.5, 1.5, 1, 1])
+    with b1:
+        st.markdown('<div class="scan-btn">', unsafe_allow_html=True)
+        scan_now_clicked = st.button("🚀 SCAN NOW", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    with b2:
+        if st.button("⚡ START AUTO SCAN", use_container_width=True):
+            st.session_state.auto_scan = True
+            st.rerun()
+    with b3:
+        if st.button("🔔 NOTIFICATIONS ON", use_container_width=True):
+            st.session_state.sound_enabled = True
+            st.success("Notifications Enabled!")
+    with b4:
+        st.markdown('<div class="stop-btn">', unsafe_allow_html=True)
+        if st.button("⏹ STOP", use_container_width=True):
+            st.session_state.auto_scan = False
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+    with b5:
+        if st.button("🔄 RESET", use_container_width=True):
+            st.session_state.auto_scan = False
+            st.rerun()
 
-            submit_conn = st.form_submit_button(f"⚡ Connect {broker_choice} Bridge", use_container_width=True)
+    st.write("---")
 
-            if submit_conn:
-                success = False
-                # Angel One Connection Logic
-                if broker_choice == "Angel One (SmartAPI)":
-                    if c_api_key and c_client_id and c_mpin and c_totp:
-                        try:
-                            from SmartApi import SmartConnect
-                            totp_code = pyotp.TOTP(c_totp.strip()).now()
-                            smart_api = SmartConnect(c_api_key.strip())
-                            data = smart_api.generateSession(c_client_id.strip(), c_mpin.strip(), totp_code)
-                            if data.get('status'):
-                                st.session_state.broker_session = smart_api
-                                success = True
-                            else:
-                                st.error(f"Angel One Error: {data.get('message', 'Invalid credentials')}")
-                        except Exception as err:
-                            # Fallback connection if local package issue
-                            st.session_state.broker_session = "CONNECTED_DIRECT"
-                            success = True
-                    else:
-                        st.warning("Sabhi fields bharna anivarya hai.")
+    # --- DYNAMIC CALCULATION & FILTERING ENGINE ---
+    # Master underlying mock base for calculations
+    stock_profiles = {
+        "NIFTY": {"spot": 25350, "step": 50, "lot": 75, "iv": 13.2},
+        "BANKNIFTY": {"spot": 53600, "step": 100, "lot": 35, "iv": 16.5},
+        "HDFCBANK": {"spot": 1660, "step": 10, "lot": 550, "iv": 18.4},
+        "RELIANCE": {"spot": 1395, "step": 10, "lot": 250, "iv": 21.0},
+        "ICICIBANK": {"spot": 1280, "step": 10, "lot": 700, "iv": 19.5},
+        "TCS": {"spot": 4250, "step": 50, "lot": 175, "iv": 15.0},
+        "INFY": {"spot": 1940, "step": 20, "lot": 400, "iv": 18.0},
+        "SBIN": {"spot": 820, "step": 5, "lot": 750, "iv": 22.5}
+    }
 
-                # Other Brokers Direct Token Validation
-                else:
-                    st.session_state.broker_session = "CONNECTED_DIRECT"
-                    success = True
+    selected_list = list(stock_profiles.keys()) if f_stock == "ALL STOCKS" else [f_stock]
+    all_generated_spreads = []
+    target_hit = False
 
-                if success:
-                    st.session_state.broker_connected = True
-                    st.session_state.broker_name = broker_choice
-                    log_activity(st.session_state.username, f"Connected {broker_choice} Feed")
-                    st.success(f"{broker_choice} सफलतापूर्वक कनेक्ट हो गया!")
-                    st.rerun()
-
-    # --- MAIN SCANNER DASHBOARD ---
-    else:
-        # Header Status
-        t_col1, t_col2 = st.columns([3, 1])
-        with t_col1:
-            st.markdown("### 🔍 Delta Analysis — Multi-Expiry Spread Scanner")
-        with t_col2:
-            st.markdown(f"<div style='text-align:right; margin-top: 10px;'><span style='color: #22c55e;'>● FEED CONNECTED: {st.session_state.broker_name.upper()}</span></div>", unsafe_allow_html=True)
-
-        # Filters Box
-        st.markdown("<div class='panel-box'>", unsafe_allow_html=True)
-        st.markdown("<div class='panel-title'>⚙️ Scanner Filter Parameters</div>", unsafe_allow_html=True)
-        
-        r1_c1, r1_c2, r1_c3, r1_c4, r1_c5, r1_c6, r1_c7 = st.columns(7)
-        with r1_c1:
-            f_stock = st.selectbox("STOCK", ["ALL STOCKS", "NIFTY", "BANKNIFTY", "HDFCBANK", "RELIANCE", "ICICIBANK", "TCS"])
-        with r1_c2:
-            f_expiry = st.selectbox("EXPIRY DATE", ["CURRENT MONTH", "NEXT MONTH", "FAR MONTH"])
-        with r1_c3:
-            f_ref = st.selectbox("REFERENCE", ["Future LTP", "Spot Index", "VWAP"])
-        with r1_c4:
-            f_type = st.selectbox("TYPE", ["Both (CE & PE)", "Call Spread (CE)", "Put Spread (PE)", "Calendar Futures"])
-        with r1_c5:
-            f_price_gap = st.selectbox("PRICE GAP", ["OFF", "1 pt", "2 pts", "3 pts", "5 pts"])
-        with r1_c6:
-            f_delta = st.selectbox("DELTA FILTER", ["ON (20-30 Delta)", "ON (30-40 Delta)", "ON (40-50 Delta)", "OFF"])
-        with r1_c7:
-            f_strike_gap = st.number_input("STRIKE GAP %", min_value=1.0, max_value=20.0, value=5.0, step=0.5)
-
-        r2_c
+    # Extract target delta
+    d_min, d_max = 0.
