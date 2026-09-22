@@ -3,6 +3,7 @@ import requests
 import os
 import base64
 from datetime import datetime, date, timedelta
+import time
 
 st.set_page_config(page_title="ARHAM TRADERS | Delta Analysis", layout="wide", initial_sidebar_state="expanded")
 
@@ -102,26 +103,26 @@ for key, default in [("logged_in", False), ("username", ""), ("user_id", None), 
 
 # ==================== 1. LOGIN SCREEN ====================
 if not st.session_state.logged_in:
-    st.markdown('''
+    st.markdown(f'''
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
-        .stApp { background-color: #0b0f19 !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }
-        .brand-card {
+        .stApp {{ background-color: #080d16 !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }}
+        .brand-card {{
             display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
             margin: 30px auto 20px auto; padding: 20px 30px; background: rgba(11, 18, 36, 0.94);
             backdrop-filter: blur(16px); border: 2.5px solid #f59e0b; border-radius: 16px;
             box-shadow: 0 0 50px rgba(245, 158, 11, 0.45); width: fit-content !important; max-width: 95% !important; box-sizing: border-box;
-        }
-        .brand-main {
+        }}
+        .brand-main {{
             font-family: 'Cinzel', serif; font-size: clamp(1.8rem, 4vw, 2.5rem) !important; font-weight: 900 !important;
             font-style: italic !important; white-space: nowrap !important; letter-spacing: 1.5px !important;
             color: #ffbe0b !important; text-shadow: 0 0 25px rgba(255, 190, 11, 0.85); margin: 0 !important; line-height: 1.2 !important;
-        }
-        .brand-dev {
+        }}
+        .brand-dev {{
             font-family: 'Teko', sans-serif; font-size: clamp(1.1rem, 2.5vw, 1.4rem) !important; font-weight: 700 !important;
             letter-spacing: 1.5px !important; white-space: nowrap !important; color: #38bdf8 !important;
             text-shadow: 0 0 16px rgba(56, 189, 248, 0.85); margin-top: 4px !important;
-        }
+        }}
     </style>
     ''', unsafe_allow_html=True)
 
@@ -252,7 +253,6 @@ elif st.session_state.is_admin:
                                 st.error("Failed.")
     except:
         st.info("Loading user management interface...")
-
 # ==================== 3. EXACT VIDEO MATCH UI (DELTA ANALYSIS TERMINAL) ====================
 else:
     st.markdown('''
@@ -293,6 +293,9 @@ else:
 
     rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.mode == "LIVE" and st.session_state.valid_until else 999
 
+    # Always show Developer Tag at top
+    st.markdown('<div style="font-family:\'Teko\',sans-serif; font-size:1.1rem; color:#38bdf8; font-weight:700; letter-spacing:1px; margin-bottom:4px;">⚡ DEVELOPED BY PRATHAM MEHTA ⚡</div>', unsafe_allow_html=True)
+
     # Sidebar matching video layout exactly
     with st.sidebar:
         st.markdown('<div style="font-family:\'Cinzel\', serif; font-size:1.3rem; font-weight:900; color:#ffbe0b; margin-bottom:15px;">▲ DELTA ANALYSIS<br><span style="font-size:0.75rem; color:#38bdf8; font-family:\'Rajdhani\',sans-serif;">FNO SCANNER</span></div>', unsafe_allow_html=True)
@@ -317,14 +320,29 @@ else:
             st.session_state.logged_in = False
             st.rerun()
 
-    # Top Bar Header with Live Clock
-    h_col1, h_col2, h_col3 = st.columns([2.5, 1.5, 1])
+    # Determine Real-Time 12-hour Clock and Market Status (9:00 AM to 3:40 PM)
+    now_dt = datetime.now()
+    current_time_12hr = now_dt.strftime("%I : %M : %S %p")
+    
+    current_time_val = now_dt.time()
+    market_open_time = datetime.strptime("09:00:00", "%H:%M:%S").time()
+    market_close_time = datetime.strptime("15:40:00", "%H:%M:%S").time()
+    
+    is_weekday = now_dt.weekday() < 5 # Monday to Friday
+    if is_weekday and market_open_time <= current_time_val <= market_close_time:
+        market_status_html = '<div style="background:rgba(16,185,129,0.15); border:1px solid #10b981; color:#10b981; padding:4px 10px; border-radius:6px; font-weight:800; text-align:center; font-size:0.9rem;">🟢 Market Open</div>'
+    else:
+        market_status_html = '<div style="background:rgba(239,68,68,0.15); border:1px solid #ef4444; color:#ef4444; padding:4px 10px; border-radius:6px; font-weight:800; text-align:center; font-size:0.9rem;">🔴 Market Closed</div>'
+
+    # Top Bar Header with Real-Time 12hr Clock & Market Status
+    h_col1, h_col2, h_col3, h_col4 = st.columns([2.2, 1.4, 1.4, 1])
     with h_col1:
-        st.markdown(f'<div style="font-size:1.2rem; font-weight:800; color:#fff;">▲ Delta Analysis <span style="font-size:0.8rem; color:#38bdf8;">{st.session_state.active_tab.upper()}</span></div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="font-size:1.2rem; font-weight:800; color:#fff; padding-top:4px;">▲ Delta Analysis <span style="font-size:0.8rem; color:#38bdf8;">{st.session_state.active_tab.upper()}</span></div>', unsafe_allow_html=True)
     with h_col2:
-        current_time_str = datetime.now().strftime("%H : %M : %S")
-        st.markdown(f'<div style="background:rgba(56,189,248,0.12); border:1px solid #38bdf8; color:#38bdf8; padding:4px 10px; border-radius:6px; font-weight:800; text-align:center; font-size:0.9rem;">🕒 LIVE: {current_time_str}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="background:rgba(56,189,248,0.12); border:1px solid #38bdf8; color:#38bdf8; padding:4px 10px; border-radius:6px; font-weight:800; text-align:center; font-size:0.9rem;">🕒 {current_time_12hr}</div>', unsafe_allow_html=True)
     with h_col3:
+        st.markdown(market_status_html, unsafe_allow_html=True)
+    with h_col4:
         st.markdown(f'<div style="color:#f59e0b; background:rgba(245,158,11,0.12); padding:5px 8px; border-radius:6px; font-size:0.8rem; font-weight:700; text-align:center;">● {rem_days if st.session_state.mode=="LIVE" else "Trial"} Active</div>', unsafe_allow_html=True)
 
     st.write("")
@@ -417,3 +435,4 @@ else:
                 <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters matched. Upstox Token Connected. Required Margin: {req_margin} per lot.</div>
             </div>
             ''', unsafe_allow_html=True)
+        
