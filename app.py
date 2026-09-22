@@ -6,19 +6,17 @@ from datetime import datetime, date, timedelta
 
 st.set_page_config(page_title="ARHAM TRADERS", layout="wide", initial_sidebar_state="collapsed")
 
-# --- EXACT FILE NAME EMBEDDER ---
+# --- EXACT GIRNAR BACKGROUND DETECTOR ---
 def get_exact_girnar_bg():
     target_files = [
         "Screenshot_20260922-172632_Google.png",
         "girnar.jpg",
         "girnar.png"
     ]
-    # Check exact uploaded filename first
     for f in target_files:
         if os.path.exists(f):
             with open(f, "rb") as img:
                 return f"data:image/png;base64,{base64.b64encode(img.read()).decode()}"
-    # Fallback to search directory
     for f in os.listdir("."):
         if f.lower().startswith("screenshot") and f.lower().endswith((".png", ".jpg", ".jpeg")):
             with open(f, "rb") as img:
@@ -31,14 +29,14 @@ st.markdown(f'''
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
     
-    /* Fullscreen Background Layer with Exact Uploaded Photo */
+    /* Fullscreen High-Resolution Girnar Background */
     .girnar-bg-full {{
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: linear-gradient(rgba(6, 11, 23, 0.75), rgba(6, 11, 23, 0.88)), 
+        background: linear-gradient(rgba(6, 11, 23, 0.70), rgba(6, 11, 23, 0.85)), 
                     url('{girnar_bg_src}') no-repeat center center fixed !important;
         background-size: cover !important;
         z-index: -999;
@@ -50,37 +48,50 @@ st.markdown(f'''
         font-family: 'Rajdhani', sans-serif !important;
     }}
     
+    /* Big Wide Luxury Brand Card */
     .brand-card {{
         text-align: center;
-        margin: 20px auto 18px auto;
-        padding: 16px 12px;
-        background: rgba(11, 18, 36, 0.90);
-        backdrop-filter: blur(12px);
-        border: 2px solid #f59e0b;
-        border-radius: 16px;
-        box-shadow: 0 0 35px rgba(245, 158, 11, 0.45);
-        max-width: 480px;
+        margin: 25px auto 22px auto;
+        padding: 22px 28px;
+        background: rgba(11, 18, 36, 0.92);
+        backdrop-filter: blur(14px);
+        border: 2.5px solid #f59e0b;
+        border-radius: 18px;
+        box-shadow: 0 0 50px rgba(245, 158, 11, 0.55);
+        width: 98%;
+        max-width: 620px;
+        box-sizing: border-box;
     }}
     .brand-main {{
         font-family: 'Cinzel', serif;
-        font-size: clamp(2rem, 6.5vw, 2.7rem) !important;
+        font-size: clamp(2.1rem, 6.2vw, 3rem) !important;
         font-weight: 900 !important;
         font-style: italic !important;
         white-space: nowrap !important;
+        letter-spacing: 2px !important;
         color: #ffbe0b !important;
-        text-shadow: 0 0 20px rgba(255, 190, 11, 0.8);
+        text-shadow: 0 0 25px rgba(255, 190, 11, 0.85);
         margin: 0 !important;
         line-height: 1.2 !important;
     }}
     .brand-dev {{
         font-family: 'Teko', sans-serif;
-        font-size: clamp(1.2rem, 4.5vw, 1.45rem) !important;
+        font-size: clamp(1.2rem, 4.4vw, 1.55rem) !important;
         font-weight: 700 !important;
         letter-spacing: 1.5px !important;
         white-space: nowrap !important;
         color: #38bdf8 !important;
-        text-shadow: 0 0 15px rgba(56, 189, 248, 0.8);
-        margin-top: 5px !important;
+        text-shadow: 0 0 16px rgba(56, 189, 248, 0.85);
+        margin-top: 6px !important;
+    }}
+    .brand-mantra {{
+        color: #f59e0b;
+        font-size: clamp(0.85rem, 3.2vw, 1.05rem) !important;
+        margin-top: 8px;
+        font-weight: 800;
+        letter-spacing: 0.8px;
+        text-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+        white-space: nowrap !important;
     }}
     
     .filter-panel {{
@@ -221,13 +232,13 @@ for key, default in [("logged_in", False), ("username", ""), ("is_admin", False)
 
 # ==================== 1. LOGIN SCREEN ====================
 if not st.session_state.logged_in:
-    _, col_mid, _ = st.columns([1, 1.4, 1])
+    _, col_mid, _ = st.columns([1, 1.8, 1])
     with col_mid:
         st.markdown('''
         <div class="brand-card">
             <div class="brand-main">ARHAM TRADERS</div>
             <div class="brand-dev">⚡ DEVELOPED BY PRATHAM MEHTA ⚡</div>
-            <div style="color:#f59e0b; font-size:0.9rem; margin-top:6px; font-weight:700;">🙏 Jai Girnar Ji Maha Tirth 🙏</div>
+            <div class="brand-mantra">🙏 Shree Girnar Mandal Shree Neminath Bhagwan Ne Namah 🙏</div>
         </div>
         ''', unsafe_allow_html=True)
         
@@ -245,16 +256,16 @@ if not st.session_state.logged_in:
                             st.session_state.update(logged_in=True, username=usr["username"], is_admin=True)
                             st.rerun()
                         elif not usr.get("is_approved", False):
-                            st.warning("⏳ आपका अकाउंट पेंडिंग है! एडमिन अप्रूवल का इंतज़ार करें।")
+                            st.warning("⏳ Aapka account pending hai! Admin approval ka intezar karein.")
                         elif not usr.get("valid_until") or datetime.strptime(usr["valid_until"], "%Y-%m-%d").date() < date.today():
-                            st.error("⛔ आपका एक्सेस समाप्त हो चुका है! एडमिन से संपर्क करें।")
+                            st.error("⛔ Access validity samapt ho chuki hai!")
                         else:
                             st.session_state.update(logged_in=True, username=usr["username"], is_admin=False, valid_until=usr["valid_until"])
                             st.rerun()
                     else:
-                        st.error("गलत क्रेडेंशियल्स!")
+                        st.error("Galat credentials!")
                 else:
-                    st.warning("दोनों फ़ील्ड भरें।")
+                    st.warning("Dono fields bharein.")
 
         with tab_reg:
             ru = st.text_input("Desired Username", key="reg_u")
@@ -264,9 +275,9 @@ if not st.session_state.logged_in:
                 if ru and rph and rp:
                     res = register_user(ru, rp, rph)
                     if res and res.status_code in [200, 201]:
-                        st.success("✅ रिक्वेस्ट सबमिट हो गई! एडमिन अप्रूवल के बाद लॉगिन करें।")
+                        st.success("✅ Request submit ho gayi! Admin approval ke baad login karein.")
                     else:
-                        st.error("यह यूज़रनेम पहले से मौजूद है!")
+                        st.error("Username already exist karta hai!")
 
 # ==================== 2. ADMIN CONTROL PANEL ====================
 elif st.session_state.is_admin:
