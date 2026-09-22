@@ -6,29 +6,28 @@ from datetime import datetime, date, timedelta
 
 st.set_page_config(page_title="ARHAM TRADERS", layout="wide", initial_sidebar_state="collapsed")
 
-# Pavithra Girnar Ji Maha Tirth (Shri Neminath Bhagwan) Direct Image Link
-GIRNAR_ONLINE = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Neminath_Temple_Girnar_02.jpg/1280px-Neminath_Temple_Girnar_02.jpg"
+# --- GIRNAR PHOTO EMBEDDER ---
+def load_girnar_b64():
+    for fname in ["girnar.jpg", "girnar.png", "girnar.jpeg"]:
+        if os.path.exists(fname):
+            with open(fname, "rb") as f:
+                return f"data:image/jpeg;base64,{base64.b64encode(f.read()).decode()}"
+    return "https://images.unsplash.com/photo-1622396481304-4ad7343b6794?auto=format&fit=crop&w=1600&q=80"
 
-def get_bg():
-    if os.path.exists("girnar.jpg"):
-        with open("girnar.jpg", "rb") as f:
-            return f"data:image/jpeg;base64,{base64.b64encode(f.read()).decode()}"
-    return GIRNAR_ONLINE
-
-bg_url = get_bg()
+girnar_src = load_girnar_b64()
 
 st.markdown(f'''
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
     
-    /* Poore Background Me Girnar Ji Ki Photo Fit */
-    .bg-layer {{
+    /* Fixed Fullscreen Background */
+    .girnar-bg-cover {{
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: linear-gradient(rgba(6, 11, 23, 0.82), rgba(6, 11, 23, 0.92)), url('{bg_url}') no-repeat center center fixed;
+        background: linear-gradient(rgba(6, 11, 23, 0.84), rgba(6, 11, 23, 0.92)), url('{girnar_src}') no-repeat center center fixed;
         background-size: cover;
         z-index: -999;
     }}
@@ -36,7 +35,7 @@ st.markdown(f'''
     
     .brand-card {{
         text-align: center;
-        margin: 15px auto 20px auto;
+        margin: 10px auto 18px auto;
         padding: 16px 12px;
         background: rgba(11, 18, 36, 0.88);
         backdrop-filter: blur(12px);
@@ -112,7 +111,7 @@ st.markdown(f'''
     .grid-val {{ color: #f8fafc; font-weight: 700; font-size: 0.92rem; margin-top: 2px; }}
     .advice-box {{ background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 0.88rem; margin-top: 6px; }}
 </style>
-<div class="bg-layer"></div>
+<div class="girnar-bg-cover"></div>
 ''', unsafe_allow_html=True)
 
 SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
@@ -151,6 +150,9 @@ for key, default in [("logged_in", False), ("username", ""), ("is_admin", False)
 if not st.session_state.logged_in:
     _, col_mid, _ = st.columns([1, 1.4, 1])
     with col_mid:
+        if os.path.exists("girnar.jpg"):
+            st.image("girnar.jpg", caption="Shri Girnar Ji Maha Tirth — Neminath Bhagwan", use_container_width=True)
+
         st.markdown('''
         <div class="brand-card">
             <div class="brand-main">ARHAM TRADERS</div>
