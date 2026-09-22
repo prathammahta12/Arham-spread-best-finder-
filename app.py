@@ -59,10 +59,19 @@ def update_user_token(uid, token):
     except:
         return False
 
-def admin_master_update(uid, days, new_pass, is_approved):
+def admin_set_approval(uid, approve_status, days):
     try:
-        v_date = (date.today() + timedelta(days=int(days))).strftime("%Y-%m-%d") if is_approved else None
-        payload = {"is_approved": is_approved, "valid_until": v_date}
+        v_date = (date.today() + timedelta(days=int(days))).strftime("%Y-%m-%d") if approve_status else None
+        payload = {"is_approved": approve_status, "valid_until": v_date}
+        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json=payload, timeout=5)
+        return r.status_code in [200, 204]
+    except:
+        return False
+
+def admin_master_update(uid, days, new_pass, approve_status):
+    try:
+        v_date = (date.today() + timedelta(days=int(days))).strftime("%Y-%m-%d") if approve_status else None
+        payload = {"is_approved": approve_status, "valid_until": v_date}
         if new_pass and new_pass.strip():
             payload["password"] = new_pass.strip()
         r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json=payload, timeout=5)
@@ -181,15 +190,14 @@ elif st.session_state.is_admin:
         st.session_state.logged_in = False
         st.rerun()
 
-    st.markdown("### 🟢 Complete User Access & Session Manager")
     try:
         r = requests.get(f"{SUPABASE_URL}/rest/v1/users?order=created_at.desc", headers=HEADERS, timeout=5)
         if r.status_code == 200:
             users_list = r.json()
-            st.info(f"Total Database Users: {len([u for u in users_list if not u.get('is_admin')])}")
+            normal_users = [u for u in users_list if not u.get('is_admin')]
+            st.markdown(f"### 🟢 Total Registered Users: `{len(normal_users)}`")
             
-            for u in users_list:
-                if u["username"].lower() in ["pratham1785", "admin"]: continue
+            for u in normal_users:
                 rem_days = (datetime.strptime(u["valid_until"], "%Y-%m-%d").date() - date.today()).days if u.get("valid_until") and u.get("is_approved") else 0
                 is_app = u.get("is_approved", False)
                 status_str = f"🟢 Approved & Active ({rem_days} Days Left)" if is_app and rem_days > 0 else "🔴 Pending / Blocked / Expired"
@@ -204,31 +212,44 @@ elif st.session_state.is_admin:
                     - **Current Validity Date:** `{u.get('valid_until') or 'No Active Validity'}`
                     """)
                     
-                    c1, c2 = st.columns(2)
-                    app_status = c1.checkbox("Approve User Access", value=is_app, key=f"app_{u['id']}")
-                    grant_d = c2.number_input("Validity Days:", 1, 365, 30, key=f"days_{u['id']}")
-                    
+                    grant_d = st.number_input("Validity Days Extension:", 1, 365, 30, key=f"days_{u['id']}")
                     new_p = st.text_input("Reset User Password:", type="password", key=f"pass_{u['id']}")
                     
-                    col_btn1, col_btn2, col_btn3 = st.columns(3)
-                    if col_btn1.button("💾 Save Access & Settings", key=f"upd_{u['id']}"):
-                        if admin_master_update(u["id"], grant_d, new_p, app_status):
-                            st.success(f"User {u['username']} updated successfully!")
-                            st.rerun()
-                        else:
-                            st.error("Failed to update user.")
+                    b_col1, b_col2, b_col3, b_col4, b_col5 = st.columns(5)
                     
-                    if col_btn2.button("🔌 Force Logout", key=f"out_{u['id']}"):
-                        requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{u['id']}", headers=HEADERS, json={"is_approved": False}, timeout=5)
-                        st.warning(f"User {u['username']} has been force logged out!")
-                        st.rerun()
-
-                    if col_btn3.button("🗑️ Delete Permanently", key=f"del_{u['id']}"):
-                        if admin_delete_user(u["id"]):
-                            st.warning(f"User {u['username']} deleted from database!")
-                            st.rerun()
+                    with b_col1:
+                        if not is_app:
+                            if st.button("✅ Approve", key=f"app_btn_{u['id']}"):
+                                admin_set_approval(u["id"], True, grant_d)
+                                st.success(f"User {u['username']} approved!")
+                                st.rerun()
                         else:
-                            st.error("Failed to delete user.")
+                            if st.button("❌ Block", key=f"blk_btn_{u['id']}"):
+                                admin_set_approval(u["id"], False, grant_d)
+                                st.warning(f"User {u['username']} blocked!")
+                                st.rerun()
+                    
+                    with b_col2:
+                        if st.button("💾 Save Settings", key=f"upd_{u['id']}"):
+                            if admin_master_update(u["id"], grant_d, new_p, is_app):
+                                st.success("Updated successfully!")
+                                st.rerun()
+                            else:
+                                st.error("Failed.")
+                    
+                    with b_col3:
+                        if st.button("🔌 Force Logout", key=f"out_{u['id']}"):
+                            requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{u['id']}", headers=HEADERS, json={"is_approved": False}, timeout=5)
+                            st.warning("Force logged out!")
+                            st.rerun()
+
+                    with b_col4:
+                        if st.button("🗑️ Delete", key=f"del_{u['id']}"):
+                            if admin_delete_user(u["id"]):
+                                st.error("Deleted!")
+                                st.rerun()
+                            else:
+                                st.error("Failed.")
     except:
         st.error("Failed to fetch users list.")
 
@@ -337,7 +358,7 @@ else:
     with btn2:
         st.button("START AUTO SCAN", use_container_width=True)
     with btn3:
-        st.button("🔔 ENABLE NOTIFICATIONS", use_container_width=True)
+     st.button("🔔 ENABLE NOTIFICATIONS", use_container_width=True)
     with btn4:
         st.button("STOP", use_container_width=True)
     with btn5:
