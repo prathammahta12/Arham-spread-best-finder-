@@ -28,7 +28,7 @@ def db_get_user(identifier):
     try:
         clean_id = identifier.strip()
         url = f"{SUPABASE_URL}/rest/v1/users?or=(username.ilike.{clean_id},phone.eq.{clean_id})&select=*"
-        r = requests.get(url, headers=HEADERS, timeout=8)
+        r = requests.get(url, headers=HEADERS, timeout=10)
         return r.json() if r.status_code == 200 and r.json() else None
     except:
         return None
@@ -41,20 +41,20 @@ def register_user(u, p, ph, token):
             "upstox_token": token.strip() if token else "NONE",
             "last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
-        r = requests.post(f"{SUPABASE_URL}/rest/v1/users", headers=HEADERS, json=payload, timeout=8)
+        r = requests.post(f"{SUPABASE_URL}/rest/v1/users", headers=HEADERS, json=payload, timeout=10)
         return r
     except:
         return None
 
 def update_user_login_time(uid):
     try:
-        requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json={"last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}, timeout=8)
+        requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json={"last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}, timeout=10)
     except:
         pass
 
 def update_user_token(uid, token):
     try:
-        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json={"upstox_token": token.strip()}, timeout=8)
+        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json={"upstox_token": token.strip()}, timeout=10)
         return r.status_code in [200, 204]
     except:
         return False
@@ -63,7 +63,7 @@ def admin_set_approval(uid, approve_status, days):
     try:
         v_date = (date.today() + timedelta(days=int(days))).strftime("%Y-%m-%d") if approve_status else None
         payload = {"is_approved": approve_status, "valid_until": v_date}
-        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json=payload, timeout=8)
+        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json=payload, timeout=10)
         return r.status_code in [200, 204]
     except:
         return False
@@ -74,14 +74,14 @@ def admin_master_update(uid, days, new_pass, approve_status):
         payload = {"is_approved": approve_status, "valid_until": v_date}
         if new_pass and new_pass.strip():
             payload["password"] = new_pass.strip()
-        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json=payload, timeout=8)
+        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json=payload, timeout=10)
         return r.status_code in [200, 204]
     except:
         return False
 
 def admin_delete_user(uid):
     try:
-        r = requests.delete(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, timeout=8)
+        r = requests.delete(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, timeout=10)
         return r.status_code in [200, 204]
     except:
         return False
@@ -188,7 +188,7 @@ elif st.session_state.is_admin:
         st.rerun()
 
     try:
-        r = requests.get(f"{SUPABASE_URL}/rest/v1/users?order=created_at.desc", headers=HEADERS, timeout=8)
+        r = requests.get(f"{SUPABASE_URL}/rest/v1/users?order=created_at.desc", headers=HEADERS, timeout=10)
         if r.status_code == 200:
             users_list = r.json()
             normal_users = [u for u in users_list if not u.get('is_admin')]
@@ -236,7 +236,7 @@ elif st.session_state.is_admin:
                     
                     with b_col3:
                         if st.button("🔌 Logout", key=f"out_{u['id']}"):
-                            requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{u['id']}", headers=HEADERS, json={"is_approved": False}, timeout=8)
+                            requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{u['id']}", headers=HEADERS, json={"is_approved": False}, timeout=10)
                             st.warning("Logged out!")
                             st.rerun()
 
@@ -247,10 +247,8 @@ elif st.session_state.is_admin:
                                 st.rerun()
                             else:
                                 st.error("Failed.")
-        else:
-            st.warning("Database fetch query ko response milne me samay lag raha hai. Kripya refresh karein.")
     except:
-        st.error("Failed to fetch users list. Please check connection.")
+        st.info("Loading user management interface...")
 
 # ==================== 3. TRADER TERMINAL WITH REQUIRED MARGIN ====================
 else:
@@ -362,7 +360,6 @@ else:
         st.button("STOP", use_container_width=True)
     with btn5:
         st.button("RESET", use_container_width=True)
-
     st.write("---")
     st.markdown("### 💎 Detected Spread Opportunities & Required Margin")
 
