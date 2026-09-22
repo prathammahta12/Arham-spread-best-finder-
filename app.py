@@ -2,113 +2,122 @@ import streamlit as st
 import requests
 import pandas as pd
 from datetime import datetime, date, timedelta
+import os
 import time
 
 # Page Configuration
-st.set_page_config(page_title="Arham Traders | Delta Spread Terminal", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="ARHAM TRADERS | Terminal", layout="wide", initial_sidebar_state="expanded")
 
-# --- HIGH-END CYBER TRADING TERMINAL CSS ---
+# --- HIGH-CONTRAST GOLDEN & NEON THEME WITH TEMPLE BACKGROUND ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:ital,wght@0,800;1,900&family=Rajdhani:wght@600;700&display=swap');
 
-    /* Global Dark Cyber Background */
+    /* Global Dark Cyber & Temple Overlay Background */
     .stApp {
-        background: radial-gradient(circle at 10% 20%, rgba(13, 23, 42, 0.95) 0%, rgba(6, 10, 20, 0.98) 90%),
-                    url('https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=1920&q=80');
+        background: linear-gradient(rgba(5, 10, 24, 0.88), rgba(5, 10, 24, 0.94)), 
+                    url('https://images.unsplash.com/photo-1622396481304-4ad7343b6794?auto=format&fit=crop&w=1920&q=80');
         background-size: cover;
+        background-position: center;
         background-attachment: fixed;
-        color: #e2e8f0;
+        color: #ffffff;
         font-family: 'Rajdhani', sans-serif;
     }
 
-    /* Arham Traders Branding Header */
-    .brand-title {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 2.8rem;
-        font-weight: 900;
-        font-style: italic;
-        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
-        letter-spacing: 2px;
-        margin: 0;
+    /* Main Big Brand Header */
+    .brand-container {
         text-align: center;
-    }
-
-    .brand-subtitle {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 1.15rem;
-        font-weight: 700;
-        font-style: italic;
-        color: #f59e0b;
-        letter-spacing: 1.5px;
-        text-align: center;
-        margin-top: 4px;
+        margin-top: 15px;
         margin-bottom: 25px;
-    }
-
-    /* Glassmorphism Control Panels */
-    .terminal-panel {
-        background: rgba(15, 23, 42, 0.85);
-        backdrop-filter: blur(16px);
-        border: 1px solid rgba(56, 189, 248, 0.25);
-        border-radius: 14px;
         padding: 20px;
+        background: rgba(10, 18, 38, 0.7);
+        border: 2px solid rgba(245, 158, 11, 0.4);
+        border-radius: 16px;
+        box-shadow: 0 0 35px rgba(245, 158, 11, 0.25);
+    }
+
+    .brand-title-big {
+        font-family: 'Cinzel', serif;
+        font-size: 3.6rem !important;
+        font-weight: 900 !important;
+        font-style: italic !important;
+        letter-spacing: 3px !important;
+        color: #ffbe0b !important;
+        text-shadow: 0 0 25px rgba(255, 190, 11, 0.8), 0 0 50px rgba(255, 110, 0, 0.5);
+        margin: 0 !important;
+        line-height: 1.1;
+    }
+
+    .brand-sub-big {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 1.45rem !important;
+        font-weight: 900 !important;
+        font-style: italic !important;
+        letter-spacing: 2px !important;
+        color: #38bdf8 !important;
+        text-shadow: 0 0 20px rgba(56, 189, 248, 0.9);
+        margin-top: 8px !important;
+        margin-bottom: 0px !important;
+    }
+
+    /* Temple Header Banner Image Container */
+    .temple-banner-box {
+        text-align: center;
+        margin-bottom: 18px;
+    }
+    .temple-banner-box img {
+        width: 100%;
+        max-height: 220px;
+        object-fit: cover;
+        border-radius: 14px;
+        border: 2px solid rgba(245, 158, 11, 0.5);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    }
+
+    /* High Visibility Input Form Styling */
+    .terminal-glass-card {
+        background: rgba(13, 22, 45, 0.92);
+        backdrop-filter: blur(14px);
+        border: 1.5px solid rgba(56, 189, 248, 0.35);
+        border-radius: 14px;
+        padding: 22px;
         margin-bottom: 20px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7);
     }
 
-    .panel-heading {
-        font-family: 'Orbitron', sans-serif;
-        color: #38bdf8;
-        font-size: 1.05rem;
-        font-weight: 800;
-        letter-spacing: 1px;
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    /* Input Controls */
-    div[data-baseweb="select"] > div, .stTextInput > div > div > input, .stNumberInput input {
-        background-color: #0f172a !important;
-        color: #f8fafc !important;
-        border: 1px solid #334155 !important;
-        border-radius: 8px !important;
+    /* Labels & Texts */
+    label, p, span {
         font-family: 'Rajdhani', sans-serif !important;
-        font-size: 1rem !important;
-        font-weight: 600 !important;
-    }
-
-    /* Buttons Styling */
-    .stButton > button {
-        border-radius: 8px !important;
-        font-family: 'Orbitron', sans-serif !important;
+        font-size: 1.1rem !important;
         font-weight: 700 !important;
-        letter-spacing: 1px !important;
-        padding: 8px 16px !important;
-        transition: all 0.2s ease-in-out !important;
+        color: #f1f5f9 !important;
+        letter-spacing: 0.5px !important;
     }
 
-    /* Scan Now High Glow Button */
+    /* Input Fields */
+    div[data-baseweb="select"] > div, .stTextInput > div > div > input, .stNumberInput input {
+        background-color: #0b1329 !important;
+        color: #38bdf8 !important;
+        font-size: 1.15rem !important;
+        font-weight: 800 !important;
+        border: 1.5px solid #2563eb !important;
+        border-radius: 8px !important;
+    }
+
+    /* Scan Now High Glow Action Button */
     .scan-glow > button {
-        background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
+        background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%) !important;
         color: #ffffff !important;
-        border: 1px solid #38bdf8 !important;
-        box-shadow: 0 0 15px rgba(2, 132, 199, 0.6) !important;
+        font-family: 'Montserrat', sans-serif !important;
+        font-size: 1.2rem !important;
+        font-weight: 900 !important;
+        border: 1.5px solid #ffbe0b !important;
+        box-shadow: 0 0 25px rgba(245, 158, 11, 0.7) !important;
+        border-radius: 10px !important;
     }
     .scan-glow > button:hover {
-        box-shadow: 0 0 25px rgba(56, 189, 248, 0.9) !important;
+        box-shadow: 0 0 35px rgba(255, 190, 11, 1) !important;
         transform: scale(1.02);
-    }
-
-    .stop-glow > button {
-        background: #ef4444 !important;
-        color: white !important;
-        border: none !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -197,14 +206,27 @@ if "valid_until" not in st.session_state:
 if "auto_scan" not in st.session_state:
     st.session_state.auto_scan = False
 
-# ==================== 1. BRANDED AUTH SCREEN ====================
+# ==================== 1. BRANDED LOGIN SCREEN WITH TEMPLE PHOTO ====================
 if not st.session_state.logged_in:
-    col_l, col_center, col_r = st.columns([1, 1.3, 1])
+    col_l, col_center, col_r = st.columns([1, 1.4, 1])
     with col_center:
-        st.markdown("<div style='margin-top: 40px;'>", unsafe_allow_html=True)
-        st.markdown("<h1 class='brand-title'>ARHAM TRADERS</h1>", unsafe_allow_html=True)
-        st.markdown("<div class='brand-subtitle'>⚡ Developed by Pratham Mehta ⚡</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        # Temple Photo Display
+        if os.path.exists("bg_temple.png"):
+            st.image("bg_temple.png", use_container_width=True)
+        else:
+            st.markdown("""
+            <div class='temple-banner-box'>
+                <img src='https://images.unsplash.com/photo-1622396481304-4ad7343b6794?auto=format&fit=crop&w=1200&q=80' alt='Temple Peak'>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Big Bold Italic Brand Display
+        st.markdown("""
+        <div class='brand-container'>
+            <div class='brand-title-big'>ARHAM TRADERS</div>
+            <div class='brand-sub-big'>⚡ DEVELOPED BY PRATHAM MEHTA ⚡</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         tab_login, tab_reg, tab_rst = st.tabs(["🔐 Trader Login", "📝 New Registration", "🔄 Reset Access Key"])
         
@@ -212,7 +234,7 @@ if not st.session_state.logged_in:
             u_name = st.text_input("Username / Mobile", key="l_name")
             u_pass = st.text_input("Access Password", type="password", key="l_pass")
             
-            if st.button("AUTHENTICATE TERMINAL", use_container_width=True, type="primary"):
+            if st.button("AUTHENTICATE & ENTER TERMINAL", use_container_width=True, type="primary"):
                 if not u_name or not u_pass:
                     st.warning("कृपया Username और Password दोनों भरें।")
                 else:
@@ -325,7 +347,7 @@ elif st.session_state.is_admin:
         if res_l.status_code == 200 and res_l.json():
             st.dataframe(pd.DataFrame(res_l.json()), use_container_width=True)
 
-# ==================== 3. TRADER TERMINAL: DELTA & FUTURES ENGINE ====================
+# ==================== 3. TRADER SPREAD SCANNER TERMINAL ====================
 else:
     # Auto-Logout Check
     if st.session_state.valid_until:
@@ -336,33 +358,32 @@ else:
 
     # Sidebar
     with st.sidebar:
-        st.markdown("<h2 style='color:#38bdf8; font-family: Orbitron; margin: 0;'>ARHAM TRADERS</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='color:#f59e0b; font-size: 0.85rem; font-weight:700;'>Dev by Pratham Mehta</p>", unsafe_allow_html=True)
+        st.markdown("<h1 style='color:#ffbe0b; font-family: Cinzel; font-size: 1.8rem; margin:0;'>ARHAM TRADERS</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#38bdf8; font-size: 0.95rem; font-weight:800; margin-bottom: 15px;'>DEV BY PRATHAM MEHTA</p>", unsafe_allow_html=True)
         st.write("---")
         
         rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.valid_until else 0
         st.markdown(f"👤 Trader: **{st.session_state.username}**")
-        st.markdown(f"⏳ Plan Remaining: **{rem_days} Days**")
-        st.markdown(f"📅 Validity Expiry: `{st.session_state.valid_until}`")
+        st.markdown(f"⏳ Plan Validity: **{rem_days} Days Remaining**")
+        st.markdown(f"📅 Valid Till: `{st.session_state.valid_until}`")
         st.write("---")
         
         if st.sidebar.button("Logout", use_container_width=True):
             st.session_state.logged_in = False
             st.rerun()
 
-    # Terminal Main Header
+    # Terminal Header
     h1, h2 = st.columns([3, 1])
     with h1:
-        st.markdown("<h2 style='color: #38bdf8; font-family: Orbitron; margin:0;'>⚡ Delta Analysis — FNO Scanner</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='color: #ffbe0b; font-family: Montserrat; font-weight:900; margin:0;'>⚡ DELTA ANALYSIS — FNO SPREAD SCANNER</h2>", unsafe_allow_html=True)
         st.caption("Institutional Spread Analytics Engine | NSE Real-Time Feed Mode")
     with h2:
-        st.markdown("<div style='text-align:right; margin-top: 10px;'><span style='color: #22c55e; font-weight: bold;'>● FEED ACTIVE</span> | <span style='color:#94a3b8;'>NSE F&O</span></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:right; margin-top: 10px;'><span style='color: #22c55e; font-weight: 900; font-size: 1.1rem;'>● FEED ACTIVE</span> | <span style='color:#94a3b8; font-weight:700;'>NSE F&O</span></div>", unsafe_allow_html=True)
 
-    # --- TOP SCANNER FILTERS PANEL (IMAGE REPLICA) ---
-    st.markdown("<div class='terminal-panel'>", unsafe_allow_html=True)
-    st.markdown("<div class='panel-heading'>⚙️ Scanner Filter Parameters</div>", unsafe_allow_html=True)
+    # --- TOP SCANNER FILTERS PANEL ---
+    st.markdown("<div class='terminal-glass-card'>", unsafe_allow_html=True)
+    st.markdown("<div style='color:#ffbe0b; font-size: 1.15rem; font-weight: 800; margin-bottom: 12px;'>⚙️ SCANNER FILTER PARAMETERS</div>", unsafe_allow_html=True)
     
-    # Row 1
     r1_c1, r1_c2, r1_c3, r1_c4, r1_c5, r1_c6, r1_c7 = st.columns(7)
     with r1_c1:
         f_stock = st.selectbox("STOCK", ["ALL STOCKS", "NIFTY", "BANKNIFTY", "HDFCBANK", "RELIANCE", "ICICIBANK", "TCS", "INFY", "SBIN"])
@@ -371,7 +392,6 @@ else:
     with r1_c3:
         f_ref = st.selectbox("REFERENCE", ["Future LTP", "Spot Index", "VWAP", "Synthetic Future"])
     with r1_c4:
-        # Crucial Filter: Allows Pure Futures Calendar Spreads
         f_type = st.selectbox("TYPE", ["Futures Calendar Spread", "Both (CE & PE)", "Call Spread (CE)", "Put Spread (PE)"])
     with r1_c5:
         f_price_gap = st.selectbox("PRICE GAP", ["OFF", "1 pt", "2 pts", "3 pts", "5 pts"])
@@ -380,7 +400,6 @@ else:
     with r1_c7:
         f_strike_gap = st.number_input("STRIKE GAP %", min_value=1.0, max_value=20.0, value=5.0, step=0.5)
 
-    # Row 2
     r2_c1, r2_c2, r2_c3, r2_c4, r2_c5, r2_c6 = st.columns(6)
     with r2_c1:
         f_iv_gap = st.number_input("IV GAP %", min_value=1.0, max_value=50.0, value=5.0, step=0.5)
@@ -397,8 +416,8 @@ else:
     st.markdown("</div>", unsafe_allow_html=True)
 
     # --- CUSTOM ALERT PANEL ---
-    st.markdown("<div class='terminal-panel'>", unsafe_allow_html=True)
-    st.markdown("<div class='panel-heading'>🎯 Custom Spread Alert — Specific Company / Strike</div>", unsafe_allow_html=True)
+    st.markdown("<div class='terminal-glass-card'>", unsafe_allow_html=True)
+    st.markdown("<div style='color:#38bdf8; font-size: 1.15rem; font-weight: 800; margin-bottom: 12px;'>🎯 CUSTOM SPREAD ALERT — SPECIFIC COMPANY / STRIKE</div>", unsafe_allow_html=True)
     
     c_col1, c_col2, c_col3, c_col4, c_col5, c_col6 = st.columns(6)
     with c_col1:
@@ -412,145 +431,4 @@ else:
     with c_col5:
         a_ratio = st.selectbox("RATIO BUY:SELL", ["1 : 1", "1 : 2", "3 : 10"])
     with c_col6:
-        a_debit = st.number_input("TARGET SPREAD ₹", value=12.50, step=0.5)
-
-    btn_ca1, btn_ca2 = st.columns(2)
-    with btn_ca1:
-        start_alert_btn = st.button("🔔 START CUSTOM ALERT", use_container_width=True)
-    with btn_ca2:
-        check_now_btn = st.button("🔎 CHECK STRIKE PAIR NOW", use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    # --- ACTION TOOLBAR (SCREENSHOT BUTTONS) ---
-    b1, b2, b3, b4, b5 = st.columns([1.5, 1.5, 1.5, 1, 1])
-    with b1:
-        st.markdown('<div class="scan-glow">', unsafe_allow_html=True)
-        scan_triggered = st.button("🚀 SCAN NOW", use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    with b2:
-        if st.button("⚡ START AUTO SCAN", use_container_width=True):
-            st.session_state.auto_scan = True
-            st.rerun()
-    with b3:
-        if st.button("🔔 NOTIFICATIONS ON", use_container_width=True):
-            st.success("Sound notifications enabled!")
-    with b4:
-        st.markdown('<div class="stop-glow">', unsafe_allow_html=True)
-        if st.button("⏹ STOP", use_container_width=True):
-            st.session_state.auto_scan = False
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-    with b5:
-        if st.button("🔄 RESET", use_container_width=True):
-            st.session_state.auto_scan = False
-            st.rerun()
-
-    st.write("---")
-
-    # --- SPREAD CALCULATION ENGINE ---
-    underlyings = {
-        "NIFTY": {"spot": 25350, "near_fut": 25380.50, "far_fut": 25515.20, "lot": 75, "step": 50, "iv": 13.2},
-        "BANKNIFTY": {"spot": 53600, "near_fut": 53680.00, "far_fut": 53995.00, "lot": 35, "step": 100, "iv": 16.5},
-        "HDFCBANK": {"spot": 1660, "near_fut": 1664.20, "far_fut": 1678.80, "lot": 550, "step": 10, "iv": 18.4},
-        "RELIANCE": {"spot": 1395, "near_fut": 1399.10, "far_fut": 1413.50, "lot": 250, "step": 10, "iv": 21.0},
-        "ICICIBANK": {"spot": 1280, "near_fut": 1284.00, "far_fut": 1295.60, "lot": 700, "step": 10, "iv": 19.5},
-        "TCS": {"spot": 4250, "near_fut": 4265.00, "far_fut": 4302.00, "lot": 175, "step": 50, "iv": 15.0},
-        "INFY": {"spot": 1940, "near_fut": 1946.50, "far_fut": 1962.00, "lot": 400, "step": 20, "iv": 18.0},
-        "SBIN": {"spot": 820, "near_fut": 823.40, "far_fut": 831.20, "lot": 750, "step": 5, "iv": 22.5}
-    }
-
-    selected_stocks = list(underlyings.keys()) if f_stock == "ALL STOCKS" else [f_stock]
-    results = []
-
-    for s in selected_stocks:
-        u = underlyings[s]
-        lot = u["lot"]
-
-        # CASE A: USER SELECTED FUTURES CALENDAR SPREAD (ONLY FUTURES, NO OPTIONS)
-        if f_type == "Futures Calendar Spread":
-            near_p = u["near_fut"]
-            far_p = u["far_fut"]
-            spread_pts = round(far_p - near_p, 2)
-            total_spread_pnl = round(spread_pts * lot, 2)
-            spread_pct = round((spread_pts / near_p) * 100, 2)
-            annualized = round(spread_pct * 12, 1)
-
-            # Smart Recommendation
-            if spread_pct > 0.8:
-                action = "⭐ High Premium Carry! Sell Far / Buy Near (Reverse Calendar)"
-            elif spread_pct < 0.35:
-                action = "🔥 Cheap Carry! Buy Far / Sell Near (Long Calendar Spread)"
-            else:
-                action = "✅ Normal Spread Range. Arbitrage Margin Benefit."
-
-            results.append({
-                "Stock": s,
-                "Strategy": "Futures Calendar Spread",
-                "Near Month Future": f"Current Expiry @ ₹{near_p}",
-                "Far Month Future": f"Next Expiry @ ₹{far_p}",
-                "Spread (Pts)": f"+{spread_pts} pts",
-                "Lot Size": lot,
-                "Total PnL / Lot": f"₹{total_spread_pnl}",
-                "Carry % (Annualized)": f"{spread_pct}% ({annualized}% p.a.)",
-                "Best Action Advice": action
-            })
-
-        # CASE B: USER SELECTED OPTIONS SPREADS (CE / PE)
-        else:
-            spot = u["spot"]
-            step = u["step"]
-            gap = spot * (float(f_strike_gap) / 100.0)
-            
-            # Exact strike calculation
-            buy_strike = int(round((spot - (gap * 0.5)) / step) * step)
-            sell_strike = int(round((spot + (gap * 0.5)) / step) * step)
-
-            prem_buy = round(max(6.0, (spot * 0.016) + (u["iv"] * 0.25)), 2)
-            prem_sell = round(max(2.5, prem_buy * 0.52), 2)
-
-            r_sell_mult = 2 if f_ratio == "1 : 2" else (10 if f_ratio == "3 : 10" else 1)
-            net_diff = round(prem_buy - (prem_sell * r_sell_mult), 2)
-            max_risk = round(abs(net_diff) * lot, 2)
-
-            if net_diff < 0:
-                action = "🔥 Net Credit. Theta Decay Advantage."
-            else:
-                action = "✅ Defined Risk Setup. Favorable Delta Gap."
-
-            results.append({
-                "Stock": s,
-                "Strategy": f"Option {f_type.split(' ')[0]} ({f_ratio})",
-                "Leg 1 (Buy Strike)": f"{buy_strike} @ ₹{prem_buy}",
-                "Leg 2 (Sell Strike)": f"{sell_strike} (x{r_sell_mult}) @ ₹{prem_sell}",
-                "Spread (Pts)": f"{'+' if net_diff > 0 else ''}₹{net_diff}",
-                "Lot Size": lot,
-                "Total PnL / Lot": f"₹{max_risk}",
-                "Carry % (Annualized)": f"{round(float(f_iv_gap), 1)}% IV Gap",
-                "Best Action Advice": action
-            })
-
-    # Alert Trigger Display
-    if check_now_btn or start_alert_btn:
-        st.markdown(f"""
-        <div style='background: rgba(14, 165, 233, 0.15); border: 1px solid #0ea5e9; border-radius: 8px; padding: 12px; margin-bottom: 15px;'>
-            🔔 <b>Custom Spread Evaluated:</b> {a_company} | Buy: {a_buy} vs Sell: {a_sell} | Target: ₹{a_debit} <br>
-            <span style='color: #22c55e;'><b>Status:</b> Spread condition active. Good liquidity on both legs.</span>
-        </div>
-        """, unsafe_allow_html=True)
-        play_alert_sound()
-
-    # Results Table Header
-    mode_text = "FUTURES SPREADS ONLY" if f_type == "Futures Calendar Spread" else "OPTIONS DELTA SPREADS"
-    st.markdown(f"### 💎 Best High-Probability Spreads Found — [{mode_text}]")
-    
-    if results:
-        df_display = pd.DataFrame(results)
-        st.dataframe(df_display, use_container_width=True, hide_index=True)
-    else:
-        st.warning("कोई स्प्रेड मैच नहीं हुआ।")
-
-    # Auto Scan Loop
-    if st.session_state.auto_scan:
-        st.caption("⚡ Auto-Scanning active (Refreshing market in 5 seconds)...")
-        time.sleep(5)
-        st.rerun()
+        a_debit = st.number_input("T
