@@ -7,7 +7,7 @@ st.set_page_config(page_title="Futures Spread Terminal", layout="wide")
 
 # --- SUPABASE REST CONFIG ---
 SUPABASE_URL = "https://pmigagqdfbajqlemucuf.supabase.co"
-SUPABASE_KEY = "अपनी_PUBLISHABLE_KEY_यहाँ_डालें"
+SUPABASE_KEY = "sb_publishable_WPjBIo7Q1MR-_VLAcCrO8Q_Ne1x9aJ9"
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
