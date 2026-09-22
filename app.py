@@ -1,31 +1,37 @@
 import streamlit as st
 import requests
-import pandas as pd
+import os
+import base64
 from datetime import datetime, date, timedelta
 
 st.set_page_config(page_title="ARHAM TRADERS", layout="wide", initial_sidebar_state="collapsed")
 
-# Direct Unblocked Girnar Ji Jain Tirth Web-Image Link
-GIRNAR_IMAGE_URL = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png"
-# Reliable high-speed Direct Jain Mount Girnar Temple Architecture Link
-GIRNAR_URL = "https://images.pexels.com/photos/161401/fujisan-fuji-mountain-japan-161401.jpeg?auto=compress&cs=tinysrgb&w=1600"
-# High-Resolution Jain Temple Peak / Girnar Tirth direct CDN
-GIRNAR_SHIKHAR = "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1600&q=80"
+# --- STRICTLY LOCAL GIRNAR.JPG TO BASE64 BACKGROUND ---
+def get_local_girnar_bg():
+    target_files = ["girnar.jpg", "girnar.png", "girnar.jpeg", "Girnar.jpg", "GIRNAR.JPG"]
+    for f in target_files:
+        if os.path.exists(f):
+            with open(f, "rb") as img_file:
+                b64_str = base64.b64encode(img_file.read()).decode()
+                return f"data:image/jpeg;base64,{b64_str}"
+    return ""
+
+girnar_base64_bg = get_local_girnar_bg()
 
 st.markdown(f'''
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
     
-    /* Fullscreen High-Resolution Temple Background Layer */
-    .girnar-bg-full {{
+    /* Pura Background: Aapki Girnar.jpg File */
+    .girnar-full-screen-bg {{
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: linear-gradient(rgba(6, 11, 23, 0.82), rgba(6, 11, 23, 0.90)), 
-                    url('{GIRNAR_SHIKHAR}') no-repeat center center fixed;
-        background-size: cover;
+        background: linear-gradient(rgba(6, 11, 23, 0.78), rgba(6, 11, 23, 0.88)), 
+                    url('{girnar_base64_bg}') no-repeat center center fixed !important;
+        background-size: cover !important;
         z-index: -999;
     }}
 
@@ -35,26 +41,15 @@ st.markdown(f'''
         font-family: 'Rajdhani', sans-serif !important;
     }}
     
-    /* Login Temple Header Banner */
-    .temple-banner {{
-        width: 100%;
-        max-height: 200px;
-        object-fit: cover;
-        border-radius: 12px;
-        border: 2px solid #f59e0b;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-    }}
-    
     .brand-card {{
         text-align: center;
-        margin: 5px auto 18px auto;
+        margin: 20px auto 18px auto;
         padding: 16px 12px;
         background: rgba(11, 18, 36, 0.90);
         backdrop-filter: blur(12px);
         border: 2px solid #f59e0b;
         border-radius: 16px;
-        box-shadow: 0 0 35px rgba(245, 158, 11, 0.4);
+        box-shadow: 0 0 35px rgba(245, 158, 11, 0.45);
         max-width: 480px;
     }}
     .brand-main {{
@@ -80,7 +75,7 @@ st.markdown(f'''
     }}
     
     .filter-panel {{
-        background: rgba(11, 18, 36, 0.88);
+        background: rgba(11, 18, 36, 0.90);
         backdrop-filter: blur(12px);
         border: 1px solid rgba(56, 189, 248, 0.35);
         border-radius: 12px;
@@ -88,7 +83,7 @@ st.markdown(f'''
         margin-bottom: 14px;
     }}
     .alert-panel {{
-        background: rgba(8, 14, 28, 0.9);
+        background: rgba(8, 14, 28, 0.92);
         border: 1px solid #1c2b4d;
         border-radius: 8px;
         padding: 14px;
@@ -178,7 +173,7 @@ st.markdown(f'''
         margin-top: 6px;
     }}
 </style>
-<div class="girnar-bg-full"></div>
+<div class="girnar-full-screen-bg"></div>
 ''', unsafe_allow_html=True)
 
 # --- SUPABASE CONFIG ---
@@ -215,13 +210,10 @@ for key, default in [("logged_in", False), ("username", ""), ("is_admin", False)
     if key not in st.session_state:
         st.session_state[key] = default
 
-# ==================== 1. LOGIN SCREEN WITH GIRNAR JI ====================
+# ==================== 1. LOGIN SCREEN ====================
 if not st.session_state.logged_in:
     _, col_mid, _ = st.columns([1, 1.4, 1])
     with col_mid:
-        # Visible Header Image Card
-        st.markdown(f'<img src="{GIRNAR_SHIKHAR}" class="temple-banner" alt="Girnar Ji Tirth">', unsafe_allow_html=True)
-
         st.markdown('''
         <div class="brand-card">
             <div class="brand-main">ARHAM TRADERS</div>
