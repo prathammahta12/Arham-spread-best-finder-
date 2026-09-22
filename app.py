@@ -48,27 +48,31 @@ st.markdown(f'''
         font-family: 'Rajdhani', sans-serif !important;
     }}
     
-    /* Big Wide Luxury Brand Card */
+    /* Perfectly Fitted & Centered Golden Brand Card */
     .brand-card {{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         text-align: center;
-        margin: 25px auto 22px auto;
-        padding: 22px 28px;
+        margin: 25px auto 20px auto;
+        padding: 18px 24px;
         background: rgba(11, 18, 36, 0.92);
         backdrop-filter: blur(14px);
         border: 2.5px solid #f59e0b;
-        border-radius: 18px;
-        box-shadow: 0 0 50px rgba(245, 158, 11, 0.55);
-        width: 98%;
-        max-width: 620px;
+        border-radius: 16px;
+        box-shadow: 0 0 45px rgba(245, 158, 11, 0.55);
+        width: fit-content !important;
+        max-width: 95% !important;
         box-sizing: border-box;
     }}
     .brand-main {{
         font-family: 'Cinzel', serif;
-        font-size: clamp(2.1rem, 6.2vw, 3rem) !important;
+        font-size: clamp(1.7rem, 5.2vw, 2.4rem) !important;
         font-weight: 900 !important;
         font-style: italic !important;
         white-space: nowrap !important;
-        letter-spacing: 2px !important;
+        letter-spacing: 1.5px !important;
         color: #ffbe0b !important;
         text-shadow: 0 0 25px rgba(255, 190, 11, 0.85);
         margin: 0 !important;
@@ -76,22 +80,13 @@ st.markdown(f'''
     }}
     .brand-dev {{
         font-family: 'Teko', sans-serif;
-        font-size: clamp(1.2rem, 4.4vw, 1.55rem) !important;
+        font-size: clamp(1.1rem, 3.8vw, 1.35rem) !important;
         font-weight: 700 !important;
         letter-spacing: 1.5px !important;
         white-space: nowrap !important;
         color: #38bdf8 !important;
         text-shadow: 0 0 16px rgba(56, 189, 248, 0.85);
-        margin-top: 6px !important;
-    }}
-    .brand-mantra {{
-        color: #f59e0b;
-        font-size: clamp(0.85rem, 3.2vw, 1.05rem) !important;
-        margin-top: 8px;
-        font-weight: 800;
-        letter-spacing: 0.8px;
-        text-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
-        white-space: nowrap !important;
+        margin-top: 4px !important;
     }}
     
     .filter-panel {{
@@ -238,7 +233,6 @@ if not st.session_state.logged_in:
         <div class="brand-card">
             <div class="brand-main">ARHAM TRADERS</div>
             <div class="brand-dev">⚡ DEVELOPED BY PRATHAM MEHTA ⚡</div>
-            <div class="brand-mantra">🙏 Shree Girnar Mandal Shree Neminath Bhagwan Ne Namah 🙏</div>
         </div>
         ''', unsafe_allow_html=True)
         
