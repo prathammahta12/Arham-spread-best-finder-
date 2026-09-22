@@ -22,7 +22,7 @@ girnar_bg_src = get_exact_girnar_bg()
 
 SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaWdpeGdxZGZ0YWpxa211b3VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTI0OTUsImV4cCI6MjEwNTYyODQ5NX0.pI7CPt9XdLG2zirwkisz5Ttzm3CZIQiL6qg7D70fKlc"
-HEADERS = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": "application/json"}
+HEADERS = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": "application/json", "Prefer": "return=representation"}
 
 def db_get_user(identifier):
     try:
@@ -41,7 +41,8 @@ def register_user(u, p, ph, token):
             "upstox_token": token.strip() if token else "NONE",
             "last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
-        return requests.post(f"{SUPABASE_URL}/rest/v1/users", headers=HEADERS, json=payload, timeout=5)
+        r = requests.post(f"{SUPABASE_URL}/rest/v1/users", headers=HEADERS, json=payload, timeout=5)
+        return r
     except:
         return None
 
@@ -157,10 +158,17 @@ if not st.session_state.logged_in:
             if st.button("REGISTER NOW", use_container_width=True, type="primary"):
                 if ru and rph and rp:
                     res = register_user(ru, rp, rph, r_token)
-                    if res and res.status_code in [200, 201]:
-                        st.success("✅ Registration successful! Admin approval ke baad login karein.")
+                    if res is not None:
+                        if res.status_code in [200, 201]:
+                            st.success("✅ Registration successful! Admin approval ke baad login karein.")
+                        else:
+                            try:
+                                err_msg = res.json().get("message", "Username already exists!")
+                            except:
+                                err_msg = "Username already exists!"
+                            st.error(f"Error: {err_msg}")
                     else:
-                        st.error("Username already exists!")
+                        st.error("Registration request failed.")
                 else:
                     st.warning("Kripya zaroori fields bharein.")
 
@@ -211,10 +219,10 @@ elif st.session_state.is_admin:
                     
                     if col_btn2.button("🗑️ Delete User", key=f"del_{u['id']}"):
                         if admin_delete_user(u["id"]):
-                            st.warning(f"User {u['username']} deleted!")
+                            st.warning(f"User {u['username']} permanently deleted from database!")
                             st.rerun()
                         else:
-                            st.error("Failed to delete user.")
+                            st.error("Failed to delete user. Check Supabase RLS policies.")
     except:
         st.error("Failed to fetch users list.")
 
@@ -347,7 +355,7 @@ else:
                 <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#10b981;">₹6,262.50</div></div>
                 <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ff5268;">₹3,240.00</div></div>
                 <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
-            </div>
+           </div>
             <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters matched (Strike Gap: {f_strike_gap}%, IV Gap: {f_iv_gap}%). Upstox Token: {st.session_state.upstox_token[:6] if st.session_state.upstox_token else 'Default'}...</div>
         </div>
         ''', unsafe_allow_html=True)
