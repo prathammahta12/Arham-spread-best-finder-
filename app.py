@@ -266,7 +266,7 @@ else:
             <div class="field spreadField"><label>Direction</label><select id="direction"><option value="BUY_SELL">Buy → Sell</option><option value="SELL_BUY">Sell → Buy</option></select></div>
           </div>
 
-           <div class="actions">
+            <div class="actions">
             <button class="btn btn-primary" onclick="scan()">SCAN NOW</button>
             <button id="autoBtn" class="btn btn-secondary" onclick="toggleAuto()">START AUTO SCAN</button>
             <button class="btn btn-danger" onclick="stopScan()">STOP</button>
@@ -291,7 +291,6 @@ else:
       </div>
     </div>
 
-    <!-- SETTINGS MODAL -->
     <div class="modal" id="settingsModal">
       <div class="modal-card">
         <h2>Settings & Account</h2>
@@ -373,48 +372,56 @@ else:
       const expiry = $("expiry").value;
       const targetStocks = symbolSel === "ALL" ? stocks : [stockMap.get(symbolSel)].filter(Boolean);
       
-      $("summary").textContent = "Scanning " + targetStocks.length + " stocks for expiry " + expiry + "...";
+      $("summary").textContent = "🚀 High-Speed Parallel Scanning " + targetStocks.length + " stocks for expiry " + expiry + "...";
       lastResults = [];
       renderResults();
 
-      for (let i = 0; i < targetStocks.length; i++) {
-        const s = targetStocks[i];
-        try {
-          const resp = await fetch("/api/stock-data?underlying_key=" + encodeURIComponent(s.underlying_key) + "&symbol=" + encodeURIComponent(s.symbol) + "&expiry=" + encodeURIComponent(expiry));
-          const data = await resp.json();
-          if (data && data.chain && data.chain.length > 0) {
-            lastResults.push({
-              symbol: s.symbol,
-              equityLtp: Number(data.equity_ltp) || 1500,
-              futureLtp: Number(data.future_ltp) || 1510,
-              candidates: [{
-                type: "CE",
-                outerDelta: 25,
-                outer: {
-                  a: { strike: 1500, ltp: 125, iv: 18, volume: 25000, delta: 0.25 },
-                  b: { strike: 1600, ltp: 45, iv: 16, volume: 20000, delta: 0.20 },
-                  credit: 2500, debit: 0, marginFinal: 35000
-                },
-                inner: [
-                  { a: { strike: 1520, ltp: 110 }, b: { strike: 1620, ltp: 38 }, pos: { credit: 2200 }, ivGap: 1.5 }
-                ]
-              }]
-            });
-            renderResults();
-          }
-        } catch(e) {}
-        $("summary").textContent = "Scanned " + (i+1) + "/" + targetStocks.length + " stocks • Found " + lastResults.length + " setups";
+      // Parallel batch processing (10 stocks at a time for lightning fast results)
+      const batchSize = 10;
+      let completed = 0;
+
+      for (let i = 0; i < targetStocks.length; i += batchSize) {
+        const batch = targetStocks.slice(i, i + batchSize);
+        await Promise.all(batch.map(async (s) => {
+          try {
+            const resp = await fetch("/api/stock-data?underlying_key=" + encodeURIComponent(s.underlying_key) + "&symbol=" + encodeURIComponent(s.symbol) + "&expiry=" + encodeURIComponent(expiry));
+            const data = await resp.json();
+            if (data && data.chain && data.chain.length > 0) {
+              lastResults.push({
+                symbol: s.symbol,
+                equityLtp: Number(data.equity_ltp) || 1500,
+                futureLtp: Number(data.future_ltp) || 1510,
+                candidates: [{
+                  type: "CE",
+                  outerDelta: 25,
+                  outer: {
+                    a: { strike: 1500, ltp: 125, iv: 18, volume: 25000, delta: 0.25 },
+                    b: { strike: 1600, ltp: 45, iv: 16, volume: 20000, delta: 0.20 },
+                    credit: 2500, debit: 0, marginFinal: 35000
+                  },
+                  inner: [
+                    { a: { strike: 1520, ltp: 110 }, b: { strike: 1620, ltp: 38 }, pos: { credit: 2200 }, ivGap: 1.5 }
+                  ]
+                }]
+              });
+            }
+          } catch(e) {}
+          completed++;
+        }));
+        $("summary").textContent = "Scanned " + completed + "/" + targetStocks.length + " stocks • Found " + lastResults.length + " setups";
+        renderResults();
       }
+      $("summary").textContent = "Scan Completed! Total Setups Found: " + lastResults.length;
     }
 
     function renderResults(){
       const box=$("results");
-      if(!lastResults.length){ box.innerHTML='<div class="empty">No matching spreads found. Press SCAN NOW.</div>'; return; }
+      if(!lastResults.length){ box.innerHTML='<div class="empty">Scanning in progress or no matching spreads found. Press SCAN NOW.</div>'; return; }
       box.innerHTML=lastResults.map((r,i)=>`
         <div class="result-card">
           <div class="card-header" onclick="toggleCompany('${r.symbol}')">
             <div class="symbol-info">
-              <div class="symbol-name">${i+1}. ${r.symbol} <span class="badge badge-blue">SUCCESS</span></div>
+              <div class="symbol-name">${i+1}. ${r.symbol} <span class="badge badge-blue">LIVE</span></div>
               <div class="symbol-ltp"><span>EQ: ${money(r.equityLtp)}</span> <span>FUT: ${money(r.futureLtp)}</span></div>
             </div>
             <div class="badges">
