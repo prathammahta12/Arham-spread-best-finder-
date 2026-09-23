@@ -143,12 +143,11 @@ else:
     with col_top1:
         st.markdown('<div style="font-family:\'Teko\',sans-serif; font-size:1.2rem; color:#ffffff; font-weight:900; letter-spacing:1px; padding: 5px 0; text-decoration:underline; text-decoration-color:#38bdf8;">⚡ ARHAM TRADERS | DEVELOPED BY PRATHAM MEHTA ⚡</div>', unsafe_allow_html=True)
     with col_top2:
-        if st.button("🚪 Logout", use_keyword=False, use_container_width=True):
+        if st.button("🚪 Logout", use_container_width=True):
             st.session_state.logged_in = False
             st.rerun()
 
     if os.path.exists("terminal.html"):
-        # Explicitly reading with utf-8 encoding to prevent mojibake/garbled characters
         with open("terminal.html", "r", encoding="utf-8", errors="ignore") as f:
             html_content = f.read()
         
