@@ -243,7 +243,7 @@ elif st.session_state.is_admin:
         st.info("Loading user management interface...")
 
 # ==================== 3. ARHAM TRADERS TERMINAL ====================
-      else:
+else:
     col_top1, col_top2 = st.columns([6, 1])
     with col_top1:
         st.markdown('<div style="font-family:\'Teko\',sans-serif; font-size:1.2rem; color:#ffffff; font-weight:900; letter-spacing:1px; padding: 5px 0; text-decoration:underline; text-decoration-color:#38bdf8;">⚡ ARHAM TRADERS | DEVELOPED BY PRATHAM MEHTA ⚡</div>', unsafe_allow_html=True)
@@ -625,7 +625,6 @@ elif st.session_state.is_admin:
         </div>
       `).join("");
     }
-
     function toggleAuto(){
       if(autoTimer){clearInterval(autoTimer);autoTimer=null;$("autoState").textContent="Auto: OFF";}
       else{autoTimer=setInterval(scan,60000);$("autoState").textContent="Auto: ON";}
