@@ -137,7 +137,7 @@ if not st.session_state.logged_in:
                 st.session_state.update(logged_in=True, username="Demo_Trader", user_id=0, is_admin=False, valid_until="2030-01-01", upstox_token="", mode="DEMO")
                 st.rerun()
 
-# ==================== 2. ARHAM TRADERS TERMINAL (EXACT FILE CODE INTEGRATED) ====================
+# ==================== 2. ARHAM TRADERS TERMINAL ====================
 else:
     col_top1, col_top2 = st.columns([6, 1])
     with col_top1:
@@ -151,8 +151,7 @@ else:
     current_uname = str(st.session_state.username)
     current_token = str(st.session_state.upstox_token)
 
-    # Exact code provided by user via file upload
-    dashboard_html = f"""
+    dashboard_html = """
     <!doctype html>
     <html lang="en">
     <head>
@@ -160,7 +159,7 @@ else:
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Delta Analysis — Advanced FNO Scanner</title>
     <style>
-    :root {{
+    :root {
       --bg: #0a0a0a;
       --surface: #141414;
       --surface-hover: #1f1f1f;
@@ -171,93 +170,93 @@ else:
       --success: #22c55e;
       --danger: #ef4444;
       --fontScale: 1;
-    }}
-    * {{ box-sizing: border-box; }}
-    body {{
+    }
+    * { box-sizing: border-box; }
+    body {
       margin: 0; min-height: 100vh; background-color: var(--bg); color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       font-size: calc(14px * var(--fontScale)); -webkit-font-smoothing: antialiased;
-    }}
-    .navbar {{
+    }
+    .navbar {
       display: flex; justify-content: space-between; align-items: center; padding: 0 24px; height: 60px;
       background-color: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
-    }}
-    .brand {{ font-size: 19px; font-weight: 700; letter-spacing: 1px; color: var(--accent-blue); display: flex; align-items: center; gap: 10px; }}
-    .status-indicator {{ display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }}
-    .dot {{ width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; }}
-    .connected .dot {{ background: var(--success); box-shadow: 0 0 8px var(--success); }}
-    .disconnected .dot {{ background: var(--danger); box-shadow: 0 0 8px var(--danger); }}
-    .nav-links {{ display: flex; gap: 12px; }}
-    .nav-links button {{
+    }
+    .brand { font-size: 19px; font-weight: 700; letter-spacing: 1px; color: var(--accent-blue); display: flex; align-items: center; gap: 10px; }
+    .status-indicator { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; }
+    .connected .dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .disconnected .dot { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+    .nav-links { display: flex; gap: 12px; }
+    .nav-links button {
       background: transparent; border: none; color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer;
       padding: 8px 16px; border-radius: 6px; transition: all 0.2s;
-    }}
-    .nav-links button:hover {{ color: var(--text); background: var(--surface-hover); }}
-    .nav-links button.active {{ color: var(--bg); background: var(--text); }}
-    .container {{ max-width: 1400px; margin: 0 auto; padding: 24px; }}
-    .header-title {{ font-size: 18px; font-weight: 600; margin: 0 0 16px 0; color: var(--text-muted); }}
-    .panel {{ background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 24px; }}
-    .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }}
-    .field label {{ display: block; font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.5px; }}
-    .field input, .field select {{
+    }
+    .nav-links button:hover { color: var(--text); background: var(--surface-hover); }
+    .nav-links button.active { color: var(--bg); background: var(--text); }
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    .header-title { font-size: 18px; font-weight: 600; margin: 0 0 16px 0; color: var(--text-muted); }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+    .field label { display: block; font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.5px; }
+    .field input, .field select {
       width: 100%; height: 38px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
       color: var(--text); font-size: 13px; outline: none; transition: border 0.2s;
-    }}
-    .field input:focus, .field select:focus {{ border-color: var(--accent-blue); }}
-    .inlineField {{ display: flex; gap: 8px; }}
-    .inlineField select {{ width: 75px; flex-shrink: 0; }}
-    .actions {{ display: flex; gap: 12px; margin-top: 24px; align-items: center; flex-wrap: wrap; }}
-    .btn {{
+    }
+    .field input:focus, .field select:focus { border-color: var(--accent-blue); }
+    .inlineField { display: flex; gap: 8px; }
+    .inlineField select { width: 75px; flex-shrink: 0; }
+    .actions { display: flex; gap: 12px; margin-top: 24px; align-items: center; flex-wrap: wrap; }
+    .btn {
       height: 38px; padding: 0 20px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;
       display: inline-flex; align-items: center; justify-content: center; transition: background 0.2s, opacity 0.2s;
-    }}
-    .btn:hover {{ opacity: 0.85; }}
-    .btn-primary {{ background: var(--text); color: var(--bg); }}
-    .btn-danger {{ background: var(--danger); color: white; }}
-    .btn-secondary {{ background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); }}
-    .searchRow {{ display: flex; gap: 16px; margin-bottom: 16px; }}
-    .searchBox {{ flex: 1; display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0 16px; }}
-    .searchBox input {{ flex: 1; border: none; background: transparent; color: var(--text); height: 40px; outline: none; margin-left: 8px; font-size: 14px;}}
-    .sortBox {{ display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); padding: 0 16px; border-radius: 6px; }}
-    .sortBox select {{ background: transparent; border: none; color: var(--text); outline: none; font-weight: 600; font-size: 13px;}}
-    .summary {{ font-size: 14px; font-weight: 600; color: var(--accent-blue); margin-bottom: 16px; }}
-    .empty {{ text-align: center; padding: 50px; color: var(--text-muted); font-size: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }}
-    .result-card {{ background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }}
-    .card-header {{ display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; cursor: pointer; background: transparent; }}
-    .card-header:hover {{ background: var(--surface-hover); }}
-    .symbol-info {{ display: flex; align-items: center; gap: 20px; }}
-    .symbol-name {{ font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }}
-    .symbol-ltp {{ font-size: 13px; color: var(--text-muted); display: flex; gap: 16px; }}
-    .badges {{ display: flex; gap: 8px; align-items: center; }}
-    .badge {{ padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }}
-    .badge-gray {{ background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }}
-    .badge-red {{ background: var(--danger); color: white; }}
-    .badge-blue {{ background: var(--accent-blue); color: white; }}
-    .badge-green {{ background: rgba(34, 197, 94, 0.1); color: var(--success); border: 1px solid rgba(34, 197, 94, 0.2); }}
-    .card-details {{ border-top: 1px solid var(--border); padding: 20px; background: var(--bg); display: flex; flex-direction: column; gap: 24px; }}
-    .spread-group {{ border: 1px solid var(--border); border-radius: 8px; padding: 20px; background: var(--surface); }}
-    .spread-header {{ font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 16px; display: flex; justify-content: space-between;}}
-    .legs-container {{ display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }}
-    .leg-box {{ background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 6px; }}
-    .leg-title {{ font-size: 15px; font-weight: 700; margin-bottom: 6px; }}
-    .leg-meta {{ font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 4px;}}
-    .net-value {{ font-size: 15px; font-weight: 700; text-align: right; margin-top: 10px;}}
-    .text-green {{ color: var(--success); }}
-    .text-red {{ color: var(--danger); }}
-    .inner-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }}
-    .inner-box {{ background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 6px; font-size: 13px;}}
-    .inner-box-header {{ display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px;}}
-    .inner-box-main {{ display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; margin-bottom: 6px;}}
-    .optionScroll {{ overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }}
-    .optionTable {{ width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }}
-    .optionTable th, .optionTable td {{ padding: 12px 16px; text-align: right; border-bottom: 1px solid var(--border); }}
-    .optionTable th {{ color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; background: var(--bg); }}
-    .optionTable th:first-child, .optionTable td:first-child {{ text-align: left; }}
-    .optionTable tbody tr:hover {{ background: var(--surface-hover); }}
-    .modal {{ position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(4px); }}
-    .modal.open {{ display: flex; }}
-    .modal-card {{ width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }}
-    .modal-card h2 {{ margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: var(--accent-blue);}}
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: var(--text); color: var(--bg); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-secondary { background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); }
+    .searchRow { display: flex; gap: 16px; margin-bottom: 16px; }
+    .searchBox { flex: 1; display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0 16px; }
+    .searchBox input { flex: 1; border: none; background: transparent; color: var(--text); height: 40px; outline: none; margin-left: 8px; font-size: 14px;}
+    .sortBox { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); padding: 0 16px; border-radius: 6px; }
+    .sortBox select { background: transparent; border: none; color: var(--text); outline: none; font-weight: 600; font-size: 13px;}
+    .summary { font-size: 14px; font-weight: 600; color: var(--accent-blue); margin-bottom: 16px; }
+    .empty { text-align: center; padding: 50px; color: var(--text-muted); font-size: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+    .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; cursor: pointer; background: transparent; }
+    .card-header:hover { background: var(--surface-hover); }
+    .symbol-info { display: flex; align-items: center; gap: 20px; }
+    .symbol-name { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    .symbol-ltp { font-size: 13px; color: var(--text-muted); display: flex; gap: 16px; }
+    .badges { display: flex; gap: 8px; align-items: center; }
+    .badge { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+    .badge-gray { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+    .badge-red { background: var(--danger); color: white; }
+    .badge-blue { background: var(--accent-blue); color: white; }
+    .badge-green { background: rgba(34, 197, 94, 0.1); color: var(--success); border: 1px solid rgba(34, 197, 94, 0.2); }
+    .card-details { border-top: 1px solid var(--border); padding: 20px; background: var(--bg); display: flex; flex-direction: column; gap: 24px; }
+    .spread-group { border: 1px solid var(--border); border-radius: 8px; padding: 20px; background: var(--surface); }
+    .spread-header { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 16px; display: flex; justify-content: space-between;}
+    .legs-container { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .leg-box { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 6px; }
+    .leg-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .leg-meta { font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 4px;}
+    .net-value { font-size: 15px; font-weight: 700; text-align: right; margin-top: 10px;}
+    .text-green { color: var(--success); }
+    .text-red { color: var(--danger); }
+    .inner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .inner-box { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 6px; font-size: 13px;}
+    .inner-box-header { display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px;}
+    .inner-box-main { display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; margin-bottom: 6px;}
+    .optionScroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+    .optionTable { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+    .optionTable th, .optionTable td { padding: 12px 16px; text-align: right; border-bottom: 1px solid var(--border); }
+    .optionTable th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; background: var(--bg); }
+    .optionTable th:first-child, .optionTable td:first-child { text-align: left; }
+    .optionTable tbody tr:hover { background: var(--surface-hover); }
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(4px); }
+    .modal.open { display: flex; }
+    .modal-card { width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }
+    .modal-card h2 { margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: var(--accent-blue);}
     </style>
     </head>
     <body>
@@ -284,7 +283,7 @@ else:
           <div class="field"><label>Expiry Date</label><select id="expiry"><option>29 Sep 2026</option></select></div>
           <div class="field"><label>Reference</label><select id="reference"><option value="EQUITY">Equity LTP</option><option value="FUTURE" selected>Future LTP</option></select></div>
           
-          <div class="field spreadField"><label>Type</label><select id="type"><option value="Both">Both</option><option value="CE">CE</option><option value="PE">PE</option></select></div>
+           <div class="field spreadField"><label>Type</label><select id="type"><option value="Both">Both</option><option value="CE">CE</option><option value="PE">PE</option></select></div>
           <div class="field spreadField"><label>Price Gap</label><div class="inlineField"><select id="priceGapOn"><option value="ON">ON</option><option value="OFF" selected>OFF</option></select><input id="priceGap" type="number" value="3" min="0" step=".1"></div></div>
           <div class="field spreadField"><label>Delta Filter</label><div class="inlineField"><select id="deltaOn"><option value="ON" selected>ON</option><option value="OFF">OFF</option></select><input id="deltaRange" value="20-30"></div></div>
           <div class="field spreadField"><label>Strike Gap %</label><input id="strikeGap" type="number" value="5" min="0" step=".1"></div>
@@ -326,7 +325,7 @@ else:
         <h2>Settings & Account</h2>
         <div class="field" style="margin-bottom:12px;">
           <label>Update Username / ID</label>
-          <input id="setNewUsername" type="text" value="{current_uname}">
+          <input id="setNewUsername" type="text" value="USER_NAME_PLACEHOLDER">
         </div>
         <div class="field" style="margin-bottom:12px;">
           <label>New Password (Leave blank)</label>
@@ -334,7 +333,7 @@ else:
         </div>
         <div class="field" style="margin-bottom:16px;">
           <label>Upstox Token</label>
-          <input id="setUpstoxToken" type="text" value="{current_token}">
+          <input id="setUpstoxToken" type="text" value="USER_TOKEN_PLACEHOLDER">
         </div>
         <button class="btn btn-primary" style="width:100%; margin-bottom:8px;" onclick="saveSettingsChanges()">SAVE CHANGES</button>
         <button class="btn btn-secondary" style="width:100%;" onclick="closeSettings()">CLOSE</button>
@@ -344,7 +343,7 @@ else:
     <script>
     let scannerMode="spread", autoTimer=null, lastResults=[];
     let stocks=[], stockMap=new Map();
-    const currentUserId = "{current_uid}";
+    const currentUserId = "USER_ID_PLACEHOLDER";
 
     function $(id){ return document.getElementById(id); }
     const n=x=>Number.isFinite(Number(x))?Number(x):0;
@@ -391,11 +390,9 @@ else:
       if(btn) btn.classList.add('active');
     }
 
-    // Exact logic matching user file calculations
     function scan(){
       const symbolSel=$("symbol").value;
       const expiry=$("expiry").value;
-      const ratio=$("ratio").value;
       const targetStocks=symbolSel==="ALL"?stocks:[stockMap.get(symbolSel)].filter(Boolean);
 
       $("summary").textContent="Scanning "+targetStocks.length+" F&O stocks for expiry "+expiry+"…";
@@ -492,4 +489,4 @@ else:
     dashboard_html = dashboard_html.replace("{current_uid}", current_uid)
     dashboard_html = dashboard_html.replace("{SUPABASE_KEY}", SUPABASE_KEY)
 
-    components.html(dashboard_html, height=850,
+    components.html(dashboard_html, height=850, scrolling=True)
