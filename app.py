@@ -279,15 +279,17 @@ else:
         .stApp { background-color: #080d16 !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }
         [data-testid="stSidebar"] { background-color: #0e1626 !important; border-right: 1px solid #1e293b !important; }
         
-        /* 100% BULLETPROOF FIX FOR STREAMLIT DROPDOWN VISIBILITY */
-        div[data-baseweb="select"] > div, div[data-baseweb="select"] span {
+        /* 100% FORCE DARK DROPDOWN & VISIBLE TEXT */
+        div[data-baseweb="select"] {
+            background-color: #0b1224 !important;
+            border: 2px solid #38bdf8 !important;
+            border-radius: 8px !important;
+        }
+        div[data-baseweb="select"] * {
             background-color: #0b1224 !important;
             color: #ffffff !important;
             font-weight: 900 !important;
-        }
-        div[data-baseweb="select"] {
-            border: 2px solid #38bdf8 !important;
-            border-radius: 8px !important;
+            -webkit-text-fill-color: #ffffff !important;
         }
         div[data-baseweb="popover"], div[data-baseweb="menu"], ul[data-baseweb="menu"] {
             background-color: #0b1224 !important;
@@ -296,11 +298,13 @@ else:
         ul[data-baseweb="menu"] li, ul[data-baseweb="menu"] li div, ul[data-baseweb="menu"] li span {
             background-color: #0b1224 !important;
             color: #ffffff !important;
-            font-weight: 800 !important;
+            font-weight: 900 !important;
+            -webkit-text-fill-color: #ffffff !important;
         }
         ul[data-baseweb="menu"] li:hover {
-            background-color: #1e293b !important;
-            color: #38bdf8 !important;
+            background-color: #38bdf8 !important;
+            color: #080d16 !important;
+            -webkit-text-fill-color: #080d16 !important;
         }
 
         .filter-container {
