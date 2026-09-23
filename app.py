@@ -1,9 +1,24 @@
 import streamlit as st
 import requests
 import os
+import base64
 from datetime import datetime, date, timedelta
 
 st.set_page_config(page_title="ARHAM TRADERS | Delta Analysis", layout="wide", initial_sidebar_state="expanded")
+
+def get_exact_login_bg():
+    target_files = ["wel30stockmarket450 (1).jpg", "Screenshot_20260922-172632_Google.png", "girnar.jpg"]
+    for f in target_files:
+        if os.path.exists(f):
+            with open(f, "rb") as img:
+                return f"data:image/jpeg;base64,{base64.b64encode(img.read()).decode()}"
+    for f in os.listdir("."):
+        if f.lower().startswith("wel30stockmarket") and f.lower().endswith((".png", ".jpg", ".jpeg")):
+            with open(f, "rb") as img:
+                return f"data:image/jpeg;base64,{base64.b64encode(img.read()).decode()}"
+    return ""
+
+login_bg_src = get_exact_login_bg()
 
 SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaWdpeGdxZGZ0YWpxa211b3VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTI0OTUsImV4cCI6MjEwNTYyODQ5NX0.pI7CPt9XdLG2zirwkisz5Ttzm3CZIQiL6qg7D70fKlc"
@@ -101,41 +116,32 @@ for key, default in [("logged_in", False), ("username", ""), ("user_id", None), 
 
 # ==================== 1. LOGIN SCREEN ====================
 if not st.session_state.logged_in:
-    st.markdown('''
+    bg_style = f"background: linear-gradient(rgba(6, 11, 23, 0.75), rgba(6, 11, 23, 0.90)), url('{login_bg_src}') no-repeat center center fixed !important; background-size: cover !important;" if login_bg_src else "background: #080d16 !important;"
+    
+    st.markdown(f'''
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
-        .stApp {
-            background: linear-gradient(135deg, #05080f 0%, #0a1120 50%, #03060a 100%) !important;
-            color: #ffffff !important;
-            font-family: 'Rajdhani', sans-serif !important;
-        }
-        .brand-card {
+        .stApp {{ {bg_style} color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }}
+        .brand-card {{
             display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-            margin: 25px auto 15px auto; padding: 22px 35px; background: rgba(11, 18, 36, 0.95);
+            margin: 25px auto 15px auto; padding: 22px 35px; background: rgba(11, 18, 36, 0.92);
             backdrop-filter: blur(16px); border: 3px solid #f59e0b; border-radius: 18px;
             box-shadow: 0 0 50px rgba(245, 158, 11, 0.45); width: fit-content !important; max-width: 95% !important; box-sizing: border-box;
-        }
-        .brand-main {
+        }}
+        .brand-main {{
             font-family: 'Cinzel', serif; font-size: clamp(1.8rem, 4vw, 2.5rem) !important; font-weight: 900 !important;
             font-style: italic !important; white-space: nowrap !important; letter-spacing: 1.5px !important;
             color: #ffffff !important; text-shadow: 0 0 25px rgba(255, 255, 255, 0.9); margin: 0 !important; line-height: 1.2 !important;
             text-decoration: underline !important; text-decoration-color: #ffbe0b !important; text-underline-offset: 6px !important;
-        }
-        .brand-dev {
+        }}
+        .brand-dev {{
             font-family: 'Teko', sans-serif; font-size: clamp(1.2rem, 2.5vw, 1.5rem) !important; font-weight: 800 !important;
             letter-spacing: 1.5px !important; white-space: nowrap !important; color: #ffffff !important;
             text-shadow: 0 0 16px rgba(56, 189, 248, 0.9); margin-top: 6px !important;
             text-decoration: underline !important; text-decoration-color: #38bdf8 !important; text-underline-offset: 4px !important;
-        }
-        label, p, span, div, .stTabs [data-baseweb="tab"] {
-            color: #ffffff !important; font-weight: 800 !important; text-shadow: 0 0 10px rgba(255, 255, 255, 0.4) !important;
-        }
-        .stTabs [data-baseweb="tab"] {
-            text-decoration: underline !important; text-decoration-color: #38bdf8 !important; font-size: 1.05rem !important;
-        }
-        input {
-            color: #ffffff !important; font-weight: 800 !important; background-color: #0b1224 !important; border: 2px solid #38bdf8 !important;
-        }
+        }}
+        label, p, span, div, .stTabs [data-baseweb="tab"] {{ color: #ffffff !important; font-weight: 800 !important; text-shadow: 0 0 10px rgba(255, 255, 255, 0.4) !important; }}
+        input {{ color: #ffffff !important; font-weight: 800 !important; background-color: #0b1224 !important; border: 2px solid #38bdf8 !important; }}
     </style>
     ''', unsafe_allow_html=True)
 
