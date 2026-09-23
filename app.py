@@ -137,7 +137,7 @@ if not st.session_state.logged_in:
                 st.session_state.update(logged_in=True, username="Demo_Trader", user_id=0, is_admin=False, valid_until="2030-01-01", upstox_token="", mode="DEMO")
                 st.rerun()
 
-# ==================== 2. TERMINAL PAGE (LOADS terminal.html DIRECTLY) ====================
+# ==================== 2. TERMINAL PAGE ====================
 else:
     col_top1, col_top2 = st.columns([6, 1])
     with col_top1:
@@ -148,15 +148,15 @@ else:
             st.rerun()
 
     if os.path.exists("terminal.html"):
-        with open("terminal.html", "r", encoding="utf-8") as tf:
-            raw_html = tf.read()
+        with open("terminal.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
         
-        # Inject user details safely without altering code logic
-        raw_html = raw_html.replace("USER_NAME_PLACEHOLDER", str(st.session_state.username))
-        raw_html = raw_html.replace("USER_TOKEN_PLACEHOLDER", str(st.session_state.upstox_token))
-        raw_html = raw_html.replace("USER_ID_PLACEHOLDER", str(st.session_state.user_id))
+        # Injects user details into the original file seamlessly
+        html_content = html_content.replace("USER_NAME_PLACEHOLDER", str(st.session_state.username))
+        html_content = html_content.replace("USER_TOKEN_PLACEHOLDER", str(st.session_state.upstox_token))
+        html_content = html_content.replace("USER_ID_PLACEHOLDER", str(st.session_state.user_id))
         
-        components.html(raw_html, height=850, scrolling=True)
+        components.html(html_content, height=850, scrolling=True)
     else:
-        st.error("⚠️ Error: 'terminal.html' file nahi mili! Kripya GitHub repository mein terminal.html file create karke apna code wahan save karein.")
+        st.error("⚠️ Error: GitHub repository mein 'terminal.html' file nahi mili! Kripya terminal.html file create karke apna poora code wahan save karein.")
         
