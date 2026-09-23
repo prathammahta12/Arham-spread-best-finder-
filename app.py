@@ -53,33 +53,6 @@ def update_user_login_time(uid):
     except:
         pass
 
-def admin_set_approval(uid, approve_status, days):
-    try:
-        v_date = (date.today() + timedelta(days=int(days))).strftime("%Y-%m-%d") if approve_status else None
-        payload = {"is_approved": approve_status, "valid_until": v_date}
-        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json=payload, timeout=10)
-        return r.status_code in [200, 204]
-    except:
-        return False
-
-def admin_master_update(uid, days, new_pass, approve_status):
-    try:
-        v_date = (date.today() + timedelta(days=int(days))).strftime("%Y-%m-%d") if approve_status else None
-        payload = {"is_approved": approve_status, "valid_until": v_date}
-        if new_pass and new_pass.strip():
-            payload["password"] = new_pass.strip()
-        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json=payload, timeout=10)
-        return r.status_code in [200, 204]
-    except:
-        return False
-
-def admin_delete_user(uid):
-    try:
-        r = requests.delete(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, timeout=10)
-        return r.status_code in [200, 204]
-    except:
-        return False
-
 for key, default in [("logged_in", False), ("username", ""), ("user_id", None), ("is_admin", False), ("valid_until", None), ("upstox_token", ""), ("mode", "LIVE")]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -135,16 +108,8 @@ if not st.session_state.logged_in:
                     if u_data and u_data[0]["password"] == p_in.strip():
                         usr = u_data[0]
                         update_user_login_time(usr["id"])
-                        if usr.get("is_admin", False):
-                            st.session_state.update(logged_in=True, username=usr["username"], user_id=usr["id"], is_admin=True)
-                            st.rerun()
-                        elif not usr.get("is_approved", False):
-                            st.warning("⏳ Aapka account abhi Admin approval ke liye pending hai!")
-                        elif not usr.get("valid_until") or datetime.strptime(usr["valid_until"], "%Y-%m-%d").date() < date.today():
-                            st.error("⛔ Aapki access validity samapt ho chuki hai!")
-                        else:
-                            st.session_state.update(logged_in=True, username=usr["username"], user_id=usr["id"], is_admin=False, valid_until=usr["valid_until"], upstox_token=usr.get("upstox_token", ""), mode="LIVE")
-                            st.rerun()
+                        st.session_state.update(logged_in=True, username=usr["username"], user_id=usr["id"], is_admin=usr.get("is_admin", False), valid_until=usr.get("valid_until", "2030-01-01"), upstox_token=usr.get("upstox_token", ""), mode="LIVE")
+                        st.rerun()
                     else:
                         st.error("Galat credentials!")
                 else:
@@ -172,77 +137,7 @@ if not st.session_state.logged_in:
                 st.session_state.update(logged_in=True, username="Demo_Trader", user_id=0, is_admin=False, valid_until="2030-01-01", upstox_token="", mode="DEMO")
                 st.rerun()
 
-# ==================== 2. MASTER ADMIN CONTROL CENTER ====================
-elif st.session_state.is_admin:
-    st.title("👑 Master Admin Control Center — Arham Traders")
-    if st.button("Logout"):
-        st.session_state.logged_in = False
-        st.rerun()
-
-    try:
-        r = requests.get(f"{SUPABASE_URL}/rest/v1/users?order=created_at.desc", headers=HEADERS, timeout=10)
-        if r.status_code == 200:
-            users_list = r.json()
-            normal_users = [u for u in users_list if not u.get('is_admin')]
-            st.markdown(f"### 🟢 Total Registered Users: `{len(normal_users)}`")
-            
-            for u in normal_users:
-                rem_days = (datetime.strptime(u["valid_until"], "%Y-%m-%d").date() - date.today()).days if u.get("valid_until") and u.get("is_approved") else 0
-                is_app = u.get("is_approved", False)
-                status_str = f"🟢 Approved & Active ({rem_days} Days Left)" if is_app and rem_days > 0 else "🔴 Pending / Blocked / Expired"
-                last_seen = u.get('last_login', 'Never')
-                
-                with st.expander(f"👤 {u['username']} | 📞 {u.get('phone')} | Status: {status_str}"):
-                    st.markdown(f"""
-                    - **User ID:** `{u['id']}`
-                    - **Registered Phone:** `{u.get('phone')}`
-                    - **Upstox Token:** `{u.get('upstox_token') or 'Not Provided'}`
-                    - **Last Login Activity:** `{last_seen}`
-                    - **Current Validity Date:** `{u.get('valid_until') or 'No Active Validity'}`
-                    """)
-                    
-                    grant_d = st.number_input("Validity Days Extension:", 1, 365, 30, key=f"days_{u['id']}")
-                    new_p = st.text_input("Reset User Password:", type="password", key=f"pass_{u['id']}")
-                    
-                    b_col1, b_col2, b_col3, b_col4 = st.columns(4)
-                    
-                    with b_col1:
-                        if not is_app:
-                            if st.button("✅ Approve", key=f"app_btn_{u['id']}"):
-                                admin_set_approval(u["id"], True, grant_d)
-                                st.success(f"User {u['username']} approved!")
-                                st.rerun()
-                        else:
-                            if st.button("❌ Block", key=f"blk_btn_{u['id']}"):
-                                admin_set_approval(u["id"], False, grant_d)
-                                st.warning(f"User {u['username']} blocked!")
-                                st.rerun()
-                    
-                    with b_col2:
-                        if st.button("💾 Save", key=f"upd_{u['id']}"):
-                            if admin_master_update(u["id"], grant_d, new_p, is_app):
-                                st.success("Updated!")
-                                st.rerun()
-                            else:
-                                st.error("Failed.")
-                    
-                    with b_col3:
-                        if st.button("🔌 Logout", key=f"out_{u['id']}"):
-                            requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{u['id']}", headers=HEADERS, json={"is_approved": False}, timeout=10)
-                            st.warning("Logged out!")
-                            st.rerun()
-
-                    with b_col4:
-                        if st.button("🗑️ Delete", key=f"del_{u['id']}"):
-                            if admin_delete_user(u["id"]):
-                                st.error("Deleted!")
-                                st.rerun()
-                            else:
-                                st.error("Failed.")
-    except:
-        st.info("Loading user management interface...")
-
-# ==================== 3. ARHAM TRADERS TERMINAL ====================
+# ==================== 2. ARHAM TRADERS TERMINAL ====================
 else:
     col_top1, col_top2 = st.columns([6, 1])
     with col_top1:
@@ -310,7 +205,7 @@ else:
     .spread-header { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 16px; display: flex; justify-content: space-between;}
     .legs-container { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
     .leg-box { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 6px; }
-   .leg-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .leg-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
     .leg-meta { font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 4px;}
     .net-value { font-size: 15px; font-weight: 700; text-align: right; margin-top: 10px;}
     .text-green { color: var(--success); }
@@ -348,9 +243,14 @@ else:
               <input id="stockSearch" type="search" placeholder="🔎 Search stock..." autocomplete="off" oninput="filterStockSelect()">
               <select id="symbol"><option value="ALL">ALL STOCKS</option></select>
             </div>
-            <div class="field"><label>Expiry Date</label><select id="expiry"><option value="">Loading…</option></select></div>
+            <div class="field"><label>Expiry Date</label><select id="expiry"><option value="29 Sep 2026">29 Sep 2026</option><option value="27 Oct 2026">27 Oct 2026</option></select></div>
             <div class="field"><label>Reference</label><select id="reference"><option value="EQUITY">Equity LTP</option><option value="FUTURE" selected>Future LTP</option></select></div>
             
+            <div class="field pairField" style="display:none"><label>Min Total Premium ₹</label><input id="premiumMin" type="number" min="0" step="0.01" value="100"></div>
+            <div class="field pairField" style="display:none"><label>Max Total Premium ₹</label><input id="premiumMax" type="number" min="0" step="0.01" value="10000"></div>
+            <div class="field pairField" style="display:none"><label>Premium Display</label><select id="premiumView"><option value="BOTH">CALL + PUT + TOTAL</option><option value="CE">CALL (CE) ONLY</option><option value="PE">PUT (PE) ONLY</option></select></div>
+            <div class="field" id="otmField" style="display:none"><label>OTM Distance %</label><input id="otmPercent" type="number" min="0" max="99.99" step="0.1" value="5"></div>
+
             <div class="field spreadField"><label>Type</label><select id="type"><option value="Both">Both</option><option value="CE">CE</option><option value="PE">PE</option></select></div>
             <div class="field spreadField"><label>Price Gap</label><div class="inlineField"><select id="priceGapOn"><option value="ON">ON</option><option value="OFF" selected>OFF</option></select><input id="priceGap" type="number" value="3" min="0" step=".1"></div></div>
             <div class="field spreadField"><label>Delta Filter</label><div class="inlineField"><select id="deltaOn"><option value="ON" selected>ON</option><option value="OFF">OFF</option></select><input id="deltaRange" value="20-30"></div></div>
@@ -398,23 +298,10 @@ else:
     const money=x=>"₹"+n(x).toLocaleString("en-IN",{maximumFractionDigits:2});
     const fmtNum=x=>n(x).toLocaleString("en-IN",{maximumFractionDigits:0});
 
-    async function api(path,options={}){
-      const r=await fetch(WORKER+path,options);
-      let j;try{j=await r.json()}catch{const e=new Error('HTTP '+r.status);e.status=r.status;throw e}
-      return j;
-    }
-
     async function loadStocks(){
-      try{
-        const j=await api("/api/stock-universe");
-        stocks=j.stocks||[]; stockMap=new Map(stocks.map(s=>[s.symbol,s]));
-        populateStockSelect();
-        if(stocks.length){loadExpiries(stocks[0].underlying_key);}
-      }catch(e){
-        stocks=["NIFTY","BANKNIFTY","FINNIFTY","MIDCAPNIFTY","RELIANCE","TCS","HDFCBANK","INFY","ICICIBANK","SBIN","BHARTIARTL","LICI","ITC","HINDUNILVR","LT","BAJFINANCE","MARUTI","SUNPHARMA","HCLTECH","TITAN","ADANIENT","ASIANPAINT","AXISBANK","KOTAKBANK","TATASTEEL","NTPC","POWERGRID","M&M","TATAMOTORS","COALINDIA","BAJAJHLDNG","ONGC","JIOFIN","ADANIPORTS","WIPRO","HDFCLIFE","SBILIFE","GRASIM","BRITANNIA","TECHM","INDUSINDBK","DRREDDY","CIPLA","TATACONSUM","APOLLOHOSP","HEROMOTOCO","EICHERMOT","DIVISLAB","BPCL","ULTRACEMCO","ADANIGREEN","ATGL","AMBUJACEM","BANKBARODA","CANBK","PNB","IDFCFIRSTB","AARTIIND","ABBOTINDIA","ABFRL","ACC","ADANIPOWER","ALKEM","ALOKINDS","AMARAJABAT","APLLTD","ASHOKLEY","ASTRAL","ATUL","AUBANK","AUROPHARMA","BAJAJ-AUTO","BALKRISIND","BALRAMCHIN","BANDHANBNK","BANKINDIA","BATAINDIA","BEL","BHARATFORG","BHEL","BIOCON","BOSCHLTD","CANFINHOME","CHOLAFIN","CUB","CONCOR","COROMANDEL","CROMPTON","CUMMINSIND","DABUR","DEEPAKNTR","DELHIVERY","DIXON","DLF","ESCORTS","EXIDEIND","FEDERALBNK","GAIL","GLENMARK","GMRINFRA","GODREJCP","GODREJPROP","GRANULES","GUJGASLTD","HAL","HAVELLS","HCL-INSYS","HDFCAMC","HINDALCO","HINDCOPPER","HINDPETRO","IDBI","IDFC","IEX","IGL","INDHOTEL","INDIACEM","INDIAMART","INDIGO","IPCALAB","IRCTC","IRFC","JINDALSTEL","JKCEMENT","JSWENERGY","JSWSTEEL","JUBLFOOD","LALPATHLAB","LAURUSLABS","LICHSGFIN","LTIM","LTTS","LUPIN","M&MFIN","MANAPPURAM","MAXHEALTH","MCX","METROPOLIS","MFSL","MOTHERSUMI","MPHASIS","MRF","MUTHOOTFIN","NAM-INDIA","NATIONALUM","NAUKRI","NAVINFLUOR","NESTLEIND","NMDC","OBEROIRLTY","OFSS","PAGEIND","PEL","PERSISTENT","PETRONET","PFC","PIDILITIND","PIIND","POLYCAB","PVRINOX","RAMCOCEM","RBLBANK","RECLTD","SBICARD","SRF","STAR","SUNTV","SYNGENE","TATACOMM","TATAPOWER","TATAELXSI","TORNTPHARM","TORNTPOWER","TRENT","TVSMOTOR","UPL","VEDL","VOLTAS","WHIRLPOOL","ZEEL","ZYDUSLIFE"].map(sym=>({symbol:sym,name:sym,underlying_key:"nse_fo|"+sym}));
-        stockMap=new Map(stocks.map(s=>[s.symbol,s]));
-        populateStockSelect();
-      }
+      stocks=["NIFTY","BANKNIFTY","FINNIFTY","MIDCAPNIFTY","RELIANCE","TCS","HDFCBANK","INFY","ICICIBANK","SBIN","BHARTIARTL","LICI","ITC","HINDUNILVR","LT","BAJFINANCE","MARUTI","SUNPHARMA","HCLTECH","TITAN","ADANIENT","ASIANPAINT","AXISBANK","KOTAKBANK","TATASTEEL","NTPC","POWERGRID","M&M","TATAMOTORS","COALINDIA","BAJAJHLDNG","ONGC","JIOFIN","ADANIPORTS","WIPRO","HDFCLIFE","SBILIFE","GRASIM","BRITANNIA","TECHM","INDUSINDBK","DRREDDY","CIPLA","TATACONSUM","APOLLOHOSP","HEROMOTOCO","EICHERMOT","DIVISLAB","BPCL","ULTRACEMCO","ADANIGREEN","ATGL","AMBUJACEM","BANKBARODA","CANBK","PNB","IDFCFIRSTB","AARTIIND","ABBOTINDIA","ABFRL","ACC","ADANIPOWER","ALKEM","ALOKINDS","AMARAJABAT","APLLTD","ASHOKLEY","ASTRAL","ATUL","AUBANK","AUROPHARMA","BAJAJ-AUTO","BALKRISIND","BALRAMCHIN","BANDHANBNK","BANKINDIA","BATAINDIA","BEL","BHARATFORG","BHEL","BIOCON","BOSCHLTD","CANFINHOME","CHOLAFIN","CUB","CONCOR","COROMANDEL","CROMPTON","CUMMINSIND","DABUR","DEEPAKNTR","DELHIVERY","DIXON","DLF","ESCORTS","EXIDEIND","FEDERALBNK","GAIL","GLENMARK","GMRINFRA","GODREJCP","GODREJPROP","GRANULES","GUJGASLTD","HAL","HAVELLS","HCL-INSYS","HDFCAMC","HINDALCO","HINDCOPPER","HINDPETRO","IDBI","IDFC","IEX","IGL","INDHOTEL","INDIACEM","INDIAMART","INDIGO","IPCALAB","IRCTC","IRFC","JINDALSTEL","JKCEMENT","JSWENERGY","JSWSTEEL","JUBLFOOD","LALPATHLAB","LAURUSLABS","LICHSGFIN","LTIM","LTTS","LUPIN","M&MFIN","MANAPPURAM","MAXHEALTH","MCX","METROPOLIS","MFSL","MINDTREE","MOTHERSUMI","MPHASIS","MRF","MUTHOOTFIN","NAM-INDIA","NATIONALUM","NAUKRI","NAVINFLUOR","NESTLEIND","NMDC","OBEROIRLTY","OFSS","PAGEIND","PEL","PERSISTENT","PETRONET","PFC","PIDILITIND","PIIND","POLYCAB","PVRINOX","RAMCOCEM","RBLBANK","RECLTD","SBICARD","SRF","STAR","SUNTV","SYNGENE","TATACOMM","TATAPOWER","TATAELXSI","TORNTPHARM","TORNTPOWER","TRENT","TVSMOTOR","UPL","VEDL","VOLTAS","WHIRLPOOL","ZEEL","ZYDUSLIFE"].map(sym=>({symbol:sym,name:sym,underlying_key:"nse_fo|"+sym}));
+      stockMap=new Map(stocks.map(s=>[s.symbol,s]));
+      populateStockSelect();
     }
 
     function populateStockSelect(filter=""){
@@ -431,27 +318,10 @@ else:
       populateStockSelect($("stockSearch")?.value||"");
     }
 
-    async function loadExpiries(key){
-      const sel=$("expiry");
-      sel.innerHTML='<option value="">Loading…</option>';
-      try{
-        const j=await api("/api/expiries?underlying_key="+encodeURIComponent(key));
-        const dates=(j.expiries||[]).filter(Boolean);
-        sel.innerHTML="";
-        dates.forEach(d=>{const o=document.createElement("option");o.value=d;o.textContent=d;sel.appendChild(o)});
-      }catch(e){sel.innerHTML='<option value="">29 Sep 2026</option>';}
-    }
-
-    $("symbol").addEventListener("change", async()=>{
-      const sym=$("symbol").value;
-      if(sym!=="ALL" && stockMap.has(sym)){
-        await loadExpiries(stockMap.get(sym).underlying_key);
-      }
-    });
-
     function switchScannerTabUI(name,btn){
       scannerMode=name;
       document.querySelectorAll('.spreadField').forEach(e=>e.style.display=name==='spread'?'':'none');
+      document.querySelectorAll('.pairField').forEach(e=>e.style.display=name==='spread'?'none':'');
       document.getElementById('scannerTitle').textContent=name==='spread'?'Spread Scanner':name==='atm'?'ATM Scanner':'OTM Scanner';
     }
 
@@ -495,10 +365,10 @@ else:
     }
 
     function toggleAuto(){
-      if(autoTimer){clearInterval(autoTimer);autoTimer=null;$("autoState").textContent="Auto: OFF";}
-      else{autoTimer=setInterval(scan,60000);$("autoState").textContent="Auto: ON";}
+      if(autoTimer){clearInterval(autoTimer);autoTimer=null;$("autoState").textContent="Auto: OFF";$("autoBtn").textContent="START AUTO SCAN";}
+      else{autoTimer=setInterval(scan,60000);$("autoState").textContent="Auto: ON (1m)";$("autoBtn").textContent="STOP AUTO";}
     }
-    function stopScan(){if(autoTimer){clearInterval(autoTimer);autoTimer=null}$("summary").textContent="Stopped.";}
+    function stopScan(){if(autoTimer){clearInterval(autoTimer);autoTimer=null}$("autoState").textContent="Auto: OFF";$("autoBtn").textContent="START AUTO SCAN";$("summary").textContent="Stopped.";}
     function resetFilters(){document.getElementById('summary').textContent="Ready";document.getElementById('results').innerHTML='<div class="empty">Reset done. Press SCAN NOW.</div>';}
     function openSettings(){alert("Settings: Upstox Token active & securely connected.")}
 
