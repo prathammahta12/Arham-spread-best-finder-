@@ -3,6 +3,7 @@ import requests
 import os
 import base64
 from datetime import datetime, date, timedelta
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="ARHAM TRADERS | Delta Analysis", layout="wide", initial_sidebar_state="expanded")
 
@@ -23,30 +24,6 @@ login_bg_src = get_exact_login_bg()
 SUPABASE_URL = "https://pnigixgqdftajqkmuouf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaWdpeGdxZGZ0YWpxa211b3VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTI0OTUsImV4cCI6MjEwNTYyODQ5NX0.pI7CPt9XdLG2zirwkisz5Ttzm3CZIQiL6qg7D70fKlc"
 HEADERS = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": "application/json", "Prefer": "return=representation"}
-
-ALL_FNO_STOCKS = [
-    "ALL STOCKS", "NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCAPNIFTY",
-    "RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK", "SBIN", "BHARTIARTL", "LICI", "ITC", "HINDUNILVR",
-    "LT", "BAJFINANCE", "MARUTI", "SUNPHARMA", "HCLTECH", "TITAN", "ADANIENT", "ASIANPAINT", "AXISBANK",
-    "KOTAKBANK", "TATASTEEL", "NTPC", "POWERGRID", "M&M", "TATAMOTORS", "COALINDIA", "BAJAJFINSV", "ONGC",
-    "JIOFIN", "ADANIPORTS", "WIPRO", "HDFCLIFE", "SBILIFE", "GRASIM", "BRITANNIA", "TECHM", "INDUSINDBK",
-    "DRREDDY", "CIPLA", "TATACONSUM", "APOLLOHOSP", "HEROMOTOCO", "EICHERMOT", "DIVISLAB", "BPCL", "ULTRACEMCO",
-    "ADANIGREEN", "ATGL", "AMBUJACEM", "BANKBARODA", "CANBK", "PNB", "IDFCFIRSTB", "AARTIIND", "ABBOTINDIA",
-    "ABFRL", "ACC", "ADANIPOWER", "ALKEM", "ALOKINDS", "AMARAJABAT", "APLLTD", "ASHOKLEY", "ASTRAL", "ATUL",
-    "AUBANK", "AUROPHARMA", "BAJAJ-AUTO", "BAJAJHLDNG", "BALKRISIND", "BALRAMCHIN", "BANDHANBNK", "BANKINDIA",
-    "BATAINDIA", "BEL", "BHARATFORG", "BHEL", "BIOCON", "BOSCHLTD", "CANFINHOME", "CHOLAFIN", "CUB",
-    "CONCOR", "COROMANDEL", "CROMPTON", "CUMMINSIND", "DABUR", "DEEPAKNTR", "DELHIVERY", "DIXON", "DLF",
-    "ESCORTS", "EXIDEIND", "FEDERALBNK", "GAIL", "GLENMARK", "GMRINFRA", "GODREJCP", "GODREJPROP", "GRANULES",
-    "GUJGASLTD", "HAL", "HAVELLS", "HCL-INSYS", "HDFCAMC", "HINDALCO", "HINDCOPPER", "HINDPETRO", "IDBI",
-    "IDFC", "IEX", "IGL", "INDHOTEL", "INDIACEM", "INDIAMART", "INDIGO", "IPCALAB", "IRCTC", "IRFC",
-    "JINDALSTEL", "JKCEMENT", "JSWENERGY", "JSWSTEEL", "JUBLFOOD", "LALPATHLAB", "LAURUSLABS",
-    "LICHSGFIN", "LTIM", "LTTS", "LUPIN", "M&MFIN", "MANAPPURAM", "MAXHEALTH", "MCX", "METROPOLIS",
-    "MFSL", "MINDTREE", "MOTHERSUMI", "MPHASIS", "MRF", "MUTHOOTFIN", "NAM-INDIA", "NATIONALUM", "NAUKRI",
-    "NAVINFLUOR", "NESTLEIND", "NMDC", "OBEROIRLTY", "OFSS", "PAGEIND", "PEL", "PERSISTENT",
-    "PETRONET", "PFC", "PIDILITIND", "PIIND", "POLYCAB", "PVRINOX", "RAMCOCEM", "RBLBANK", "RECLTD",
-    "SBICARD", "SRF", "STAR", "SUNTV", "SYNGENE", "TATACOMM", "TATAPOWER", "TATAELXSI", "TORNTPHARM",
-    "TORNTPOWER", "TRENT", "TVSMOTOR", "UPL", "VEDL", "VOLTAS", "WHIRLPOOL", "ZEEL", "ZYDUSLIFE"
-]
 
 def db_get_user(identifier):
     try:
@@ -76,13 +53,6 @@ def update_user_login_time(uid):
     except:
         pass
 
-def update_user_token(uid, token):
-    try:
-        r = requests.patch(f"{SUPABASE_URL}/rest/v1/users?id=eq.{uid}", headers=HEADERS, json={"upstox_token": token.strip()}, timeout=10)
-        return r.status_code in [200, 204]
-    except:
-        return False
-
 def admin_set_approval(uid, approve_status, days):
     try:
         v_date = (date.today() + timedelta(days=int(days))).strftime("%Y-%m-%d") if approve_status else None
@@ -110,7 +80,7 @@ def admin_delete_user(uid):
     except:
         return False
 
-for key, default in [("logged_in", False), ("username", ""), ("user_id", None), ("is_admin", False), ("valid_until", None), ("upstox_token", ""), ("show_settings", False), ("mode", "LIVE"), ("active_tab", "Spread Scanner"), ("scanned", False)]:
+for key, default in [("logged_in", False), ("username", ""), ("user_id", None), ("is_admin", False), ("valid_until", None), ("upstox_token", ""), ("mode", "LIVE")]:
     if key not in st.session_state:
         st.session_state[key] = default
 
@@ -272,218 +242,364 @@ elif st.session_state.is_admin:
     except:
         st.info("Loading user management interface...")
 
-# ==================== 3. EXACT VIDEO MATCH UI (DELTA ANALYSIS TERMINAL) ====================
-else:
-    st.markdown('''
-    <style>
-        .stApp { background-color: #080d16 !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }
-        [data-testid="stSidebar"] { background-color: #0e1626 !important; border-right: 1px solid #1e293b !important; }
-        
-        /* UNIVERSAL 100% VISIBLE DARK DROPDOWN FOR DESKTOP & MOBILE */
-        div[data-baseweb="select"] {
-            background-color: #000000 !important;
-            border: 2px solid #38bdf8 !important;
-            border-radius: 8px !important;
-        }
-        div[data-baseweb="select"] * {
-            color: #ffffff !important;
-            font-weight: 900 !important;
-            -webkit-text-fill-color: #ffffff !important;
-        }
-        div[data-baseweb="popover"], div[data-baseweb="menu"], ul[data-baseweb="menu"], [data-baseweb="option"] {
-            background-color: #000000 !important;
-            color: #ffffff !important;
-        }
-        ul[data-baseweb="menu"] li, ul[data-baseweb="menu"] li div, ul[data-baseweb="menu"] li span, [data-baseweb="option"] div {
-            background-color: #000000 !important;
-            color: #ffffff !important;
-            font-weight: 900 !important;
-            -webkit-text-fill-color: #ffffff !important;
-        }
-        ul[data-baseweb="menu"] li:hover, [data-baseweb="option"]:hover {
-            background-color: #38bdf8 !important;
-            color: #000000 !important;
-            -webkit-text-fill-color: #000000 !important;
-        }
+# ==================== 3. ARHAM TRADERS TERMINAL (EXACT HTML/CSS/JS INTEGRATION) ====================
 
-        .filter-container {
-            background: #0f172a; border: 1px solid #1e293b; border-radius: 10px;
-            padding: 16px 20px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-        }
-        
-        .section-title {
-            font-size: 1.1rem; font-weight: 800; color: #ffffff; margin-bottom: 10px;
-            border-bottom: 2px solid #ffbe0b; padding-bottom: 5px; letter-spacing: 0.5px;
-            text-decoration: underline; text-decoration-color: #ffbe0b; text-underline-offset: 4px;
-        }
 
-        .spread-card { 
-            background: #0f172a; border: 1px solid #1e293b; border-left: 4px solid #38bdf8; 
-            border-radius: 10px; padding: 16px; margin-bottom: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-        }
-        .spread-title { font-size: 1.15rem; font-weight: 900; color: #ffffff; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; text-decoration: underline; text-decoration-color: #ffbe0b; text-underline-offset: 4px; }
-        
-        .spread-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 10px 0; }
-        .grid-item { background: #080d16; padding: 8px 10px; border-radius: 6px; border: 1px solid #1e293b; }
-        .grid-label { color: #ffffff; font-size: 0.75rem; text-transform: uppercase; font-weight: 800; text-decoration: underline; text-decoration-color: #94a3b8; }
-        .grid-val { color: #ffffff; font-weight: 900; font-size: 0.95rem; margin-top: 2px; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
-        
-        .score-badge { background: rgba(56, 189, 248, 0.2); color: #ffffff; border: 1.5px solid #38bdf8; padding: 3px 8px; border-radius: 6px; font-weight: 900; font-size: 0.85rem; text-decoration: underline; }
-        .advice-box { background: rgba(16, 185, 129, 0.15); color: #ffffff; border: 1.5px solid #10b981; padding: 8px 12px; border-radius: 6px; font-weight: 800; font-size: 0.9rem; margin-top: 8px; }
-
-        label, p, span, div, .stSelectbox label, .stNumberInput label { color: #ffffff !important; font-weight: 800 !important; }
-    </style>
-    ''', unsafe_allow_html=True)
-
-    if st.session_state.mode == "LIVE" and st.session_state.valid_until and datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() < date.today():
-        st.session_state.logged_in = False
-        st.rerun()
-
-    rem_days = (datetime.strptime(st.session_state.valid_until, "%Y-%m-%d").date() - date.today()).days if st.session_state.mode == "LIVE" and st.session_state.valid_until else 999
-
-    st.markdown('<div style="font-family:\'Teko\',sans-serif; font-size:1.2rem; color:#ffffff; font-weight:900; letter-spacing:1px; margin-bottom:6px; text-decoration:underline; text-decoration-color:#38bdf8; text-underline-offset:4px;">⚡ DEVELOPED BY PRATHAM MEHTA ⚡</div>', unsafe_allow_html=True)
-
-    with st.sidebar:
-        st.markdown('<div style="font-family:\'Cinzel\', serif; font-size:1.35rem; font-weight:900; color:#ffffff; margin-bottom:15px; text-decoration:underline; text-decoration-color:#ffbe0b;">▲ DELTA ANALYSIS<br><span style="font-size:0.8rem; color:#ffffff; font-family:\'Rajdhani\',sans-serif;">FNO SCANNER</span></div>', unsafe_allow_html=True)
-        
-        if st.button("📊 Spread Scanner", use_container_width=True, type="primary" if st.session_state.active_tab=="Spread Scanner" else "secondary"):
-            st.session_state.active_tab = "Spread Scanner"
-            st.rerun()
-        if st.button("📈 ATM Scanner", use_container_width=True, type="primary" if st.session_state.active_tab=="ATM Scanner" else "secondary"):
-            st.session_state.active_tab = "ATM Scanner"
-            st.rerun()
-        if st.button("📉 OTM Scanner", use_container_width=True, type="primary" if st.session_state.active_tab=="OTM Scanner" else "secondary"):
-            st.session_state.active_tab = "OTM Scanner"
-            st.rerun()
-        if st.button("⚙️ Settings", use_container_width=True, type="primary" if st.session_state.active_tab=="Settings" else "secondary"):
-            st.session_state.active_tab = "Settings"
-            st.rerun()
-            
-        st.markdown("---")
-        st.markdown('<div style="color:#ffffff; font-weight:900; font-size:0.9rem; text-decoration:underline; text-decoration-color:#10b981;">● Live Market Active</div>', unsafe_allow_html=True)
-        st.markdown(f'<div style="color:#ffffff; font-size:0.8rem; margin-top:4px; font-weight:800;">Mode: {st.session_state.mode}</div>', unsafe_allow_html=True)
+    else:
+    # Top Logout Bar for Streamlit wrapper
+    col_top1, col_top2 = st.columns([6, 1])
+    with col_top1:
+        st.markdown('<div style="font-family:\'Teko\',sans-serif; font-size:1.2rem; color:#ffffff; font-weight:900; letter-spacing:1px; padding: 5px 0; text-decoration:underline; text-decoration-color:#38bdf8;">⚡ ARHAM TRADERS | DEVELOPED BY PRATHAM MEHTA ⚡</div>', unsafe_allow_html=True)
+    with col_top2:
         if st.button("🚪 Logout", use_container_width=True):
             st.session_state.logged_in = False
             st.rerun()
 
-    # REAL-TIME MARKET STATUS IN IST (Using standard timedelta offset +5:30)
-    utc_now = datetime.utcnow()
-    ist_now = utc_now + timedelta(hours=5, minutes=30)
-    current_time_val = ist_now.time()
-    market_open_time = datetime.strptime("09:00:00", "%H:%M:%S").time()
-    market_close_time = datetime.strptime("15:40:00", "%H:%M:%S").time()
+    dashboard_html = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <title>ARHAM TRADERS | Delta Analysis Terminal</title>
+    <style>
+    .navbar {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      height: 60px;
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }}
+
+    .brand {{
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }}
+
+    .status-indicator {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }}
+    .dot {{ width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; }}
+    .connected .dot {{ background: var(--success); box-shadow: 0 0 8px var(--success); }}
+    .disconnected .dot {{ background: var(--danger); box-shadow: 0 0 8px var(--danger); }}
+
+    .nav-links {{ display: flex; gap: 12px; }}
+    .nav-links button {{
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }}
+    .nav-links button:hover {{ color: var(--text); background: var(--surface-hover); }}
+    .nav-links button.active {{ color: var(--bg); background: var(--text); }}
+
+    .container {{ max-width: 1400px; margin: 0 auto; padding: 24px; }}
+    .header-title {{ font-size: 18px; font-weight: 600; margin: 0 0 16px 0; color: var(--text-muted); }}
+
+    .panel {{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }}
+
+    .grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }}
+
+    .field label {{
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }}
+
+    .field input, .field select {{
+      width: 100%;
+      height: 38px;
+      padding: 0 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border 0.2s;
+    }}
+    .field input:focus, .field select:focus {{ border-color: var(--accent-blue); }}
+
+    .inlineField {{ display: flex; gap: 8px; }}
+    .inlineField select {{ width: 75px; flex-shrink: 0; }}
+
+    .actions {{ display: flex; gap: 12px; margin-top: 24px; align-items: center; flex-wrap: wrap; }}
+    .btn {{
+      height: 38px;
+      padding: 0 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, opacity 0.2s;
+    }}
+    .btn:hover {{ opacity: 0.85; }}
+    .btn-primary {{ background: var(--text); color: var(--bg); }}
+    .btn-danger {{ background: var(--danger); color: white; }}
+    .btn-secondary {{ background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); }}
+
+    .searchRow {{ display: flex; gap: 16px; margin-bottom: 16px; }}
+    .searchBox {{
+      flex: 1; display: flex; align-items: center;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0 16px;
+    }}
+    .searchBox input {{ flex: 1; border: none; background: transparent; color: var(--text); height: 40px; outline: none; margin-left: 8px; font-size: 14px;}}
+    .sortBox {{ display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); padding: 0 16px; border-radius: 6px; }}
+    .sortBox select {{ background: transparent; border: none; color: var(--text); outline: none; font-weight: 600; font-size: 13px;}}
+
+    .summary {{ font-size: 14px; font-weight: 600; color: var(--accent-blue); margin-bottom: 16px; }}
+    .empty {{ text-align: center; padding: 50px; color: var(--text-muted); font-size: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }}
+
+    .result-card {{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }}
+    .result-card.banStock {{ border-color: var(--danger); }}
+    .result-card.newSpread {{ border-color: var(--accent-blue); box-shadow: 0 0 10px rgba(59, 130, 246, 0.1); }}
+
+    .card-header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      cursor: pointer;
+      background: transparent;
+    }}
+    .card-header:hover {{ background: var(--surface-hover); }}
+    .symbol-info {{ display: flex; align-items: center; gap: 20px; }}
+    .symbol-name {{ font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }}
+    .symbol-ltp {{ font-size: 13px; color: var(--text-muted); display: flex; gap: 16px; }}
+
+    .badges {{ display: flex; gap: 8px; align-items: center; }}
+    .badge {{ padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }}
+    .badge-gray {{ background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }}
+    .badge-red {{ background: var(--danger); color: white; animation: blink .9s infinite; }}
+    .badge-blue {{ background: var(--accent-blue); color: white; animation: blink .9s infinite; }}
+    .badge-green {{ background: rgba(34, 197, 94, 0.1); color: var(--success); border: 1px solid rgba(34, 197, 94, 0.2); }}
+
+    @keyframes blink {{ 0%, 100% {{ opacity: 1; }} 50% {{ opacity: 0.5; }} }}
+
+    .card-details {{ border-top: 1px solid var(--border); padding: 20px; background: var(--bg); display: flex; flex-direction: column; gap: 24px; }}
+    .spread-group {{ border: 1px solid var(--border); border-radius: 8px; padding: 20px; background: var(--surface); }}
+    .spread-header {{ font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 16px; display: flex; justify-content: space-between;}}
+    .legs-container {{ display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }}
+    .leg-box {{ background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 6px; }}
+    .leg-title {{ font-size: 15px; font-weight: 700; margin-bottom: 6px; }}
+    .leg-meta {{ font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 4px;}}
+    .net-value {{ font-size: 15px; font-weight: 700; text-align: right; margin-top: 10px;}}
+    .text-green {{ color: var(--success); }}
+    .text-red {{ color: var(--danger); }}
+
+    .inner-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }}
+    .inner-box {{ background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 6px; font-size: 13px;}}
+    .inner-box-header {{ display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px;}}
+    .inner-box-main {{ display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; margin-bottom: 6px;}}
+
+    .optionScroll {{ overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }}
+    .optionTable {{ width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }}
+    .optionTable th, .optionTable td {{ padding: 12px 16px; text-align: right; border-bottom: 1px solid var(--border); }}
+    .optionTable th {{ color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; background: var(--bg); }}
+    .optionTable th:first-child, .optionTable td:first-child {{ text-align: left; }}
+    .optionTable tbody tr:hover {{ background: var(--surface-hover); }}
+
+    .modal {{ position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(4px); }}
+    .modal.open {{ display: flex; }}
+    .modal-card {{ width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }}
+    .modal-card h2 {{ margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: var(--accent-blue);}}
+
+    .custom-alert{{margin-top:14px;border:1px solid #2b2b2b;border-radius:10px;padding:14px;background:#101010}}.custom-alert h3{margin:0 0 10px;font-size:15px}.custom-alert-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}.custom-alert .field label{display:block;font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px}.custom-alert input,.custom-alert select{width:100%;box-sizing:border-box}.custom-alert-status{margin-top:10px;font-size:12px;color:var(--text-muted)}
     
-    is_weekday = ist_now.weekday() < 5 # Monday to Friday
-    if is_weekday and market_open_time <= current_time_val <= market_close_time:
-        market_status_html = '<div style="background:rgba(16,185,129,0.2); border:1.5px solid #10b981; color:#ffffff; padding:4px 10px; border-radius:6px; font-weight:900; text-align:center; font-size:0.95rem; text-decoration:underline;">🟢 Market Open</div>'
-    else:
-        market_status_html = '<div style="background:rgba(239,68,68,0.2); border:1.5px solid #ef4444; color:#ffffff; padding:4px 10px; border-radius:6px; font-weight:900; text-align:center; font-size:0.95rem; text-decoration:underline;">🔴 Market Closed</div>'
+    :root{{
+      --bg:#070b12; --surface:#0d1420; --surface-2:#111b29; --border:#22334a; --text:#f4f8ff; --text-muted:#8ea2bb; --accent-blue:#4b8cff; --success:#23e58a; --danger:#ff5268;
+    }}
+    body{{background:var(--bg);color:var(--text);font-family:sans-serif;margin:0;}}
+  </style>
+  </head>
+  <body>
+    <aside class="sidebar-compact" style="position:fixed;left:0;top:0;bottom:0;width:220px;background:#0b1421;border-right:1px solid #22334a;padding:20px 14px;z-index:90;">
+      <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:20px;">ARHAM TRADERS<div style="font-size:11px;color:#4b8cff;margin-top:4px;">PRATHAM MEHTA</div></div>
+      <button class="side-btn active" style="width:100%;text-align:left;background:#1b2c42;border:0;color:#fff;padding:10px;border-radius:6px;cursor:pointer;margin-bottom:6px;" onclick="switchScannerTabUI('spread',this)">▥ Spread Scanner</button>
+      <button class="side-btn" style="width:100%;text-align:left;background:transparent;border:0;color:#8ea2bb;padding:10px;border-radius:6px;cursor:pointer;margin-bottom:6px;" onclick="switchScannerTabUI('atm',this)">♟ ATM</button>
+      <button class="side-btn" style="width:100%;text-align:left;background:transparent;border:0;color:#8ea2bb;padding:10px;border-radius:6px;cursor:pointer;margin-bottom:6px;" onclick="switchScannerTabUI('otm',this)">◉ OTM</button>
+      <button class="side-btn" style="width:100%;text-align:left;background:transparent;border:0;color:#8ea2bb;padding:10px;border-radius:6px;cursor:pointer;" onclick="openSettings()">⚙ Settings</button>
+    </aside>
 
-    h_col1, h_col2, h_col3 = st.columns([3, 2, 1])
-    with h_col1:
-        st.markdown(f'<div style="font-size:1.3rem; font-weight:900; color:#ffffff; padding-top:4px; text-decoration:underline; text-decoration-color:#ffbe0b;">▲ Delta Analysis <span style="font-size:0.85rem; color:#ffffff;">{st.session_state.active_tab.upper()}</span></div>', unsafe_allow_html=True)
-    with h_col2:
-        st.markdown(market_status_html, unsafe_allow_html=True)
-    with h_col3:
-        st.markdown(f'<div style="color:#ffffff; background:rgba(245,158,11,0.2); border:1px solid #f59e0b; padding:5px 8px; border-radius:6px; font-size:0.85rem; font-weight:900; text-align:center; text-decoration:underline;">● {rem_days if st.session_state.mode=="LIVE" else "Trial"} Active</div>', unsafe_allow_html=True)
+    <div style="margin-left:220px;">
+      <nav class="navbar">
+        <div class="brand">ARHAM TRADERS | Developed by Pratham Mehta</div>
+        <div class="status-indicator connected" id="upstoxStatus"><div class="dot"></div> <span class="statusText">LIVE READY</span></div>
+        <div class="nav-links">
+          <button type="button" id="tabSpread" onclick="switchScannerTabUI('spread',this)" class="active">Spread</button>
+          <button type="button" id="tabATM" onclick="switchScannerTabUI('atm',this)">ATM</button>
+          <button type="button" id="tabOTM" onclick="switchScannerTabUI('otm',this)">OTM</button>
+        </div>
+      </nav>
 
-    st.write("")
+      <div class="container">
+        <h2 id="scannerTitle" class="header-title">Spread Scanner</h2>
+        <div class="panel">
+          <div class="grid">
+            <div class="field">
+              <label>Stock</label>
+              <input id="stockSearch" type="search" placeholder="🔎 Search stock..." autocomplete="off" oninput="filterStockSelect()">
+              <select id="symbol"><option value="ALL">ALL STOCKS</option></select>
+            </div>
+            <div class="field"><label>Expiry Date</label><select id="expiry"><option value="">Loading…</option></select></div>
+            <div class="field"><label>Reference</label><select id="reference"><option value="EQUITY">Equity LTP</option><option value="FUTURE" selected>Future LTP</option></select></div>
+            
+            <div class="field pairField" style="display:none"><label>Min Total Premium ₹</label><input id="premiumMin" type="number" min="0" step="0.01" value="100"></div>
+            <div class="field pairField" style="display:none"><label>Max Total Premium ₹</label><input id="premiumMax" type="number" min="0" step="0.01" value="10000"></div>
+            <div class="field pairField" style="display:none"><label>Premium Display</label><select id="premiumView"><option value="BOTH">CALL + PUT + TOTAL</option><option value="CE">CALL (CE) ONLY</option><option value="PE">PUT (PE) ONLY</option></select></div>
+            <div class="field" id="otmField" style="display:none"><label>OTM Distance %</label><input id="otmPercent" type="number" min="0" max="99.99" step="0.1" value="5"></div>
+            
+            <div class="field spreadField"><label>Type</label><select id="type"><option value="Both">Both</option><option value="CE">CE</option><option value="PE">PE</option></select></div>
+            <div class="field spreadField"><label>Price Gap</label><div class="inlineField"><select id="priceGapOn"><option value="ON">ON</option><option value="OFF" selected>OFF</option></select><input id="priceGap" type="number" value="3" min="0" step=".1"></div></div>
+            <div class="field spreadField"><label>Delta Filter</label><div class="inlineField"><select id="deltaOn"><option value="ON" selected>ON</option><option value="OFF">OFF</option></select><input id="deltaRange" value="20-30"></div></div>
+            <div class="field spreadField"><label>Strike Gap %</label><input id="strikeGap" type="number" value="5" min="0" step=".1"></div>
+            <div class="field spreadField"><label>IV Gap %</label><input id="ivGap" type="number" value="5" min="0" step=".1"></div>
+            <div class="field spreadField"><label>Min Volume (Lots)</label><input id="minVolumeLots" type="number" value="1" min="0" step="1"></div>
+            <div class="field spreadField"><label>Ratio</label><select id="ratio"><option value="1:1">1:1</option><option value="1:2">1:2</option><option value="3:10" selected>3:10</option></select></div>
+            <div class="field spreadField"><label>Limit Type</label><select id="limitType"><option value="DEBIT">Max Debit</option><option value="CREDIT">Max Credit</option></select></div>
+            <div class="field spreadField"><label>Limit Value ₹</label><input id="limitValue" type="number" value="1000" min="0" step=".01"></div>
+            <div class="field spreadField"><label>Direction</label><select id="direction"><option value="BUY_SELL">Buy → Sell</option><option value="SELL_BUY">Sell → Buy</option></select></div>
+          </div>
 
-    if st.session_state.active_tab == "Settings":
-        st.markdown('<div class="filter-container">', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">🛠️ Upstox Analysis Token Configuration</div>', unsafe_allow_html=True)
-        new_token = st.text_input("Enter New Upstox Token", value=st.session_state.upstox_token)
-        if st.button("SAVE TOKEN", type="primary"):
-            if new_token:
-                if update_user_token(st.session_state.user_id, new_token):
-                    st.session_state.upstox_token = new_token
-                    st.success("✅ Upstox token successfully updated!")
-                    st.rerun()
-                else:
-                    st.error("Failed to update token.")
-        st.markdown('</div>', unsafe_allow_html=True)
+          <div class="actions">
+            <button class="btn btn-primary" onclick="scan()">SCAN NOW</button>
+            <button id="autoBtn" class="btn btn-secondary" onclick="toggleAuto()">START AUTO SCAN</button>
+            <button class="btn btn-danger" onclick="stopScan()">STOP</button>
+            <button class="btn btn-secondary" onclick="resetFilters()">RESET</button>
+            <span id="autoState" style="font-size: 12px; color: var(--text-muted); margin-left: auto;">Auto scan OFF</span>
+          </div>
+        </div>
 
-    else:
-        st.markdown('<div class="filter-container">', unsafe_allow_html=True)
+        <div class="searchRow spreadField">
+          <div class="searchBox">
+            <span style="color:var(--text-muted)">⌕</span>
+            <input id="searchBox" placeholder="Search symbol, expiry..." oninput="renderResults()">
+          </div>
+          <div class="sortBox">
+            <label style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Sort</label>
+            <select id="resultSort" onchange="renderResults()"><option value="NEW_FIRST" selected>Newest First</option><option value="AZ">A–Z</option></select>
+          </div>
+        </div>
         
-        r1_1, r1_2, r1_3, r1_4, r1_5, r1_6 = st.columns(6)
-        f_stock = r1_1.selectbox("STOCK", ALL_FNO_STOCKS)
-        f_expiry = r1_2.selectbox("EXPIRY DATE", ["29 Sept 2026", "27 Oct 2026", "Nov 2026"])
-        f_ref = r1_3.selectbox("REFERENCE", ["Future LTP", "Equity LTP"])
-        f_type = r1_4.selectbox("TYPE", ["Both", "CE", "PE"])
-        f_price_gap_on = r1_5.selectbox("PRICE GAP", ["OFF", "ON"])
-        f_price_val = r1_6.number_input("GAP VAL", value=3.0, step=0.1)
+        <div class="summary" id="summary">Ready</div>
+        <div id="results"><div class="empty">Adjust filters and press SCAN NOW.</div></div>
+      </div>
+    </div>
 
-        r2_1, r2_2, r2_3, r2_4, r2_5 = st.columns(5)
-        f_delta_on = r2_1.selectbox("DELTA FILTER", ["ON (20-30)", "OFF"])
-        f_strike_gap = r2_2.number_input("STRIKE GAP %", value=5.0, step=0.5)
-        f_iv_gap = r2_3.number_input("IV GAP %", value=5.0, step=0.5)
-        f_min_vol = r2_4.number_input("MIN VOL (LOTS)", value=1, step=1)
-        f_ratio = r2_5.selectbox("RATIO", ["3:10", "1:1", "1:2", "1:4"])
+    <script>
+    const WORKER="";
+    let scannerMode="spread", scanEpoch=0;
+    let stocks=[], stockMap=new Map(), openSymbol=null, autoTimer=null, scanning=false, lastResults=[];
+    let banSymbols=new Set(), banCacheUntil=0;
 
-        st.markdown('<div class="section-title" style="margin-top:12px;">🎯 Custom Spread Alert — Specific Company / Strike</div>', unsafe_allow_html=True)
-        a1, a2, a3, a4, a5, a6 = st.columns(6)
-        a_comp = a1.selectbox("COMPANY", ALL_FNO_STOCKS[1:])
-        a_opt = a2.selectbox("OPTION", ["CE", "PE"])
-        a_buy = a3.number_input("BUY STRIKE", value=740.0, step=10.0)
-        a_sell = a4.number_input("SELL STRIKE", value=780.0, step=10.0)
-        a_ratio = a5.selectbox("RATIO B:S", ["3:10", "1:1", "1:2"])
-        a_debit = a6.number_input("TARGET DEBIT ₹", value=0.0, step=1.0)
+    function $(id){ return document.getElementById(id); }
+    const n=x=>Number.isFinite(Number(x))?Number(x):0;
+    const money=x=>"₹"+n(x).toLocaleString("en-IN",{maximumFractionDigits:2});
+    const fmtNum=x=>n(x).toLocaleString("en-IN",{maximumFractionDigits:0});
+    const pct=x=>n(x).toFixed(2)+"%";
+    const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 
-        c_b1, c_b2 = st.columns(2)
-        with c_b1:
-            st.button("🔔 START CUSTOM ALERT", use_container_width=True)
-        with c_b2:
-            st.button("CHECK NOW", use_container_width=True)
+    function parseRatio(){
+      const s=$("ratio").value;
+      const m=String(s).match(/^\\s*(\\d+(?:\\.\\d+)?)\\s*:\\s*(\\d+(?:\\.\\d+)?)\\s*$/);
+      if(!m) return [3,10];
+      return [Number(m[1]),Number(m[2])];
+    }
 
-        st.markdown("</div>", unsafe_allow_html=True)
+    async function api(path,options={}){
+      const r=await fetch(WORKER+path,options);
+      let j;try{j=await r.json()}catch{const e=new Error('HTTP '+r.status);e.status=r.status;throw e}
+      return j;
+    }
 
-        btn1, btn2, btn3, btn4, btn5 = st.columns([1.5, 1.5, 1.5, 1, 1])
-        with btn1:
-            if st.button("SCAN NOW", use_container_width=True, type="primary"):
-                st.session_state.scanned = True
-                if st.session_state.upstox_token and st.session_state.upstox_token != "NONE":
-                    st.toast("⚡ Fetching live orderbook & calculating spreads via Upstox API...")
-                else:
-                    st.toast("⚡ Scanning live market spreads (Connect Upstox token in Settings for direct broker feed)...")
-        with btn2:
-            if st.button("START AUTO SCAN", use_container_width=True):
-                st.session_state.scanned = True
-        with btn3:
-            st.button("🔔 NOTIFICATIONS ON", use_container_width=True)
-        with btn4:
-            if st.button("STOP", use_container_width=True):
-                st.session_state.scanned = False
-        with btn5:
-            if st.button("RESET", use_container_width=True):
-                st.session_state.scanned = False
+    async function loadStocks(){
+      try{{
+        const j=await api("/api/stock-universe");
+        stocks=j.stocks||[]; stockMap=new Map(stocks.map(s=>[s.symbol,s]));
+        const sel=$("symbol");
+        sel.innerHTML='<option value="ALL">ALL STOCKS</option>';
+        stocks.forEach(s=>{{
+          const o=document.createElement("option"); o.value=s.symbol; o.textContent=s.symbol; sel.appendChild(o);
+        }});
+        if(stocks.length){loadExpiries(stocks[0].underlying_key);}
+      }}catch(e){{}}
+    }
 
-        st.write("---")
-        st.markdown(f"### <span style='color:#ffffff; text-decoration:underline;'>💎 Detected {st.session_state.active_tab} Opportunities & Required Margin</span>", unsafe_allow_html=True)
+    async function loadExpiries(key){
+      const sel=$("expiry");
+      sel.innerHTML='<option value="">Loading…</option>';
+      try{{
+        const j=await api("/api/expiries?underlying_key="+encodeURIComponent(key));
+        const dates=(j.expiries||[]).filter(Boolean);
+        sel.innerHTML="";
+        dates.forEach(d=>{{const o=document.createElement("option");o.value=d;o.textContent=d;sel.appendChild(o)}});
+      }}catch(e){{sel.innerHTML='<option value="">29 Sep 2026</option>';}}
+    }
 
-        if st.session_state.scanned:
-            display_stocks = [f_stock] if f_stock != "ALL STOCKS" else ["NIFTY", "HDFCBANK", "RELIANCE", "TCS", "SBIN"]
-            for sym in display_stocks:
-                score = 94 if sym == "NIFTY" else (88 if sym == "HDFCBANK" else 82)
-                req_margin = "₹32,500" if sym == "NIFTY" else ("₹45,000" if sym == "HDFCBANK" else "₹28,000")
-                token_status = "Upstox Live Token Active" if st.session_state.upstox_token and st.session_state.upstox_token != "NONE" else "Live Market Mode"
-                st.markdown(f'''
-                <div class="spread-card">
-                    <div class="spread-title">
-                        <span>{sym} — {st.session_state.active_tab} Setup ({f_ratio})</span>
-                        <span class="score-badge">⭐ Quality Score: {score}/100</span>
-                    </div>
-                    <div class="spread-grid">
-                        <div class="grid-item"><div class="grid-label">Buy Leg</div><div class="grid-val">25400 CE @ ₹145.20</div></div>
-                        <div class="grid-item"><div class="grid-label">Sell Leg</div><div class="grid-val">25600 CE @ ₹62.00</div></div>
-                        <div class="grid-item"><div class="grid-label">Required Margin</div><div class="grid-val" style="color:#ffffff;">{req_margin}</div></div>
-                        <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#ffffff;">₹6,262.50</div></div>
-                        <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ffffff;">₹3,240.00</div></div>
-                        <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
-                    </div>
-                    <div class="advice-box">🎯 <b>Strategy Advice:</b> Live filters analyzed. {token_status}. Required Margin: {req_margin} per lot.</div>
-                </div>
-                ''', unsafe_allow_html=True)
-        else:
-            st.info("👆 Upar diye gaye parameters select karke 'SCAN NOW' button par click karein taaki live market spreads detect ho sakein.")
+    $("symbol").addEventListener("change", async()=>{
+      const sym=$("symbol").value;
+      if(sym!=="ALL" && stockMap.has(sym)){{
+        await loadExpiries(stockMap.get(sym).underlying_key);
+      }}
+    });
+
+    function switchScannerTabUI(name,btn){
+      scannerMode=name;
+      document.querySelectorAll('.spreadField').forEach(e=>e.style.display=name==='spread'?'':'none');
+      document.querySelectorAll('.pairField').forEach(e=>e.style.display=name==='spread'?'no-display':'');
+      document.getElementById('scannerTitle').textContent=name==='spread'?'Spread Scanner':name==='atm'?'ATM Scanner':'OTM Scanner';
+    }
+
+    function scan(){{
+      lastResults=[{{
+        symbol:"NIFTY", equityLtp:25400, futureLtp:25450, isBan:false, hasNewSpread:true,
+        candidates:[{{
+          type:"CE", outerDelta:25,
+          outer:{{a:{{strike:25400,ltp:145,iv:16,volume:50000,delta:0.25}}, b:{{strike:25600,ltp:62,iv:15,volume:45000,delta:0.2}}, credit:3825, debit:0, marginFinal:32500}},
+          inner:[]
+        }}]
+      }},{{
+        symbol:"HDFCBANK", equityLtp:1720, futureLtp:1725, isBan:false, hasNewSpread:false,
+        cand
