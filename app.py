@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import os
 from datetime import datetime, date, timedelta
-import pytz
 
 st.set_page_config(page_title="ARHAM TRADERS | Delta Analysis", layout="wide", initial_sidebar_state="expanded")
 
@@ -362,14 +361,14 @@ else:
             st.session_state.logged_in = False
             st.rerun()
 
-    # REAL-TIME MARKET STATUS IN IST (Indian Standard Time)
-    ist_tz = pytz.timezone('Asia/Kolkata')
-    now_ist = datetime.now(ist_tz)
-    current_time_val = now_ist.time()
+    # REAL-TIME MARKET STATUS IN IST (Using standard timedelta offset +5:30)
+    utc_now = datetime.utcnow()
+    ist_now = utc_now + timedelta(hours=5, minutes=30)
+    current_time_val = ist_now.time()
     market_open_time = datetime.strptime("09:00:00", "%H:%M:%S").time()
     market_close_time = datetime.strptime("15:40:00", "%H:%M:%S").time()
     
-    is_weekday = now_ist.weekday() < 5 # Monday to Friday
+    is_weekday = ist_now.weekday() < 5 # Monday to Friday
     if is_weekday and market_open_time <= current_time_val <= market_close_time:
         market_status_html = '<div style="background:rgba(16,185,129,0.2); border:1.5px solid #10b981; color:#ffffff; padding:4px 10px; border-radius:6px; font-weight:900; text-align:center; font-size:0.95rem; text-decoration:underline;">🟢 Market Open</div>'
     else:
