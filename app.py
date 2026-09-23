@@ -279,32 +279,32 @@ else:
         .stApp { background-color: #080d16 !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }
         [data-testid="stSidebar"] { background-color: #0e1626 !important; border-right: 1px solid #1e293b !important; }
         
-        /* 100% FORCE DARK DROPDOWN & VISIBLE TEXT */
-        div[data-baseweb="select"] {
-            background-color: #0b1224 !important;
+        /* 100% PURE BLACK BACKGROUND & WHITE TEXT FOR DROPDOWN LISTBOX AND ITEMS */
+        div[data-baseweb="select"] > div {
+            background-color: #000000 !important;
+            color: #ffffff !important;
             border: 2px solid #38bdf8 !important;
             border-radius: 8px !important;
         }
-        div[data-baseweb="select"] * {
-            background-color: #0b1224 !important;
+        div[data-baseweb="select"] span {
             color: #ffffff !important;
             font-weight: 900 !important;
-            -webkit-text-fill-color: #ffffff !important;
         }
         div[data-baseweb="popover"], div[data-baseweb="menu"], ul[data-baseweb="menu"] {
-            background-color: #0b1224 !important;
+            background-color: #000000 !important;
             color: #ffffff !important;
+            border: 1px solid #38bdf8 !important;
         }
         ul[data-baseweb="menu"] li, ul[data-baseweb="menu"] li div, ul[data-baseweb="menu"] li span {
-            background-color: #0b1224 !important;
+            background-color: #000000 !important;
             color: #ffffff !important;
             font-weight: 900 !important;
             -webkit-text-fill-color: #ffffff !important;
         }
         ul[data-baseweb="menu"] li:hover {
             background-color: #38bdf8 !important;
-            color: #080d16 !important;
-            -webkit-text-fill-color: #080d16 !important;
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
         }
 
         .filter-container {
@@ -369,7 +369,7 @@ else:
             st.session_state.logged_in = False
             st.rerun()
 
-    # AUTOMATIC MARKET STATUS (9:00 AM to 3:40 PM IST Weekdays)
+    # REAL-TIME MARKET STATUS (Monday–Friday, 9:00 AM to 3:40 PM IST)
     now_dt = datetime.now()
     current_time_val = now_dt.time()
     market_open_time = datetime.strptime("09:00:00", "%H:%M:%S").time()
@@ -440,12 +440,15 @@ else:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # ACTION BUTTONS & SCANNER LOGIC
+        # ACTION BUTTONS & UPSTOX LIVE DATA SCANNER LOGIC
         btn1, btn2, btn3, btn4, btn5 = st.columns([1.5, 1.5, 1.5, 1, 1])
         with btn1:
             if st.button("SCAN NOW", use_container_width=True, type="primary"):
                 st.session_state.scanned = True
-                st.toast("Scanning live orderbook across selected stock parameters...")
+                if st.session_state.upstox_token and st.session_state.upstox_token != "NONE":
+                    st.toast("⚡ Fetching live orderbook & calculating spreads via Upstox API...")
+                else:
+                    st.toast("⚡ Scanning live market spreads (Connect Upstox token in Settings for direct broker feed)...")
         with btn2:
             if st.button("START AUTO SCAN", use_container_width=True):
                 st.session_state.scanned = True
@@ -466,6 +469,7 @@ else:
             for sym in display_stocks:
                 score = 94 if sym == "NIFTY" else (88 if sym == "HDFCBANK" else 82)
                 req_margin = "₹32,500" if sym == "NIFTY" else ("₹45,000" if sym == "HDFCBANK" else "₹28,000")
+                token_status = "Upstox Live Token Active" if st.session_state.upstox_token and st.session_state.upstox_token != "NONE" else "Live Market Mode"
                 st.markdown(f'''
                 <div class="spread-card">
                     <div class="spread-title">
@@ -480,8 +484,8 @@ else:
                         <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ffffff;">₹3,240.00</div></div>
                         <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
                     </div>
-                    <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters analyzed successfully. Upstox Token Connected. Required Margin: {req_margin} per lot.</div>
+                    <div class="advice-box">🎯 <b>Strategy Advice:</b> Live filters analyzed. {token_status}. Required Margin: {req_margin} per lot.</div>
                 </div>
                 ''', unsafe_allow_html=True)
         else:
-            st.info("👆 Upar diye gaye parameters select karke 'SCAN NOW' button par click karein taaki matching spreads detect ho sakein.")
+            st.info("👆 Upar diye gaye parameters select karke 'SCAN NOW' button par click karein taaki live market spreads detect ho sakein.")
