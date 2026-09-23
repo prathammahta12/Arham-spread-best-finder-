@@ -279,19 +279,28 @@ else:
         .stApp { background-color: #080d16 !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }
         [data-testid="stSidebar"] { background-color: #0e1626 !important; border-right: 1px solid #1e293b !important; }
         
-        /* FIX DROPDOWN TEXT VISIBILITY */
-        div[data-baseweb="select"] > div {
+        /* 100% BULLETPROOF FIX FOR STREAMLIT DROPDOWN VISIBILITY */
+        div[data-baseweb="select"] > div, div[data-baseweb="select"] span {
+            background-color: #0b1224 !important;
+            color: #ffffff !important;
+            font-weight: 900 !important;
+        }
+        div[data-baseweb="select"] {
+            border: 2px solid #38bdf8 !important;
+            border-radius: 8px !important;
+        }
+        div[data-baseweb="popover"], div[data-baseweb="menu"], ul[data-baseweb="menu"] {
+            background-color: #0b1224 !important;
+            color: #ffffff !important;
+        }
+        ul[data-baseweb="menu"] li, ul[data-baseweb="menu"] li div, ul[data-baseweb="menu"] li span {
             background-color: #0b1224 !important;
             color: #ffffff !important;
             font-weight: 800 !important;
-            border: 1.5px solid #38bdf8 !important;
         }
-        ul[data-baseweb="menu"] {
-            background-color: #0b1224 !important;
-        }
-        ul[data-baseweb="menu"] li div {
-            color: #ffffff !important;
-            font-weight: 800 !important;
+        ul[data-baseweb="menu"] li:hover {
+            background-color: #1e293b !important;
+            color: #38bdf8 !important;
         }
 
         .filter-container {
@@ -310,7 +319,7 @@ else:
             border-radius: 10px; padding: 16px; margin-bottom: 12px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
-           .spread-title { font-size: 1.15rem; font-weight: 900; color: #ffffff; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; text-decoration: underline; text-decoration-color: #ffbe0b; text-underline-offset: 4px; }
+        .spread-title { font-size: 1.15rem; font-weight: 900; color: #ffffff; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; text-decoration: underline; text-decoration-color: #ffbe0b; text-underline-offset: 4px; }
         
         .spread-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 10px 0; }
         .grid-item { background: #080d16; padding: 8px 10px; border-radius: 6px; border: 1px solid #1e293b; }
