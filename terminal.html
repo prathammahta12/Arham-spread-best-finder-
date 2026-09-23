@@ -1,0 +1,2937 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delta Analysis â€” Advanced FNO Scanner</title>
+<style>
+/* DELTA ANALYSIS - MINIMAL DARK THEME */
+:root {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface-hover: #1f1f1f;
+  --border: #262626;
+  --text: #ededed;
+  --text-muted: #888888;
+  --accent-blue: #3b82f6;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --fontScale: 1;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: calc(14px * var(--fontScale));
+  -webkit-font-smoothing: antialiased;
+}
+
+/* TOP NAVBAR */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  height: 60px;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--accent-blue);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; }
+.connected .dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
+.disconnected .dot { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+.nav-links { display: flex; gap: 12px; }
+.nav-links button {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+.nav-links button:hover { color: var(--text); background: var(--surface-hover); }
+.nav-links button.active { color: var(--bg); background: var(--text); }
+
+/* MAIN CONTAINER & PANEL */
+.container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+.header-title { font-size: 18px; font-weight: 600; margin: 0 0 16px 0; color: var(--text-muted); }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.field label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.field input, .field select {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  transition: border 0.2s;
+}
+  .field input:focus, .field select:focus { border-color: var(--accent-blue); }
+
+.inlineField { display: flex; gap: 8px; }
+.inlineField select { width: 75px; flex-shrink: 0; }
+
+.actions { display: flex; gap: 12px; margin-top: 24px; align-items: center; flex-wrap: wrap; }
+.btn {
+  height: 38px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, opacity 0.2s;
+}
+.btn:hover { opacity: 0.85; }
+.btn-primary { background: var(--text); color: var(--bg); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-secondary { background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); }
+
+/* SEARCH & SORT */
+.searchRow { display: flex; gap: 16px; margin-bottom: 16px; }
+.searchBox {
+  flex: 1; display: flex; align-items: center;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0 16px;
+}
+.searchBox input { flex: 1; border: none; background: transparent; color: var(--text); height: 40px; outline: none; margin-left: 8px; font-size: 14px;}
+.sortBox { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); padding: 0 16px; border-radius: 6px; }
+.sortBox select { background: transparent; border: none; color: var(--text); outline: none; font-weight: 600; font-size: 13px;}
+
+.summary { font-size: 14px; font-weight: 600; color: var(--accent-blue); margin-bottom: 16px; }
+.empty { text-align: center; padding: 50px; color: var(--text-muted); font-size: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+
+/* SPREAD RESULT CARDS */
+.result-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.result-card.banStock { border-color: var(--danger); }
+.result-card.newSpread { border-color: var(--accent-blue); box-shadow: 0 0 10px rgba(59, 130, 246, 0.1); }
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  cursor: pointer;
+  background: transparent;
+}
+  .card-header:hover { background: var(--surface-hover); }
+.symbol-info { display: flex; align-items: center; gap: 20px; }
+.symbol-name { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.symbol-ltp { font-size: 13px; color: var(--text-muted); display: flex; gap: 16px; }
+
+.badges { display: flex; gap: 8px; align-items: center; }
+.badge { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+.badge-gray { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+.badge-red { background: var(--danger); color: white; animation: blink .9s infinite; }
+.badge-blue { background: var(--accent-blue); color: white; animation: blink .9s infinite; }
+.badge-green { background: rgba(34, 197, 94, 0.1); color: var(--success); border: 1px solid rgba(34, 197, 94, 0.2); }
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* EXPANDED SPREAD DETAILS */
+.card-details { border-top: 1px solid var(--border); padding: 20px; background: var(--bg); display: flex; flex-direction: column; gap: 24px; }
+.spread-group { border: 1px solid var(--border); border-radius: 8px; padding: 20px; background: var(--surface); }
+.spread-header { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 16px; display: flex; justify-content: space-between;}
+.legs-container { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.leg-box { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 6px; }
+.leg-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.leg-meta { font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 4px;}
+.net-value { font-size: 15px; font-weight: 700; text-align: right; margin-top: 10px;}
+.text-green { color: var(--success); }
+.text-red { color: var(--danger); }
+
+.inner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.inner-box { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 6px; font-size: 13px;}
+.inner-box-header { display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px;}
+.inner-box-main { display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; margin-bottom: 6px;}
+
+/* ATM/OTM OPTION TABLE */
+.optionScroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.optionTable { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+.optionTable th, .optionTable td { padding: 12px 16px; text-align: right; border-bottom: 1px solid var(--border); }
+.optionTable th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; background: var(--bg); }
+.optionTable th:first-child, .optionTable td:first-child { text-align: left; }
+.optionTable tbody tr:hover { background: var(--surface-hover); }
+
+/* MODAL */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(4px); }
+.modal.open { display: flex; }
+.modal-card { width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }
+.modal-card h2 { margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: var(--accent-blue);}
+
+@media(max-width: 800px) {
+  .legs-container { grid-template-columns: 1fr; }
+  .symbol-info { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .grid { grid-template-columns: 1fr 1fr; }
+  .card-header { flex-direction: column; align-items: flex-start; gap: 12px;}
+  .badges { width: 100%; justify-content: space-between; }
+}
+@media(max-width: 500px) {
+  .grid { grid-template-columns: 1fr; }
+  .nav-links button { padding: 8px; font-size: 13px;}
+}
+  .custom-alert{margin-top:14px;border:1px solid #2b2b2b;border-radius:10px;padding:14px;background:#101010}.custom-alert h3{margin:0 0 10px;font-size:15px}.custom-alert-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}.custom-alert .field label{display:block;font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px}.custom-alert input,.custom-alert select{width:100%;box-sizing:border-box}.custom-alert-status{margin-top:10px;font-size:12px;color:var(--text-muted)}@media(max-width:900px){.custom-alert-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+
+<style id="help-contact-style">
+.help-contact{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 14px;border-radius:10px;
+  background:#1f1f1f;border:1px solid #333;color:#fff;
+  text-decoration:none;font-weight:700;cursor:pointer;
+}
+.help-contact:hover{background:#2a2a2a}
+.help-contact-wrap{display:flex;justify-content:flex-end;margin:8px 0 12px}
+.help-card{
+  margin:14px 0;padding:14px 16px;border:1px solid #333;
+  border-radius:12px;background:#141414;
+}
+.help-card h3{margin:0 0 8px}
+.help-actions{display:flex;gap:10px;flex-wrap:wrap}
+.help-actions a{
+  text-decoration:none;padding:10px 14px;border-radius:9px;
+  font-weight:700;color:#fff;background:#222;border:1px solid #3a3a3a;
+}
+</style>
+
+
+<style id="help-popup-style">
+.help-mini{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:7px 10px;border-radius:8px;background:#1f1f1f;
+  border:1px solid #333;color:#fff;font-size:13px;font-weight:700;
+  cursor:pointer;text-decoration:none;
+}
+.help-popup{
+  display:none;position:fixed;right:18px;top:72px;z-index:99999;
+  width:min(300px,calc(100vw - 36px));padding:16px;
+  background:#151515;border:1px solid #444;border-radius:12px;
+  box-shadow:0 10px 35px rgba(0,0,0,.55);
+}
+.help-popup.open{display:block}
+.help-popup h3{margin:0 0 8px;font-size:16px}
+.help-popup p{margin:0 0 12px;font-size:13px;color:#bbb}
+.help-popup-actions{display:flex;gap:8px}
+.help-popup-actions a{
+  flex:1;text-align:center;text-decoration:none;padding:9px 8px;
+  border-radius:8px;background:#222;border:1px solid #3a3a3a;color:#fff;
+  font-weight:700;font-size:13px;
+}
+</style>
+<script id="help-popup-script">
+function toggleHelpPopup(){
+  const p=document.getElementById('helpPopup');
+  if(p) p.classList.toggle('open');
+}
+</script>
+
+
+<style id="compact-alfa-style">
+:root{
+  --bg:#06111d;--surface:#071a2a;--surface-hover:#0c2740;--border:#0b78ad;
+  --text:#eef8ff;--text-muted:#9ab3c7;--accent-blue:#147cff;--cyan:#00d9ff;
+  --success:#18e66b;--danger:#ff4242;
+}
+  body{background:radial-gradient(circle at 60% 0%,#0a2034 0,#06111d 45%,#04101a 100%);font-size:14px}
+.navbar{height:82px;padding:0 28px;background:rgba(4,15,26,.96);border-bottom:1px solid #0b4c70;position:sticky}
+.brand{font-size:25px;color:#fff;letter-spacing:.4px}
+.brand::first-letter{color:#19a9ff}
+.status-indicator{font-size:13px;color:#b9cad7}
+.nav-links{display:none}
+.navbar:after{content:"âš™  D";font-weight:700;font-size:17px;color:#dcecff;word-spacing:14px}
+.container{max-width:none;margin:0;padding:20px 28px 30px 250px}
+.header-title{display:none}
+.panel{background:linear-gradient(135deg,rgba(6,28,45,.97),rgba(4,18,30,.97));border:1px solid #075c88;border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 8px 28px rgba(0,0,0,.25)}
+.grid{grid-template-columns:repeat(7,minmax(120px,1fr));gap:12px}
+.field label{color:#b6d0e3;font-size:11px}
+.field input,.field select{height:38px;background:#030b13;border:1px solid #075f8e;border-radius:7px;color:#eef8ff}
+.field input:focus,.field select:focus{border-color:#00cfff;box-shadow:0 0 0 1px #00cfff44}
+.custom-alert{border:1px solid #075c88!important;background:#061522!important;border-radius:10px!important}
+.custom-alert h3{color:#fff}
+.btn{border-radius:7px!important;border:1px solid #0872a9!important}
+.btn-primary{background:#087cff!important}
+.btn-success{background:#12d95d!important;color:#04130a!important}
+.btn-danger{background:#ff3f3f!important}
+.actions{gap:10px}
+.sidebar-compact{position:fixed;left:0;top:82px;bottom:0;width:222px;background:rgba(3,16,28,.98);border-right:1px solid #0b4c70;padding:18px 12px;z-index:90}
+.side-logo{font-size:24px;font-weight:800;color:#fff;padding:14px 12px 22px;line-height:1.05}
+.side-logo span{color:#13a8ff}
+.side-sub{font-size:13px;color:#9ab3c7;margin-top:5px}
+.side-btn{width:100%;text-align:left;background:transparent;border:0;color:#cfe3f1;padding:13px 14px;margin:3px 0;border-radius:8px;font-size:15px;font-weight:650;cursor:pointer}
+.side-btn:hover{background:#0b2740}
+.side-btn.active{background:#1759ff;color:#fff;box-shadow:0 4px 14px #1759ff55}
+.side-live{position:absolute;bottom:26px;left:22px;color:#16e96a;font-weight:700}
+.side-version{position:absolute;bottom:8px;left:22px;color:#91a8bb;font-size:12px}
+.searchBox,.results-toolbar{border-color:#075c88!important}
+@media(max-width:1100px){
+ .container{padding-left:20px}.sidebar-compact{display:none}.grid{grid-template-columns:repeat(3,minmax(150px,1fr))}
+}
+</style>
+
+
+<style id="delta-advanced-design-v1">
+/* ===== DELTA ANALYSIS ADVANCED UI v1 ===== */
+:root{
+  --bg:#070b12;
+  --surface:#0d1420;
+  --surface-2:#111b29;
+  --surface-3:#152235;
+  --border:#22334a;
+  --border-soft:#1a2a3d;
+  --text:#f4f8ff;
+  --text-muted:#8ea2bb;
+  --accent-blue:#4b8cff;
+  --accent-cyan:#26d9ff;
+  --success:#23e58a;
+  --danger:#ff5268;
+  --warning:#ffbd45;
+  --shadow:0 18px 50px rgba(0,0,0,.28);
+}
+
+/* Background */
+body{
+  background:
+    radial-gradient(circle at 75% -10%,rgba(58,129,255,.16),transparent 32%),
+    radial-gradient(circle at 10% 25%,rgba(38,217,255,.07),transparent 28%),
+    linear-gradient(180deg,#060a11 0%,#08101a 100%);
+  color:var(--text);
+}
+  /* Left navigation */
+.sidebar-compact{
+  position:fixed!important;
+  left:0!important;
+  top:0!important;
+  bottom:0!important;
+  width:238px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  padding:24px 16px!important;
+  background:linear-gradient(180deg,#0b121d 0%,#09101a 100%)!important;
+  border-right:1px solid #1d2d42!important;
+  box-shadow:18px 0 50px rgba(0,0,0,.18)!important;
+  z-index:300!important;
+}
+.side-logo{
+  margin:4px 10px 30px!important;
+  font-size:22px!important;
+  letter-spacing:1.5px!important;
+  color:#fff!important;
+  font-weight:800!important;
+}
+.side-logo span{color:#4b8cff!important}
+.side-sub{
+  margin-top:5px!important;
+  font-size:10px!important;
+  letter-spacing:2.5px!important;
+  color:#7188a4!important;
+}
+.side-btn{
+  width:100%!important;
+  margin:4px 0!important;
+  padding:13px 14px!important;
+  border:1px solid transparent!important;
+  border-radius:11px!important;
+  background:transparent!important;
+  color:#91a4bc!important;
+  text-align:left!important;
+  font-size:14px!important;
+  font-weight:700!important;
+  transition:.18s ease!important;
+}
+.side-btn:hover{
+  background:#122033!important;
+  color:#fff!important;
+  border-color:#1f3650!important;
+}
+.side-btn.active{
+  background:linear-gradient(90deg,rgba(75,140,255,.22),rgba(75,140,255,.07))!important;
+  color:#fff!important;
+  border-color:#285a9d!important;
+  box-shadow:inset 3px 0 0 #4b8cff,0 8px 22px rgba(20,91,190,.12)!important;
+}
+  .side-live{
+  margin-top:auto!important;
+  position:static!important;
+  padding:12px 10px!important;
+  color:#23e58a!important;
+  font-size:12px!important;
+  border-top:1px solid #1b2a3c!important;
+}
+.side-version{
+  position:static!important;
+  padding:4px 10px!important;
+  color:#53677f!important;
+  font-size:11px!important;
+}
+
+/* Top bar */
+.navbar{
+  margin-left:238px!important;
+  width:calc(100% - 238px)!important;
+  height:70px!important;
+  padding:0 28px!important;
+  background:rgba(9,15,24,.88)!important;
+  border-bottom:1px solid #1c2b3f!important;
+  backdrop-filter:blur(16px)!important;
+  position:sticky!important;
+  top:0!important;
+  z-index:200!important;
+}
+.brand{
+  color:#fff!important;
+  font-size:18px!important;
+  letter-spacing:.6px!important;
+}
+.brand:first-letter{color:#4b8cff}
+.status-indicator{
+  padding:7px 12px!important;
+  border:1px solid #20344b!important;
+  border-radius:999px!important;
+  background:#0c1725!important;
+  color:#9eb2ca!important;
+}
+.dot{width:7px!important;height:7px!important}
+.nav-links{gap:6px!important}
+.nav-links button{
+  padding:9px 13px!important;
+  border-radius:9px!important;
+  color:#8ea2bb!important;
+  font-size:13px!important;
+}
+.nav-links button:hover{background:#132135!important;color:#fff!important}
+.nav-links button.active{
+  background:linear-gradient(135deg,#f4f8ff,#dce8f8)!important;
+  color:#08101a!important;
+  box-shadow:0 5px 18px rgba(255,255,255,.08)!important;
+}
+  /* Main area */
+.container{
+  margin-left:238px!important;
+  width:calc(100% - 238px)!important;
+  max-width:none!important;
+  padding:30px 34px 70px!important;
+}
+.header-title{
+  margin:0 0 22px!important;
+  font-size:25px!important;
+  font-weight:800!important;
+  letter-spacing:-.4px!important;
+  color:#f7fbff!important;
+}
+
+/* Main filter panel */
+.panel{
+  background:linear-gradient(145deg,rgba(17,27,41,.96),rgba(10,17,27,.96))!important;
+  border:1px solid #21334a!important;
+  border-radius:16px!important;
+  box-shadow:var(--shadow)!important;
+  padding:22px!important;
+}
+.grid{
+  gap:16px!important;
+}
+.field label{
+  color:#8298b2!important;
+  font-size:10px!important;
+  font-weight:800!important;
+  letter-spacing:1.2px!important;
+  margin-bottom:7px!important;
+}
+.field input,.field select,
+.searchBox,.results-toolbar input,.results-toolbar select{
+  min-height:43px!important;
+  background:#09121d!important;
+  color:#edf5ff!important;
+  border:1px solid #23374f!important;
+  border-radius:9px!important;
+  outline:none!important;
+  transition:.18s ease!important;
+}
+.field input:focus,.field select:focus,
+.searchBox:focus{
+  border-color:#397de2!important;
+  box-shadow:0 0 0 3px rgba(75,140,255,.12)!important;
+}
+
+/* Buttons */
+.btn,.action-btn,button{
+  transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease!important;
+}
+.btn:hover,.action-btn:hover{transform:translateY(-1px)!important}
+
+/* Results */
+.results,.results-panel{
+  margin-top:18px!important;
+  background:linear-gradient(145deg,#0d1623,#0a111b)!important;
+  border:1px solid #21334a!important;
+  border-radius:16px!important;
+  box-shadow:var(--shadow)!important;
+}
+.card,.result-card,.option-card{
+  background:linear-gradient(145deg,#111d2b,#0c1521)!important;
+  border-color:#243951!important;
+  border-radius:12px!important;
+  }
+
+/* Tables */
+.optionScroll{
+  border-color:#23374f!important;
+  border-radius:12px!important;
+}
+.optionTable th{
+  background:#0a1320!important;
+  color:#7890ab!important;
+  border-color:#1c2e43!important;
+}
+.optionTable td{
+  border-color:#1a2b40!important;
+}
+.optionTable tbody tr:hover{
+  background:rgba(75,140,255,.055)!important;
+}
+
+/* Search / toolbars */
+.searchBox,.results-toolbar{
+  background:#09121d!important;
+  border-color:#21364e!important;
+}
+
+/* Modal */
+.modal{
+  background:rgba(2,6,12,.78)!important;
+  backdrop-filter:blur(10px)!important;
+}
+.modal-card{
+  width:min(420px,calc(100vw - 30px))!important;
+  background:linear-gradient(145deg,#111d2b,#0b131e)!important;
+  border:1px solid #29405b!important;
+  border-radius:16px!important;
+  box-shadow:0 30px 80px rgba(0,0,0,.5)!important;
+}
+  /* Mobile */
+@media(max-width:900px){
+  .sidebar-compact{display:none!important}
+  .navbar{
+    margin-left:0!important;
+    width:100%!important;
+    padding:0 14px!important;
+  }
+  .container{
+    margin-left:0!important;
+    width:100%!important;
+    padding:20px 14px 50px!important;
+  }
+  .brand span{display:none!important}
+  .status-indicator{display:none!important}
+  .nav-links{gap:2px!important}
+  .nav-links button{padding:8px 9px!important;font-size:12px!important}
+}
+@media(max-width:520px){
+  .navbar{height:62px!important}
+  .brand{font-size:16px!important}
+  .nav-links button{padding:7px 8px!important}
+  .header-title{font-size:21px!important}
+  .panel{padding:14px!important;border-radius:13px!important}
+}
+</style>
+
+
+<style id="spread-margin-top-v2">
+.spread-margin-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:28px;
+  padding:0 10px;
+  border-radius:8px;
+  border:1px solid rgba(35,229,138,.35);
+  background:linear-gradient(180deg,rgba(35,229,138,.13),rgba(35,229,138,.05));
+  color:#39ee9a;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.45px;
+  white-space:nowrap;
+  box-shadow:0 0 16px rgba(35,229,138,.07);
+}
+.result-card .card-header{
+  gap:16px;
+}
+.result-card .card-header .badges{
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+@media(max-width:650px){
+  .spread-margin-badge{font-size:10px;padding:0 8px}
+  .result-card .card-header{align-items:flex-start}
+  .result-card .card-header .badges{max-width:52%;gap:5px}
+}
+</style>
+  <style id="delta-big-spread-v3">
+/* ===== BIG SPREAD + MARGIN RESULT CARDS ===== */
+.result-card{
+  margin-bottom:20px!important;
+  border-radius:15px!important;
+  border:1px solid #29415e!important;
+  box-shadow:0 10px 32px rgba(0,0,0,.24)!important;
+}
+.card-header{
+  min-height:112px!important;
+  padding:20px 24px!important;
+  background:linear-gradient(105deg,rgba(17,31,48,.98),rgba(10,19,31,.98))!important;
+}
+.symbol-info{
+  gap:18px!important;
+  flex-wrap:wrap!important;
+}
+.symbol-name{
+  font-size:21px!important;
+  font-weight:850!important;
+  letter-spacing:.2px!important;
+}
+.symbol-ltp{
+  font-size:13px!important;
+  color:#9fb3ca!important;
+}
+.spread-top-info{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+.spread-big-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:8px 13px;
+  border-radius:9px;
+  background:linear-gradient(135deg,rgba(75,140,255,.22),rgba(38,217,255,.08));
+  border:1px solid #3279cf;
+  color:#dcecff;
+  font-size:13px;
+  font-weight:850;
+}
+.spread-net-big{
+  font-size:18px;
+  font-weight:900;
+  letter-spacing:.2px;
+  padding:7px 12px;
+  border-radius:9px;
+  background:#07131f;
+  border:1px solid #25425e;
+}
+    .spread-margin-badge{
+  font-size:15px!important;
+  font-weight:900!important;
+  padding:10px 14px!important;
+  border-radius:10px!important;
+  background:linear-gradient(135deg,rgba(35,229,138,.17),rgba(35,229,138,.05))!important;
+  border:1px solid rgba(35,229,138,.55)!important;
+  color:#67f0ae!important;
+  white-space:nowrap;
+}
+.badges{
+  gap:9px!important;
+  align-items:center!important;
+}
+.badge{
+  font-size:11px!important;
+  padding:6px 10px!important;
+}
+.card-details{
+  padding:22px!important;
+}
+.spread-group{
+  border-radius:13px!important;
+  padding:20px!important;
+}
+.leg-box{
+  padding:18px!important;
+  border-radius:10px!important;
+}
+.leg-title{
+  font-size:17px!important;
+}
+.net-value{
+  font-size:19px!important;
+}
+@media(max-width:700px){
+  .card-header{
+    min-height:auto!important;
+    padding:16px!important;
+    align-items:flex-start!important;
+    gap:14px!important;
+  }
+  .symbol-name{font-size:18px!important}
+  .spread-margin-badge{font-size:13px!important;padding:8px 10px!important}
+  .spread-net-big{font-size:15px!important}
+}
+</style>
+  <style id="delta-white-theme-v5">
+/* ===== CLEAN WHITE TRADING THEME ===== */
+:root{
+  --bg:#f4f7fb;
+  --surface:#ffffff;
+  --surface-2:#f8fafc;
+  --surface-3:#eef4fb;
+  --border:#dbe3ee;
+  --border-soft:#e8eef5;
+  --text:#172033;
+  --text-muted:#64748b;
+  --accent-blue:#2563eb;
+  --accent-cyan:#0891b2;
+  --success:#16a34a;
+  --danger:#dc2626;
+  --warning:#d97706;
+  --shadow:0 10px 30px rgba(31,50,80,.09);
+}
+
+html,body{
+  background:#f4f7fb!important;
+  color:#172033!important;
+}
+body{
+  background:
+    radial-gradient(circle at 80% -10%,rgba(37,99,235,.08),transparent 30%),
+    linear-gradient(180deg,#f8fbff 0%,#f3f6fa 100%)!important;
+}
+
+/* Sidebar */
+.sidebar-compact{
+  background:#fff!important;
+  border-right:1px solid #dbe3ee!important;
+  box-shadow:8px 0 28px rgba(31,50,80,.06)!important;
+}
+.side-logo{color:#172033!important}
+.side-logo span{color:#2563eb!important}
+.side-sub{color:#94a3b8!important}
+.side-btn{
+  color:#64748b!important;
+}
+.side-btn:hover{
+  background:#f1f5f9!important;
+  color:#172033!important;
+  border-color:#dbe3ee!important;
+}
+.side-btn.active{
+  background:#eaf2ff!important;
+  color:#1d4ed8!important;
+  border-color:#b9d2ff!important;
+  box-shadow:inset 3px 0 0 #2563eb,0 5px 16px rgba(37,99,235,.08)!important;
+}
+.side-live{
+  color:#16a34a!important;
+  border-top-color:#e5ebf2!important;
+}
+.side-version{color:#94a3b8!important}
+
+/* Navbar */
+.navbar{
+  background:rgba(255,255,255,.92)!important;
+  border-bottom:1px solid #dbe3ee!important;
+  box-shadow:0 3px 18px rgba(31,50,80,.04)!important;
+}
+.brand{color:#172033!important}
+.status-indicator{
+  background:#f8fafc!important;
+  border-color:#dbe3ee!important;
+  color:#64748b!important;
+}
+.nav-links button{color:#64748b!important}
+.nav-links button:hover{
+  background:#f1f5f9!important;
+  color:#172033!important;
+}
+.nav-links button.active{
+  background:#172033!important;
+  color:#fff!important;
+  box-shadow:0 5px 16px rgba(23,32,51,.15)!important;
+}
+
+/* Main */
+.container{color:#172033!important}
+.header-title{color:#172033!important}
+
+/* Panels */
+.panel,.results,.results-panel{
+  background:#fff!important;
+  border-color:#dbe3ee!important;
+  box-shadow:var(--shadow)!important;
+}
+.card,.result-card,.option-card{
+  background:#fff!important;
+  border-color:#dbe3ee!important;
+}
+    /* Inputs */
+.field label{
+  color:#64748b!important;
+}
+.field input,.field select,
+.searchBox,.results-toolbar input,.results-toolbar select{
+  background:#fff!important;
+  color:#172033!important;
+  border-color:#cfd9e6!important;
+}
+.field input::placeholder,.searchBox::placeholder{
+  color:#94a3b8!important;
+}
+.field input:focus,.field select:focus,.searchBox:focus{
+  border-color:#2563eb!important;
+  box-shadow:0 0 0 3px rgba(37,99,235,.10)!important;
+}
+
+/* Tables/results */
+.optionScroll{border-color:#dbe3ee!important}
+.optionTable th{
+  background:#f4f7fb!important;
+  color:#64748b!important;
+  border-color:#e2e8f0!important;
+}
+.optionTable td{border-color:#e8eef5!important}
+.optionTable tbody tr:hover{background:#f7faff!important}
+
+/* Spread cards */
+.card-header{
+  background:linear-gradient(105deg,#fff,#f6f9fd)!important;
+}
+.spread-big-badge{
+  background:#eef5ff!important;
+  border-color:#b9d2ff!important;
+  color:#1d4ed8!important;
+}
+.spread-net-big{
+  background:#f8fafc!important;
+  border-color:#dbe3ee!important;
+  color:#172033!important;
+}
+.spread-margin-badge{
+  background:#ecfdf3!important;
+  border-color:#9ae6b4!important;
+  color:#15803d!important;
+}
+    /* Modal */
+.modal{background:rgba(15,23,42,.38)!important}
+.modal-card{
+  background:#fff!important;
+  border-color:#dbe3ee!important;
+  box-shadow:0 25px 70px rgba(15,23,42,.18)!important;
+}
+
+/* Buttons: keep semantic colors, neutralize overly dark buttons */
+.btn-secondary{
+  background:#f1f5f9!important;
+  color:#172033!important;
+  border-color:#dbe3ee!important;
+}
+</style>
+
+
+<style id="delta-premium-v6">
+/* ===== DELTA ANALYSIS â€” PREMIUM LIGHT TRADING UI v6 ===== */
+:root{
+  --bg:#f6f8fc;
+  --surface:#ffffff;
+  --surface-soft:#f8fafc;
+  --navy:#0f1b2d;
+  --navy-2:#15243a;
+  --blue:#2563eb;
+  --blue-soft:#edf4ff;
+  --cyan:#0891b2;
+  --green:#16a34a;
+  --red:#dc2626;
+  --amber:#d97706;
+  --text:#172033;
+  --muted:#718096;
+  --line:#e2e8f0;
+  --line-2:#cfd9e6;
+  --shadow:0 8px 28px rgba(15,27,45,.07);
+  --shadow-lg:0 18px 50px rgba(15,27,45,.10);
+}
+
+/* Base */
+html,body{
+  background:var(--bg)!important;
+  color:var(--text)!important;
+}
+body{
+  background:
+    radial-gradient(700px 320px at 80% -8%,rgba(37,99,235,.08),transparent 65%),
+    #f6f8fc!important;
+  font-family:Inter,Segoe UI,Arial,sans-serif!important;
+}
+
+/* Sidebar â€” premium navy */
+.sidebar-compact{
+  width:224px!important;
+  background:linear-gradient(180deg,#101d31 0%,#0b1525 100%)!important;
+  border-right:0!important;
+  box-shadow:12px 0 35px rgba(15,27,45,.12)!important;
+  padding:22px 13px!important;
+}
+.side-logo{
+  color:#fff!important;
+  margin:5px 11px 28px!important;
+  font-size:21px!important;
+  font-weight:850!important;
+  }
+  .side-logo span{color:#62a0ff!important}
+.side-sub{color:#8092aa!important}
+.side-btn{
+  color:#a9b8cb!important;
+  border:1px solid transparent!important;
+  border-radius:10px!important;
+  margin:4px 0!important;
+  padding:12px 13px!important;
+}
+.side-btn:hover{
+  background:rgba(255,255,255,.07)!important;
+  color:#fff!important;
+}
+.side-btn.active{
+  color:#fff!important;
+  background:linear-gradient(90deg,rgba(37,99,235,.34),rgba(37,99,235,.10))!important;
+  border-color:rgba(98,160,255,.28)!important;
+  box-shadow:inset 3px 0 #62a0ff!important;
+}
+.side-live{
+  color:#4ade80!important;
+  border-top-color:rgba(255,255,255,.10)!important;
+}
+.side-version{color:#64748b!important}
+
+/* Header */
+.navbar{
+  margin-left:224px!important;
+  width:calc(100% - 224px)!important;
+  height:66px!important;
+  padding:0 28px!important;
+  background:rgba(255,255,255,.94)!important;
+  border-bottom:1px solid var(--line)!important;
+  box-shadow:0 3px 18px rgba(15,27,45,.04)!important;
+}
+.brand{
+  color:var(--navy)!important;
+  font-size:18px!important;
+  font-weight:800!important;
+}
+.status-indicator{
+  background:#f8fafc!important;
+  border:1px solid var(--line)!important;
+  border-radius:999px!important;
+  padding:6px 11px!important;
+  font-size:11px!important;
+}
+.nav-links button{
+  color:#64748b!important;
+  border-radius:8px!important;
+  font-weight:700!important;
+}
+.nav-links button:hover{
+  background:#f1f5f9!important;
+  color:var(--navy)!important;
+}
+.nav-links button.active{
+  background:var(--navy)!important;
+  color:#fff!important;
+  box-shadow:0 5px 15px rgba(15,27,45,.14)!important;
+  }
+  /* Main */
+.container{
+  margin-left:224px!important;
+  width:calc(100% - 224px)!important;
+  padding:28px 30px 60px!important;
+}
+.header-title{
+  color:var(--navy)!important;
+  font-size:24px!important;
+  font-weight:850!important;
+  margin-bottom:18px!important;
+}
+
+/* Main panel */
+.panel{
+  background:rgba(255,255,255,.96)!important;
+  border:1px solid var(--line)!important;
+  border-radius:15px!important;
+  box-shadow:var(--shadow)!important;
+  padding:21px!important;
+}
+.field label{
+  color:#66758a!important;
+  font-size:10px!important;
+  font-weight:800!important;
+  letter-spacing:1px!important;
+}
+.field input,.field select,
+.searchBox,.results-toolbar input,.results-toolbar select{
+  background:#fbfcfe!important;
+  color:var(--text)!important;
+  border:1px solid var(--line-2)!important;
+  border-radius:8px!important;
+  min-height:42px!important;
+}
+.field input:hover,.field select:hover{
+  border-color:#b9c7d8!important;
+}
+.field input:focus,.field select:focus,.searchBox:focus{
+  border-color:#4d83e8!important;
+  box-shadow:0 0 0 3px rgba(37,99,235,.09)!important;
+}
+
+/* Section/card hierarchy */
+.results,.results-panel{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+.result-card{
+  background:#fff!important;
+  border:1px solid var(--line)!important;
+  border-radius:14px!important;
+  box-shadow:var(--shadow)!important;
+  overflow:hidden!important;
+}
+.result-card:hover{
+  border-color:#bfd1eb!important;
+  box-shadow:var(--shadow-lg)!important;
+}
+.card-header{
+  background:linear-gradient(180deg,#fff 0%,#f8fbff 100%)!important;
+  border-bottom:1px solid #e7edf4!important;
+  padding:17px 20px!important;
+  }
+  .symbol-name{
+  color:var(--navy)!important;
+  font-size:19px!important;
+  font-weight:850!important;
+}
+.symbol-ltp{color:#64748b!important}
+
+/* Spread emphasis */
+.spread-big-badge{
+  background:var(--blue-soft)!important;
+  border:1px solid #c7dbff!important;
+  color:#1d4ed8!important;
+  font-weight:850!important;
+}
+.spread-net-big{
+  background:#f8fafc!important;
+  border:1px solid var(--line)!important;
+  color:var(--navy)!important;
+  font-weight:900!important;
+}
+.spread-margin-badge{
+  background:#ecfdf3!important;
+  border:1px solid #a7e8bd!important;
+  color:#15803d!important;
+  font-weight:900!important;
+}
+
+/* Details */
+.card-details,.spread-group{
+  background:#fff!important;
+}
+.spread-group{
+  border:1px solid #e6edf5!important;
+  border-radius:11px!important;
+}
+.leg-box{
+  background:#f8fafc!important;
+  border:1px solid #e5ebf3!important;
+}
+
+/* Table */
+.optionScroll{
+  background:#fff!important;
+  border:1px solid var(--line)!important;
+  border-radius:11px!important;
+}
+.optionTable th{
+  background:#f3f6fa!important;
+  color:#617189!important;
+  border-color:#e0e7ef!important;
+  font-weight:800!important;
+}
+.optionTable td{border-color:#e9eef4!important}
+.optionTable tbody tr:hover{background:#f7faff!important}
+
+/* Search bar */
+.searchBox{
+  background:#fff!important;
+  box-shadow:0 3px 12px rgba(15,27,45,.04)!important;
+}
+
+/* Buttons */
+.btn,.action-btn{
+  border-radius:8px!important;
+  font-weight:800!important;
+}
+.btn-primary{
+  box-shadow:0 5px 14px rgba(37,99,235,.16)!important;
+}
+.btn-secondary{
+  background:#f1f5f9!important;
+  color:var(--navy)!important;
+  border:1px solid var(--line)!important;
+  }
+  /* Modal */
+.modal{
+  background:rgba(15,27,45,.38)!important;
+  backdrop-filter:blur(7px)!important;
+}
+.modal-card{
+  background:#fff!important;
+  border:1px solid var(--line)!important;
+  border-radius:15px!important;
+  box-shadow:0 28px 80px rgba(15,27,45,.20)!important;
+}
+
+/* Mobile */
+@media(max-width:900px){
+  .sidebar-compact{display:none!important}
+  .navbar{margin-left:0!important;width:100%!important;padding:0 13px!important}
+  .container{margin-left:0!important;width:100%!important;padding:18px 13px 45px!important}
+}
+</style>
+
+
+<style id="delta-dark-v7">
+/* ===== DELTA ANALYSIS PREMIUM DARK + MULTI-API v7 ===== */
+:root{
+  --bg:#070b12;
+  --surface:#0d1420;
+  --surface2:#111b29;
+  --surface3:#162337;
+  --navy:#f4f8ff;
+  --text:#edf4ff;
+  --muted:#8da1b9;
+  --line:#22344a;
+  --line2:#2b415b;
+  --blue:#4b8cff;
+  --blue2:#67a2ff;
+  --green:#24df8b;
+  --red:#ff596d;
+  --amber:#ffbf55;
+  --shadow:0 12px 34px rgba(0,0,0,.28);
+}
+html,body{background:#070b12!important;color:var(--text)!important}
+body{
+ background:
+ radial-gradient(800px 360px at 72% -8%,rgba(75,140,255,.14),transparent 65%),
+ linear-gradient(180deg,#060a10,#09111b)!important;
+}
+.sidebar-compact{
+ width:224px!important;
+ background:linear-gradient(180deg,#0b1421,#08101a)!important;
+ border-right:1px solid #1d2d41!important;
+ box-shadow:12px 0 35px rgba(0,0,0,.25)!important;
+}
+.side-logo{color:#fff!important}
+.side-logo span{color:#5c9bff!important}
+.side-sub{color:#71859e!important}
+.side-btn{color:#8fa3bb!important}
+.side-btn:hover{background:#122033!important;color:#fff!important}
+.side-btn.active{
+ color:#fff!important;
+ background:linear-gradient(90deg,rgba(75,140,255,.25),rgba(75,140,255,.07))!important;
+ border-color:#2c568c!important;
+ box-shadow:inset 3px 0 #5d9dff!important;
+}
+.side-live{border-top-color:#1d2c3e!important;color:#27df8c!important}
+.side-version{color:#50657e!important}
+.navbar{
+ margin-left:224px!important;width:calc(100% - 224px)!important;
+ background:rgba(8,13,21,.92)!important;
+ border-bottom:1px solid #1d2d41!important;
+ box-shadow:0 5px 22px rgba(0,0,0,.16)!important;
+  }
+  .brand{color:#f5f9ff!important}
+.status-indicator{background:#0c1725!important;border-color:#20364e!important;color:#93a8c1!important}
+.nav-links button{color:#879bb3!important}
+.nav-links button:hover{background:#122033!important;color:#fff!important}
+.nav-links button.active{
+ background:#f3f7fd!important;color:#0a111c!important;
+ box-shadow:0 5px 16px rgba(255,255,255,.08)!important;
+}
+.container{margin-left:224px!important;width:calc(100% - 224px)!important}
+.header-title{color:#f4f8ff!important}
+.panel{
+ background:linear-gradient(145deg,rgba(16,26,40,.98),rgba(9,16,26,.98))!important;
+ border:1px solid #22364d!important;
+ box-shadow:var(--shadow)!important;
+}
+.field label{color:#8196af!important}
+.field input,.field select,.searchBox,.results-toolbar input,.results-toolbar select{
+ background:#09131f!important;color:#edf4ff!important;border-color:#294058!important;
+}
+.field input::placeholder,.searchBox::placeholder{color:#60758e!important}
+.field input:focus,.field select:focus,.searchBox:focus{
+ border-color:#4b8cff!important;box-shadow:0 0 0 3px rgba(75,140,255,.12)!important;
+}
+.result-card{
+ background:linear-gradient(145deg,#101b29,#0b141f)!important;
+ border-color:#263d56!important;
+ box-shadow:var(--shadow)!important;
+}
+.result-card:hover{border-color:#38618c!important}
+.card-header{
+ background:linear-gradient(180deg,#111e2d,#0d1723)!important;
+ border-bottom-color:#21354b!important;
+}
+.symbol-name{color:#f5f9ff!important}
+.symbol-ltp{color:#91a5bc!important}
+.spread-big-badge{
+ background:rgba(75,140,255,.13)!important;
+ border-color:#315f99!important;color:#8fbcff!important;
+  }
+  .spread-net-big{
+ background:#09131f!important;border-color:#294058!important;color:#f2f7ff!important;
+}
+.spread-margin-badge{
+ background:rgba(36,223,139,.10)!important;border-color:#277b5a!important;color:#55eca5!important;
+}
+.card-details,.spread-group{background:#101a27!important}
+.spread-group{border-color:#243b53!important}
+.leg-box{background:#0c1622!important;border-color:#22374e!important}
+.optionScroll{background:#0b141f!important;border-color:#263c54!important}
+.optionTable th{background:#0b1521!important;color:#849ab3!important;border-color:#203449!important}
+.optionTable td{border-color:#1c3045!important}
+.optionTable tbody tr:hover{background:rgba(75,140,255,.06)!important}
+.modal{background:rgba(0,0,0,.72)!important;backdrop-filter:blur(8px)!important}
+.modal-card{background:#101a27!important;border-color:#2a415a!important;color:#edf4ff!important}
+.btn-secondary{background:#152337!important;color:#edf4ff!important;border-color:#294058!important}
+
+/* API provider selector */
+.api-provider-grid{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0 16px;
+}
+.api-provider-card{
+ padding:13px 12px;border:1px solid #294058;border-radius:10px;
+ background:#0a1420;color:#93a7be;cursor:pointer;font-weight:800;text-align:center;
+}
+.api-provider-card.active{
+ border-color:#4b8cff;background:rgba(75,140,255,.13);color:#fff;
+ box-shadow:0 0 0 1px rgba(75,140,255,.15);
+}
+.api-status{
+ display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;
+ background:#0a1722;border:1px solid #234057;color:#8ea5bd;font-size:11px;font-weight:800;
+}
+.api-status.ok{color:#55eca5;border-color:#286d54;background:rgba(36,223,139,.08)}
+@media(max-width:900px){
+ .sidebar-compact{display:none!important}
+ .navbar{margin-left:0!important;width:100%!important}
+ .container{margin-left:0!important;width:100%!important}
+}
+@media(max-width:600px){.api-provider-grid{grid-template-columns:1fr}}
+</style>
+  <style id="upstox-analytics-ui-v8">
+.api-compact{
+  display:grid;
+  grid-template-columns:minmax(180px,1fr) minmax(260px,2fr) auto;
+  gap:12px;
+  align-items:end;
+  margin-top:12px;
+}
+.api-compact .api-field label{
+  display:block;
+  margin-bottom:7px;
+  color:#8196af;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1px;
+}
+.api-compact input{
+  width:100%;
+  min-height:43px;
+  box-sizing:border-box;
+  background:#09131f;
+  color:#edf4ff;
+  border:1px solid #294058;
+  border-radius:8px;
+  padding:0 12px;
+  outline:none;
+}
+.api-compact input:focus{
+  border-color:#4b8cff;
+  box-shadow:0 0 0 3px rgba(75,140,255,.12);
+}
+.api-provider-fixed{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:43px;
+  padding:0 14px;
+  border-radius:8px;
+  border:1px solid #315985;
+  background:rgba(75,140,255,.12);
+  color:#8fbcff;
+  font-weight:850;
+  font-size:12px;
+}
+.api-test-btn{
+  min-height:43px;
+  padding:0 16px;
+  border-radius:8px;
+  border:1px solid #2b5c92;
+  background:#2563eb;
+  color:#fff;
+  font-weight:850;
+  cursor:pointer;
+}
+.api-test-btn:hover{filter:brightness(1.08)}
+.api-token-note{
+  margin-top:9px;
+  color:#7188a2;
+  font-size:11px;
+}
+@media(max-width:760px){
+  .api-compact{grid-template-columns:1fr}
+}
+  </style>
+  </head>
+<body>
+<aside class="sidebar-compact">
+  <div class="side-logo">DELTA <span>ANALYSIS</span><div class="side-sub">FNO SCANNER</div></div>
+  <button class="side-btn active" onclick="switchScannerTabUI('spread',document.getElementById('tabSpread'))">â–¥ &nbsp; Spread Scanner</button>
+  <button class="side-btn" onclick="switchScannerTabUI('atm',document.getElementById('tabATM'))">â™Ÿ &nbsp; ATM</button>
+  <button class="side-btn" onclick="switchScannerTabUI('otm',document.getElementById('tabOTM'))">â—‰ &nbsp; OTM</button>
+  <button class="side-btn" onclick="openSettings()">âš™ &nbsp; Settings</button>
+  <div class="side-live">â— &nbsp; Live Market</div>
+  <div class="side-version">v1.0</div>
+</aside>
+
+
+
+<nav class="navbar">
+  <div class="brand">â–³ Delta Analysis <span style="font-size:13px;color:#91a8bb;font-weight:600;margin-left:8px">FNO SCANNER</span></div>
+  <div class="status-indicator" id="upstoxStatus">
+    <div class="dot"></div> <span class="statusText">CONNECTING</span>
+    <span id="liveNote" style="display:none;"></span>
+  </div>
+  <div class="nav-links">
+    <button type="button" id="tabSpread" onclick="switchScannerTabUI('spread',this)">Spread</button>
+    <button type="button" id="tabATM" onclick="switchScannerTabUI('atm',this)">ATM</button>
+    <button type="button" id="tabOTM" onclick="switchScannerTabUI('otm',this)">OTM</button>
+<button type="button" onclick="openSettings()">Settings</button>
+  </div>
+</nav>
+
+<div class="container">
+  <h2 id="scannerTitle" class="header-title">Spread Scanner</h2>
+  <p id="scannerHelp" style="display:none;"></p>
+  
+  <div class="panel">
+    <div class="grid">
+      <!-- COMMON FIELDS -->
+      <div class="field">
+        <label>Stock</label>
+        <input id="stockSearch" type="search" placeholder="ðŸ”Ž Search stock..." autocomplete="off" oninput="filterStockSelect()">
+        <select id="symbol"><option value="ALL">ALL STOCKS</option></select>
+      </div>
+      <div class="field"><label>Expiry Date</label><select id="expiry"><option>Loadingâ€¦</option></select></div>
+      <div class="field"><label>Reference</label><select id="reference"><option value="EQUITY">Equity LTP</option><option value="FUTURE" selected>Future LTP</option></select></div>
+      
+  <!-- ATM / OTM FIELDS (Hidden in Spread mode) -->
+      <div class="field pairField" style="display:none"><label>Min Total Premium â‚¹</label><input id="premiumMin" type="number" min="0" step="0.01" value="100"></div>
+      <div class="field pairField" style="display:none"><label>Max Total Premium â‚¹</label><input id="premiumMax" type="number" min="0" step="0.01" value="10000"></div>
+      <div class="field pairField" style="display:none"><label>Premium Display</label><select id="premiumView" onchange="renderOptions()"><option value="BOTH">CALL + PUT + TOTAL</option><option value="CE">CALL (CE) ONLY</option><option value="PE">PUT (PE) ONLY</option></select></div>
+      <div class="field" id="otmField" style="display:none"><label>OTM Distance %</label><input id="otmPercent" type="number" min="0" max="99.99" step="0.1" value="5"></div>
+      
+      <!-- SPREAD FIELDS (Hidden in ATM/OTM mode) -->
+      <div class="field spreadField"><label>Type</label><select id="type"><option value="Both">Both</option><option value="CE">CE</option><option value="PE">PE</option></select></div>
+      <div class="field spreadField"><label>Price Gap</label><div class="inlineField"><select id="priceGapOn"><option value="ON">ON</option><option value="OFF" selected>OFF</option></select><input id="priceGap" type="number" value="3" min="0" step=".1"></div></div>
+      <div class="field spreadField"><label>Delta Filter</label><div class="inlineField"><select id="deltaOn"><option value="ON" selected>ON</option><option value="OFF">OFF</option></select><input id="deltaRange" value="20-30"></div></div>
+      <div class="field spreadField"><label>Strike Gap %</label><input id="strikeGap" type="number" value="5" min="0" step=".1"></div>
+      <div class="field spreadField"><label>IV Gap %</label><input id="ivGap" type="number" value="5" min="0" step=".1"></div>
+      <div class="field spreadField"><label>Min Volume (Lots)</label><input id="minVolumeLots" type="number" value="1" min="0" step="1"></div>
+      <div class="field spreadField"><label>Ratio</label><select id="ratio"><option value="1:1">1:1</option><option value="1:2">1:2</option><option value="1:3">1:3</option><option value="1:4">1:4</option><option value="3:10" selected>3:10</option><option value="CUSTOM">Custom</option></select><input id="customRatio" type="text" autocomplete="off" style="display:none;pointer-events:auto;user-select:text;margin-top:5px" placeholder="e.g. 7:13"></div>
+      <div class="field spreadField"><label>Limit Type</label><select id="limitType"><option value="DEBIT">Max Debit</option><option value="CREDIT">Max Credit</option></select></div>
+      <div class="field spreadField"><label>Limit Value â‚¹</label><input id="limitValue" type="number" value="1000" min="0" step=".01"></div>
+      <div class="field spreadField"><label>Direction</label><select id="direction"><option value="BUY_SELL">Buy â†’ Sell</option><option value="SELL_BUY">Sell â†’ Buy</option></select></div>
+    </div>
+    <div class="custom-alert spreadOnlyAlert" id="customSpreadAlertCard" class="spreadOnlyCard">
+      <h3>ðŸŽ¯ Custom Spread Alert â€” Specific Company / Strike</h3>
+      <div class="custom-alert-grid">
+        <div class="field"><label>Company</label><select id="customAlertSymbol"><option value="">Select Company</option></select></div>
+        <div class="field"><label>Option</label><select id="customAlertType"><option value="CE">CE</option><option value="PE">PE</option></select></div>
+        <div class="field"><label>BUY Strike</label><input id="customBuyStrike" type="number" step="0.05" placeholder="1900"></div>
+        <div class="field"><label>SELL Strike</label><input id="customSellStrike" type="number" step="0.05" placeholder="2000"></div>
+        <div class="field"><label>Ratio BUY:SELL</label><select id="customAlertRatio"><option value="1:1">1:1</option><option value="1:2" selected>1:2</option><option value="1:3">1:3</option><option value="1:4">1:4</option><option value="3:10">3:10</option><option value="CUSTOM">Custom</option></select><input id="customAlertCustomRatio" type="text" autocomplete="off" style="display:none;pointer-events:auto;user-select:text;margin-top:5px" placeholder="e.g. 7:13"></div>
+        <div class="field"><label>Target Debit â‚¹</label><input id="customAlertTarget" type="number" value="0" min="0" step="0.01"></div>
+      </div>
+      <div class="actions" style="margin-top:10px">
+        <button id="customAlertBtn" class="btn btn-secondary" onclick="toggleCustomAlert()">ðŸŽ¯ START CUSTOM ALERT</button>
+        <button class="btn btn-secondary" onclick="checkCustomAlert(true)">CHECK NOW</button>
+      </div>
+      <div id="customAlertStatus" class="custom-alert-status">Custom alert OFF</div>
+    </div>
+
+    <div class="custom-alert pairOnlyAlert" style="display:none">
+      <h3>ðŸ“ˆ ATM/OTM Combined Premium Alert</h3>
+      <div class="custom-alert-grid" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+        <div class="field">
+          <label>Alert %</label>
+          <select id="premiumAlertPercentMode" onchange="updatePremiumAlertPercentUI()">
+            <option value="10" selected>+10% (Default)</option>
+            <option value="CUSTOM">Custom %</option>
+          </select>
+        </div>
+        <div class="field" id="premiumAlertCustomWrap" style="display:none">
+          <label>Custom %</label>
+          <input id="premiumAlertCustomPercent" type="number" min="0.1" max="1000" step="0.1" value="10" oninput="updatePremiumAlertPercentUI()">
+        </div>
+        <div class="field">
+          <label>Baseline</label>
+          <div id="premiumAlertBaseline" style="padding:9px 0;font-size:13px">Not set</div>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <div id="premiumAlertStatus" class="custom-alert-status" style="margin-top:0;padding:9px 0">Alert OFF</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--text-muted)">
+        Current ATM/OTM combined CE + PE premium ko baseline banaya jayega. Selected percentage ya Custom % se zyada increase hone par notification aayega.
+      </div>
+      <div class="actions" style="margin-top:10px">
+        <div style="margin:8px 0 10px">
+  <label style="display:block;margin-bottom:5px">ALERT PERCENTAGE</label>
+  <select id="combinedPremiumPercent" style="width:100%">
+    <option value="10" selected>+10%</option>
+    <option value="15">+15%</option>
+    <option value="20">+20%</option>
+    <option value="25">+25%</option>
+    <option value="CUSTOM">Custom %</option>
+  </select>
+  <input id="combinedPremiumCustomPercent" type="number" min="0.1" step="0.1" autocomplete="off" inputmode="decimal" placeholder="Enter percentage" style="display:block;width:100%;box-sizing:border-box;pointer-events:auto;user-select:text;">
+</div>
+<button id="premiumAlertBtn" class="btn btn-secondary" onclick="togglePremiumIncreaseAlert()">ðŸ“ˆ START ALERT</button>
+      </div>
+    </div>
+    <div id="combinedPremiumAlertCard" class="pairOnlyCard" style="display:none;">
+  <div class="combinedPremiumHeader">ðŸ“ˆ <strong>ATM/OTM Combined Premium Alert</strong></div>
+  <div class="combinedPremiumGrid">
+    <div>
+      <div class="alertLabel">ALERT</div>
+      <div id="combinedPremiumAlertText">CE Premium + PE Premium â†’ <strong>+10%</strong></div>
+    </div>
+    <div>
+      <div class="alertLabel">BASELINE</div>
+      <div id="combinedPremiumBaseline">Not set</div>
+    </div>
+    <div>
+      <div class="alertLabel">STATUS</div>
+      <div id="combinedPremiumStatus">Alert OFF</div>
+    </div>
+  </div>
+  <div class="combinedPremiumControls">
+    <div>
+      <div class="alertLabel">INCREASE %</div>
+      <select id="pairCombinedPremiumPercent">
+        <option value="5">+5%</option>
+        <option value="10" selected>+10%</option>
+        <option value="15">+15%</option>
+        <option value="20">+20%</option>
+        <option value="CUSTOM">Custom...</option>
+      </select>
+    </div>
+    <div class="combinedCustomWrap" id="combinedCustomWrap">
+      <input id="pairCombinedPremiumCustomPercent" type="number" min="0.1" step="0.1"
+             placeholder="Enter percentage">
+      <span>%</span>
+    </div>
+    <button type="button" id="combinedPremiumStartBtn">ðŸ“ˆ START ALERT</button>
+  </div>
+  <div class="combinedPremiumHelp">
+    Baseline current ATM/OTM total premium set hoga. Jab stock mein combined premium
+    baseline se selected % ya zyada badhega par notification aayega.
+  </div>
+</div>
+
+<div class="actions">
+      <button class="btn btn-primary" onclick="scan()">SCAN NOW</button>
+      <button id="autoBtn" class="btn btn-secondary" onclick="toggleAuto()">START AUTO SCAN</button>
+      <button id="notifyBtn" class="btn btn-secondary" onclick="toggleNotifications()">ðŸ”” ENABLE NOTIFICATIONS</button>
+      <button class="btn btn-danger" onclick="stopScan()">STOP</button>
+      <button class="btn btn-secondary" onclick="resetFilters()">RESET</button>
+      <span id="autoState" style="font-size: 12px; color: var(--text-muted); margin-left: auto;">Auto scan OFF</span>
+    </div>
+  </div>
+  <div class="searchRow spreadField">
+    <div class="searchBox">
+      <span style="color:var(--text-muted)">âŒ•</span>
+      <input id="searchBox" placeholder="Search symbol, expiry..." oninput="renderResults()">
+    </div>
+    <div class="sortBox">
+      <label style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Sort</label>
+      <select id="resultSort" onchange="renderResults()"><option value="NEW_FIRST" selected>Newest First</option><option value="AZ">Aâ€“Z</option></select>
+    </div>
+  </div>
+  
+  <div class="summary" id="summary">Ready</div>
+  <div id="results"><div class="empty">Adjust filters and press SCAN NOW.</div></div>
+</div>
+
+<div class="modal" id="settingsModal">
+  <div class="modal-card">
+    <h2>Settings</h2>
+    <div style="margin-top:12px;padding:14px;border:1px solid #294058;border-radius:10px;background:#0a1420;">
+      <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#8196af;font-weight:800;margin-bottom:8px;">UPSTOX ANALYTICS</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <strong style="font-size:14px;color:#eef6ff;">Server-side connection</strong>
+        <span class="api-status">â— ANALYTICS TOKEN</span>
+      </div>
+      <div style="font-size:11px;color:#7188a2;margin-top:8px;line-height:1.45;">
+        Analytics Token is configured securely on the server. No server credential or token value is stored in this browser.
+      </div>
+    </div>
+    <button type="button" class="btn btn-secondary" style="margin-top:12px;width:100%;" onclick="toggleHelpPopup(); closeSettings();">ðŸ†˜ Help & Support</button>
+    <button type="button" class="btn btn-primary" style="margin-top:12px;width:100%;" onclick="closeSettings()">Close</button>
+  </div>
+</div>
+
+<script>
+const WORKER="";
+let scannerMode="spread", scanEpoch=0;
+const scannerStates=new Map();
+let stocks=[], stockMap=new Map(), openSymbol=null, autoTimer=null, scanning=false, lastResults=[];
+let banSymbols=new Set(), banCacheUntil=0;
+let previousSpreadKeys=new Set(), spreadFirstSeen=new Map();
+const NEW_HIGHLIGHT_MS=15*60*1000;
+let notificationsEnabled=false;
+try{notificationsEnabled=localStorage.getItem("delta_notify")==="1"}catch(e){}
+
+function updateNotifyButton(){
+  const b=$("notifyBtn");
+  if(!b)return;
+  b.textContent=notificationsEnabled?"ðŸ”” NOTIFICATIONS ON":"ðŸ”” ENABLE NOTIFICATIONS";
+}
+  async function toggleNotifications(){
+  try{
+    if(!(typeof Notification!=="undefined")){alert("Browser notifications are not supported on this device.");return}
+    if(location.protocol!=="https:" && location.hostname!=="localhost"){
+      alert("Notifications ke liye scanner ko HTTPS par chalana hoga. Abhi site HTTP par hai.");
+      return;
+    }
+    if(Notification.permission==="denied"){
+      alert("Browser ne notifications block ki hain. Chrome site settings me Notifications = Allow karein.");
+      return;
+    }
+    if(Notification.permission!=="granted") await Notification.requestPermission();
+    if(Notification.permission!=="granted")return;
+    notificationsEnabled=!notificationsEnabled;
+    try{localStorage.setItem("delta_notify",notificationsEnabled?"1":"0")}catch(e){}
+    updateNotifyButton();
+    if(notificationsEnabled) new Notification("Delta Analysis",{body:"Spread notifications ON"});
+  }catch(e){alert("Notification setup failed: "+(e.message||e))}
+}
+
+function notifyNewSpread(symbol,c,expiry,f){
+  if(!notificationsEnabled || !c?.isNew)return;
+  if(typeof Notification==="undefined" || Notification.permission!=="granted")return;
+  const buyFirst=f.direction==="BUY_SELL";
+  const a=c.outer?.a,b=c.outer?.b;
+  if(!a||!b)return;
+  const left=`${a.strike} ${buyFirst?"BUY":"SELL"} Ã— ${f.ratio[0]}`;
+  const right=`${b.strike} ${buyFirst?"SELL":"BUY"} Ã— ${f.ratio[1]}`;
+  const net=c.outer.credit?money(c.outer.credit)+" CR":money(c.outer.debit)+" DR";
+  new Notification("ðŸ”” New Spread: "+symbol,{body:`${left} / ${right} â€¢ NET ${net} â€¢ Expiry ${expiry}`,tag:c.spreadKey||symbol});
+}
+
+
+let premiumIncreaseAlertEnabled=false;
+let premiumIncreaseBaseline=new Map();
+let premiumIncreaseHit=new Set();
+
+function getPremiumAlertPercent(){
+  const mode=$('premiumAlertPercentMode')?.value||'10';
+  if(mode==='CUSTOM'){
+    const v=Number($('premiumAlertCustomPercent')?.value);
+    if(!Number.isFinite(v)||v<=0) return 10;
+    return Math.min(v,1000);
+  }
+  return Math.max(0.1,Number(mode)||10);
+}
+
+function updatePremiumAlertPercentUI(){
+  const mode=$('premiumAlertPercentMode')?.value||'10';
+  const wrap=$('premiumAlertCustomWrap');
+  if(wrap)wrap.style.display=mode==='CUSTOM'?'block':'none';
+  const pct=getPremiumAlertPercent();
+  const btn=$('premiumAlertBtn');
+  if(btn && !premiumIncreaseAlertEnabled)btn.textContent=`ðŸ“ˆ START +${pct}% ALERT`;
+  if(premiumIncreaseAlertEnabled){
+    const st=$('premiumAlertStatus');
+    if(st)st.textContent=`Monitoring current baseline â†’ +${pct}%`;
+  }
+}
+
+function premiumAlertStatus(text){
+  const el=$('premiumAlertStatus');
+  if(el)el.textContent=text;
+}
+
+function premiumAlertBaselineText(){
+  const vals=[...premiumIncreaseBaseline.values()].filter(x=>Number.isFinite(x));
+  if(!vals.length)return 'Not set';
+  if(vals.length===1)return money(vals[0]);
+  return vals.length+' stocks';
+  }
+  function setPremiumIncreaseBaseline(){
+  premiumIncreaseBaseline=new Map();
+  premiumIncreaseHit=new Set();
+  (lastResults||[]).forEach(r=>{
+    (r.options||[]).forEach(o=>{
+      const key=r.symbol+'|'+(r.expiry||$('expiry')?.value||'')+'|'+scannerMode;
+      if(Number.isFinite(Number(o.total)) && Number(o.total)>0){
+        premiumIncreaseBaseline.set(key,Number(o.total));
+      }
+    });
+  });
+  const el=$('premiumAlertBaseline');
+  if(el)el.textContent=premiumAlertBaselineText();
+}
+
+function checkPremiumIncreaseAlert(){
+  if(!premiumIncreaseAlertEnabled || scannerMode==='spread')return;
+  if(!premiumIncreaseBaseline.size){
+    if(lastResults?.length)setPremiumIncreaseBaseline();
+    return;
+  }
+  const threshold=getPremiumAlertPercent();
+  let hits=0, checked=0;
+  (lastResults||[]).forEach(r=>{
+    (r.options||[]).forEach(o=>{
+      const key=r.symbol+'|'+(r.expiry||$('expiry')?.value||'')+'|'+scannerMode;
+      const current=Number(o.total), base=Number(premiumIncreaseBaseline.get(key));
+      if(!Number.isFinite(current)||!Number.isFinite(base)||base<=0)return;
+      checked++;
+      const hit=current>=base*(1+threshold/100)-1e-9;
+      if(hit){
+        hits++;
+        if(!premiumIncreaseHit.has(key) && notificationsEnabled && typeof Notification!=="undefined" && Notification.permission==="granted"){
+          new Notification(`ðŸ“ˆ ATM/OTM Premium +${threshold}%: ${r.symbol}`,{
+            body:`Combined CE + PE premium ${money(base)} â†’ ${money(current)} (+${((current/base-1)*100).toFixed(1)}%) â€¢ Expiry ${r.expiry}`,
+            tag:'premium-custom-'+key
+          });
+        }
+        premiumIncreaseHit.add(key);
+      }else{
+        premiumIncreaseHit.delete(key);
+      }
+    });
+  });
+  premiumAlertStatus(hits?`ðŸŽ¯ ${hits} stock${hits===1?'':'s'} at +${threshold}% or above`:`Monitoring ${checked} stock${checked===1?'':'s'} â€¢ waiting for +${threshold}%`);
+}
+
+function togglePremiumIncreaseAlert(){
+  if(scannerMode==='spread'){
+    alert('Ye alert sirf ATM/OTM tab mein available hai.');
+    return;
+  }
+  if(premiumIncreaseAlertEnabled){
+    premiumIncreaseAlertEnabled=false;
+    premiumIncreaseBaseline=new Map();
+    premiumIncreaseHit=new Set();
+    const b=$('premiumAlertBtn');if(b)b.textContent=`ðŸ“ˆ START +${getPremiumAlertPercent()}% ALERT`;
+    const el=$('premiumAlertBaseline');if(el)el.textContent='Not set';
+    premiumAlertStatus('Alert OFF');
+    return;
+  }
+  if(!lastResults?.length){
+    alert('Pehle SCAN NOW karke current ATM/OTM premiums load karein.');
+    return;
+  }
+  if(!notificationsEnabled || typeof Notification==='undefined' || Notification.permission!=='granted'){
+    alert('Pehle ðŸ”” ENABLE NOTIFICATIONS ko ON karein.');
+    return;
+  }
+  const threshold=getPremiumAlertPercent();
+  if(!Number.isFinite(threshold)||threshold<=0){alert('Custom % 0 se bada hona chahiye.');return;}
+  setPremiumIncreaseBaseline();
+  premiumIncreaseAlertEnabled=true;
+  const b=$('premiumAlertBtn');if(b)b.textContent=`ðŸ“ˆ +${threshold}% ALERT ON`;
+  premiumAlertStatus(`Monitoring current baseline â†’ +${threshold}%`);
+  checkPremiumIncreaseAlert();
+}
+
+let customAlertEnabled=false;
+let customAlertTimer=null;
+let customAlertWasBelow=false;
+let customAlertBusy=false;
+
+function customAlertSave(){
+  try{localStorage.setItem("delta_custom_alert",JSON.stringify({
+    symbol:$('customAlertSymbol')?.value||'',type:$('customAlertType')?.value||'CE',
+    buyStrike:$('customBuyStrike')?.value||'',sellStrike:$('customSellStrike')?.value||'',
+    ratio:$('customAlertRatio')?.value||'1:2',target:$('customAlertTarget')?.value||'0'
+  }))}catch(e){}
+  }
+  function customAlertLoad(){
+  try{const x=JSON.parse(localStorage.getItem("delta_custom_alert")||"null");if(!x)return;
+    if($('customAlertSymbol'))$('customAlertSymbol').value=x.symbol||'';
+    if($('customAlertType'))$('customAlertType').value=x.type||'CE';
+    if($('customBuyStrike'))$('customBuyStrike').value=x.buyStrike||'';
+    if($('customSellStrike'))$('customSellStrike').value=x.sellStrike||'';
+    if($('customAlertRatio'))$('customAlertRatio').value=x.ratio||'1:2';
+    if($('customAlertTarget'))$('customAlertTarget').value=x.target??'0';
+  }catch(e){}
+}
+function fillCustomAlertCompanies(){
+  const el=$('customAlertSymbol');if(!el)return;
+  const current=el.value;
+  el.innerHTML='<option value="">Select Company</option>'+(stocks||[]).map(s=>`<option value="${esc(s.symbol)}">${esc(s.symbol)}${s.name&&s.name!==s.symbol?' â€” '+esc(s.name):''}</option>`).join('');
+  if(current)el.value=current;
+  customAlertLoad();
+}
+function parseCustomAlertRatio(){
+  const m=String($('customAlertRatio').value||'').match(/^\\s*(\\d+(?:\\.\\d+)?)\\s*:\\s*(\\d+(?:\\.\\d+)?)\\s*$/);
+  if(!m)throw new Error('Custom ratio invalid. Use 1:2');
+  const a=Number(m[1]),b=Number(m[2]);if(a<=0||b<=0)throw new Error('Custom ratio must be greater than 0');return [a,b];
+}
+async function checkCustomAlert(manual=false){
+  if(customAlertBusy)return;
+  if(!customAlertEnabled && !manual)return;
+  const symbol=$('customAlertSymbol')?.value||'';
+  const type=$('customAlertType')?.value||'CE';
+  const buyStrike=Number($('customBuyStrike')?.value);
+  const sellStrike=Number($('customSellStrike')?.value);
+  const target=Number($('customAlertTarget')?.value);
+  const expiry=$('expiry')?.value;
+  const status=$('customAlertStatus');
+  try{
+    if(!symbol)throw new Error('Select company');
+    if(!Number.isFinite(buyStrike)||!Number.isFinite(sellStrike))throw new Error('Enter both strikes');
+    if(!Number.isFinite(target)||target<0)throw new Error('Enter valid target debit');
+    const ratio=parseCustomAlertRatio();
+    if(!expiry)throw new Error('Expiry date not available');
+    customAlertSave();customAlertBusy=true;
+    if(status)status.textContent=`Checking ${symbol} ${buyStrike} ${type} BUY / ${sellStrike} ${type} SELLâ€¦`;
+    const stock=stockMap.get(symbol);if(!stock)throw new Error('Company not found');
+    const data=await fetchStock(stock,expiry);
+    const map=new Map();(data.chain||[]).forEach(r=>{const x=sideData(r,type);if(x)map.set(Number(x.strike),x)});
+    const a=map.get(buyStrike),b=map.get(sellStrike);
+    if(!a||!b)throw new Error('Selected strike not found in option chain');
+    const lot=Number(data.lot_size)||1;
+    const debit=(a.ltp*ratio[0]-b.ltp*ratio[1])*lot;
+    const debitPerUnit=a.ltp*ratio[0]-b.ltp*ratio[1];
+    const hit=debitPerUnit<=target+1e-9;
+    if(status)status.textContent=`${symbol}: BUY ${buyStrike} ${type} Ã— ${ratio[0]} / SELL ${sellStrike} ${type} Ã— ${ratio[1]} â€¢ NET ${debitPerUnit>=0?money(debitPerUnit)+' DR':money(Math.abs(debitPerUnit))+' CR'} â€¢ ${hit?'ðŸŽ¯ TARGET HIT':'Waiting for â‚¹'+target}`;
+    if(hit && (!customAlertWasBelow || manual)){
+      if(notificationsEnabled && typeof Notification!=="undefined" && Notification.permission==="granted") new Notification('ðŸŽ¯ Custom Alert: '+symbol,{body:`${buyStrike} ${type} BUY Ã— ${ratio[0]} / ${sellStrike} ${type} SELL Ã— ${ratio[1]} â€¢ NET ${debitPerUnit>=0?money(debitPerUnit)+' DR':money(Math.abs(debitPerUnit))+' CR'} â€¢ Expiry ${expiry}`,tag:'custom-'+symbol+'-'+type+'-'+buyStrike+'-'+sellStrike});
+      else if(manual) alert(`TARGET HIT: ${symbol} ${buyStrike} ${type} BUY / ${sellStrike} ${type} SELL
+NET ${debitPerUnit>=0?money(debitPerUnit)+' debit':money(Math.abs(debitPerUnit))+' credit'}`);
+    }
+    customAlertWasBelow=hit;
+  }catch(e){if(status)status.textContent='Custom alert: '+(e.message||'Check failed');}
+  finally{customAlertBusy=false;}
+}
+function toggleCustomAlert(){
+  if(customAlertEnabled){customAlertEnabled=false;if(customAlertTimer)clearInterval(customAlertTimer);customAlertTimer=null;
+    $('customAlertBtn').textContent='ðŸŽ¯ START CUSTOM ALERT';$('customAlertStatus').textContent='Custom alert OFF';return;}
+  try{parseCustomAlertRatio();if(!$('customAlertSymbol').value)throw new Error('Select company');if(!Number.isFinite(Number($('customBuyStrike').value))||!Number.isFinite(Number($('customSellStrike').value)))throw new Error('Enter both strikes');}catch(e){alert(e.message);return;}
+  customAlertSave();customAlertEnabled=true;customAlertWasBelow=false;
+  $('customAlertBtn').textContent='ðŸŽ¯ CUSTOM ALERT ON';
+  checkCustomAlert(true);
+  customAlertTimer=setInterval(()=>checkCustomAlert(false),10*60*1000);
+  }
+  function $(id){ return document.getElementById(id); }
+const n=x=>Number.isFinite(Number(x))?Number(x):0;
+const money=x=>"â‚¹"+n(x).toLocaleString("en-IN",{maximumFractionDigits:2});
+const fmtNum=x=>n(x).toLocaleString("en-IN",{maximumFractionDigits:0});
+const pct=x=>n(x).toFixed(2)+"%";
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+updatePremiumAlertPercentUI();
+
+updateNotifyButton();
+
+function parseRatio(){
+  const s=$("ratio").value==="CUSTOM"?$("customRatio").value:$("ratio").value;
+  const m=String(s).match(/^\s*(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)\s*$/);
+  if(!m) throw new Error("Invalid ratio. Use BUY:SELL, e.g. 3:10");
+  const a=Number(m[1]),b=Number(m[2]);
+  if(a<=0||b<=0) throw new Error("Ratio must be greater than 0");
+  return [a,b];
+}
+$("ratio").addEventListener("change",()=>{$("customRatio").style.display=$("ratio").value==="CUSTOM"?"block":"none"});
+$("customAlertRatio").addEventListener("change",()=>{
+  $("customAlertCustomRatio").style.display=$("customAlertRatio").value==="CUSTOM"?"block":"none";
+});
+
+async function api(path,options={}){
+  options=options||{};
+  options.headers={...(options.headers||{})};
+  const token=localStorage.getItem("delta_auth_token")||"";
+  if(token) options.headers.Authorization="Bearer "+token;
+  const r=await fetch(WORKER+path,options);
+  let j;try{j=await r.json()}catch{
+    const e=new Error('Market server returned HTTP '+r.status);
+    e.status=r.status;throw e;
+  }
+  const sessionErrorCodes=new Set(["LOGIN_REQUIRED","SESSION_INVALID","SESSION_EXPIRED","INVALID_SESSION"]);
+  const sessionError=Boolean(j && sessionErrorCodes.has(String(j.error||j.code||"").toUpperCase()));
+  if(r.status===401 && sessionError){
+    localStorage.removeItem("delta_auth_token");
+    localStorage.removeItem("delta_user_id");
+    document.getElementById("deltaLoginOverlay")?.classList.remove("hidden");
+  }
+  if(!r.ok||j.success===false){
+    const e=new Error(j.error||j.result?.errors?.[0]?.message||('HTTP '+r.status));
+    e.status=r.status;e.step=j.step||'';throw e;
+  }
+  return j;
+}
+
+async function loadBanList(){
+  if(Date.now()<banCacheUntil)return banSymbols;
+  try{
+    const j=await api("/api/fo-ban-list");
+    banSymbols=new Set((j.symbols||[]).map(x=>String(x).trim().toUpperCase()).filter(Boolean));
+    banCacheUntil=Date.now()+10*60*1000;
+  }catch(e){ banCacheUntil=Date.now()+2*60*1000; }
+  return banSymbols;
+}
+
+function spreadKey(symbol,expiry,c,f){
+  const a=c?.outer?.a?.strike, b=c?.outer?.b?.strike;
+  return [symbol,expiry,c?.type,a,b,f.ratio.join(":"),f.direction].join("|");
+}
+function ageText(ts){
+  const mins=Math.max(0,Math.floor((Date.now()-ts)/60000));
+  if(mins<1)return "Just now";
+  return `${mins}m ago`;
+  }
+  async function loadInitialExpiries(){
+  const sel=$("expiry");
+  sel.innerHTML='<option value="">Loadingâ€¦</option>';
+  const preferredSymbols=["RELIANCE","SBIN","HDFCBANK","ICICIBANK","AXISBANK","TCS","INFY"];
+  const candidates=[];
+  const seen=new Set();
+
+  preferredSymbols.forEach(sym=>{
+    const s=stockMap.get(sym);
+    if(s && s.underlying_key && !seen.has(s.underlying_key)){
+      seen.add(s.underlying_key); candidates.push(s);
+    }
+  });
+  stocks.slice(0,20).forEach(s=>{
+    if(s && s.underlying_key && !seen.has(s.underlying_key)){
+      seen.add(s.underlying_key); candidates.push(s);
+    }
+  });
+
+  async function tryCandidate(s){
+    const j=await api("/api/expiries?underlying_key="+encodeURIComponent(s.underlying_key));
+    const dates=(j.expiries||[]).filter(Boolean);
+    if(!dates.length) throw new Error(j.error||"No expiry found");
+    return dates;
+  }
+
+  let lastError=null;
+  for(let pass=0;pass<2;pass++){
+    for(const s of candidates){
+      try{
+        const dates=await tryCandidate(s);
+        expiryCache.set("__INITIAL__",dates);
+        sel.innerHTML="";
+        dates.forEach(d=>{
+          const o=document.createElement("option"); o.value=d; o.textContent=formatDate(d); sel.appendChild(o);
+        });
+        sel.selectedIndex=0;
+        return true;
+      }catch(e){ lastError=e; }
+    }
+    await new Promise(r=>setTimeout(r,800));
+  }
+  sel.innerHTML='<option value="">Unavailable</option>';
+  return false;
+  }
+  function populateStockSelect(filter=""){
+  const sel=$("symbol"); if(!sel)return;
+  const current=sel.value||"ALL";
+  const q=String(filter||"").trim().toUpperCase();
+  const list=q ? stocks.filter(s=>{
+    const sym=String(s.symbol||"").toUpperCase();
+    const name=String(s.name||"").toUpperCase();
+    return sym.includes(q)||name.includes(q);
+  }) : stocks;
+  sel.innerHTML='<option value="ALL">ALL STOCKS</option>';
+  list.forEach(s=>{
+    const o=document.createElement("option");
+    o.value=s.symbol;
+    o.textContent=s.symbol;
+    sel.appendChild(o);
+  });
+  if(current==="ALL" || list.some(s=>s.symbol===current)) sel.value=current;
+  else if(list.length) sel.value=list[0].symbol;
+}
+function filterStockSelect(){
+  populateStockSelect($("stockSearch")?.value||"");
+}
+async function loadStocks(){
+  try{
+    const j=await api("/api/stock-universe");
+    stocks=j.stocks||[]; stockMap=new Map(stocks.map(s=>[s.symbol,s]));
+    const sel=$("symbol");
+    populateStockSelect($("stockSearch")?.value||"");
+    sel.value="ALL";
+    const initialStock = stockMap.get("RELIANCE") || stockMap.get("SBIN") || stocks[0];
+    if(initialStock && initialStock.underlying_key){
+      await loadExpiries(initialStock.underlying_key);
+      sel.value="ALL";
+      await startLiveMarketFeed();
+    }
+  }catch(e){}
+
+  fillCustomAlertCompanies();
+}
+const expiryCache=new Map();
+async function loadExpiries(key){
+  const sel=$("expiry");
+  sel.innerHTML='<option value="">Loadingâ€¦</option>';
+  try{
+    const j=await api("/api/expiries?underlying_key="+encodeURIComponent(key));
+    const dates=(j.expiries||[]).filter(Boolean);
+    if(!dates.length) throw new Error("No expiry found");
+    expiryCache.set(key,dates);
+    sel.innerHTML="";
+    dates.forEach(d=>{const o=document.createElement("option");o.value=d;o.textContent=formatDate(d);sel.appendChild(o)});
+    await startLiveMarketFeed();
+  }catch(e){
+    const keep=expiryCache.get(key)||expiryCache.get("__INITIAL__")||[];
+    sel.innerHTML="";
+    if(keep.length){ keep.forEach(d=>{const o=document.createElement("option");o.value=d;o.textContent=formatDate(d);sel.appendChild(o)}); }
+  }
+  }
+  $("symbol").addEventListener("change",async()=>{
+  const symbol=$("symbol").value;
+  if(symbol==="ALL"){
+    const currentExpiry=$("expiry").value;
+    if(currentExpiry){ await startLiveMarketFeed(); return; }
+    const initialStock=stockMap.get("RELIANCE")||stocks[0];
+    if(initialStock) await loadExpiries(initialStock.underlying_key);
+    $("symbol").value="ALL";
+    await startLiveMarketFeed();
+    return;
+  }
+  const s=stockMap.get(symbol);
+  if(s) await loadExpiries(s.underlying_key);
+});
+$("expiry").addEventListener("change",()=>startLiveMarketFeed());
+
+function formatDate(d){
+  const x=new Date(d+"T00:00:00"); return isNaN(x)?d:x.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
+}
+
+function sideData(row,type){
+  const d=type==="CE"?row.call_options:row.put_options;
+  if(!d) return null;
+  const md=d.market_data||{}, g=d.option_greeks||{};
+  const ltp=md.ltp; if(!Number.isFinite(Number(ltp))) return null;
+  const rawDelta=Number(g.delta); const delta=Number.isFinite(rawDelta)?rawDelta:null;
+  return {strike:n(row.strike_price),ltp:n(ltp),iv:n(g.iv),delta,oi:n(md.oi),volume:n(md.volume),instrument_key:d.instrument_key};
+}
+function deltaPct(v){ const x=Number(v); if(!Number.isFinite(x)) return null; return Math.abs(x)<=1?Math.abs(x)*100:Math.abs(x); }
+function parseDeltaRange(){
+  const raw=String($("deltaRange").value||"").trim();
+  const m=raw.match(/^\s*(\d+(?:\.\d+)?)\s*[-:]\s*(\d+(?:\.\d+)?)\s*$/);
+  if(!m) return [0,100];
+  return [Number(m[1]),Number(m[2])];
+}
+function makePosition(a,b,direction,ratio,lotSize){
+  const [x,y]=ratio, buyFirst=direction==="BUY_SELL";
+  const gross=buyFirst ? (b.ltp*y)-(a.ltp*x) : (a.ltp*x)-(b.ltp*y);
+  const total=gross*n(lotSize);
+  return {a,b,buyQty:buyFirst?x:y,sellQty:buyFirst?y:x,gross,total,credit:total>0?total:0,debit:total<0?Math.abs(total):0};
+}
+
+function ivPass(a,b,minGap){return Math.abs(n(a.iv)-n(b.iv))>=minGap;}
+function limitPass(pos,type,value){
+  value=n(value);
+  if(type==="DEBIT" && value===0) return pos.debit<=0;
+  if(value<=0) return true;
+  return type==="DEBIT"?pos.debit<=value:pos.credit>=value;
+}
+function referencePrice(data,kind){return (kind||$("reference").value)==="FUTURE"?n(data.future_ltp):n(data.equity_ltp);}
+function deltaPass(leg,enabled,range){
+  if(!enabled)return true; const d=deltaPct(leg.delta); return d!=null&&d>=range[0]&&d<=range[1];
+}
+
+function makeCandidates(data,type,ratio,direction,priceGapOn,priceGap,strikeGap,deltaOn,deltaRange,ivGap,limitType,limitValue,minVolumeLots,mode="spread",referenceKind){
+  const map=new Map();
+  (data.chain||[]).forEach(r=>{const s=sideData(r,type);if(s)map.set(s.strike,s)});
+  const strikes=[...map.keys()].sort((a,b)=>a-b);
+  const ref=referencePrice(data,referenceKind);
+  if(!Number.isFinite(ref)||ref<=0||!strikes.length)return [];
+  const atmStrike=strikes.reduce((best,strike)=>Math.abs(strike-ref)<Math.abs(best-ref)?strike:best,strikes[0]);
+  const up=type==="CE";
+  const all=[...strikes].map(x=>map.get(x)).filter(Boolean);
+  const minVolumeQty=Math.max(0,n(minVolumeLots))*Math.max(1,n(data.lot_size)||1);
+  const modePass=a=>mode==="atm"?a.strike===atmStrike:mode==="otm"?(a.strike!==atmStrike && (up?a.strike>ref:a.strike<ref)):true;
+  const firstEligible=all.filter(a=>modePass(a) && deltaPass(a,deltaOn,deltaRange) && n(a.volume)>=minVolumeQty && n(a.ltp)>0);
+  const secondEligible=all.filter(b=>n(b.volume)>=minVolumeQty && n(b.ltp)>0);
+  if(!firstEligible.length || !secondEligible.length)return [];
+
+  const target=ref*(1+(up?1:-1)*priceGap/100);
+  const ordered=[...firstEligible].sort((a,b)=>Math.abs(a.strike-target)-Math.abs(b.strike-target));
+  const firstCandidates=priceGapOn?ordered:firstEligible;
+  const pairs=[];
+  for(const a of firstCandidates){
+    for(const b of secondEligible){
+      if(up?b.strike<=a.strike:b.strike>=a.strike)continue;
+      const minGap=Math.abs(a.strike)*Math.max(0,strikeGap)/100;
+      if(Math.abs(b.strike-a.strike)+1e-9<minGap)continue;
+      const pos=makePosition(a,b,direction,ratio,data.lot_size||1);
+      const ivOK=ivPass(a,b,ivGap),limOK=limitPass(pos,limitType,limitValue);
+      if(ivOK&&limOK) pairs.push({a,b,pos,ivGap:Math.abs(n(a.iv)-n(b.iv)),delta:deltaPct(a.delta),ivOK,limOK});
+    }
+  }
+  const seen=new Set();
+  const unique=pairs.filter(p=>{const k=p.a.strike+"|"+p.b.strike;if(seen.has(k))return false;seen.add(k);return true;});
+  if(!unique.length)return [];
+  unique.sort((a,b)=>{
+    const dd=(b.delta??-1)-(a.delta??-1);
+    if(Math.abs(dd)>1e-9)return dd;
+    if(priceGapOn)return Math.abs(a.a.strike-target)-Math.abs(b.a.strike-target);
+    return a.a.strike-b.a.strike;
+  });
+
+  const highest=unique[0];
+  const A=highest.a,B=highest.b,width=Math.abs(A.strike-B.strike);
+  const inner=[];
+  const startIndex=strikes.indexOf(A.strike);
+  const step=up?-1:1;
+  let cursor=startIndex+step;
+
+  while(inner.length<3 && cursor>=0 && cursor<strikes.length){
+    const nextA=strikes[cursor];
+    const targetB=up ? nextA+width : nextA-width;
+    const a=map.get(nextA); const b=map.get(targetB);
+    if(!a || !b || Math.abs(Math.abs(a.strike-b.strike)-width)>1e-9 || n(a.ltp)<=0 || n(b.ltp)<=0){ cursor+=step; continue; }
+    const p=makePosition(a,b,direction,ratio,data.lot_size||1);
+    inner.push({a,b,pos:p,ivGap:Math.abs(n(a.iv)-n(b.iv)),ivPass:ivPass(a,b,ivGap),limitPass:limitPass(p,limitType,limitValue)});
+    cursor+=step;
+  }
+  return unique.map((p,i)=>({type,ref,outer:p.pos,inner:i===0?inner:[],lotSize:data.lot_size||1,equityLtp:data.equity_ltp,futureLtp:data.future_ltp,outerDelta:p.delta}));
+}
+
+// -------------------------------------------------------------
+// ATM / OTM PREMIUM SCAN LOGIC
+// -------------------------------------------------------------
+  function premiumPair(data,f){
+  const reference=Number(f.reference==='FUTURE'?data.future_ltp:data.equity_ltp);
+  if(!Number.isFinite(reference)||reference<=0)throw new Error('Reference price unavailable');
+  const chain=(data.chain||[]).filter(r=>Number.isFinite(Number(r.strike_price))&&Number(r.strike_price)>0);
+  const select=(type)=>{
+    const target=f.mode==='atm'?reference:reference*(1+(type==='CE'?1:-1)*f.otmPercent/100);
+    const field=type==='CE'?'call_options':'put_options';
+    let rows=chain.filter(r=>r[field]);
+    const epsilon=Math.max(1e-9,Math.abs(target)*1e-12);
+    if(f.mode==='otm')rows=rows.filter(r=>type==='CE'?Number(r.strike_price)+epsilon>=target:Number(r.strike_price)-epsilon<=target);
+    rows.sort((a,b)=>Math.abs(Number(a.strike_price)-target)-Math.abs(Number(b.strike_price)-target)||Number(a.strike_price)-Number(b.strike_price));
+    if(!rows.length)return null;
+    const r=rows[0],raw=r[field].market_data?.ltp;
+    if(raw==null||raw===''||!Number.isFinite(Number(raw))||Number(raw)<0)return null;
+    return {strike:Number(r.strike_price),premium:Number(raw),target};
+  };
+  const view=$('premiumView')?.value||'BOTH';
+  const ce=view==='PE'?null:select('CE');
+  const pe=view==='CE'?null:select('PE');
+  if(view==='CE'&&!ce)return null;
+  if(view==='PE'&&!pe)return null;
+  if(view==='BOTH'&&(!ce||!pe))return null;
+  const lotSize=Number(data.lot_size);
+  if(!Number.isInteger(lotSize)||lotSize<=0)throw new Error('Lot size unavailable');
+  const displayedPremium=view==='CE'?ce.premium*lotSize:view==='PE'?pe.premium*lotSize:(ce.premium+pe.premium)*lotSize;
+  if(displayedPremium+1e-9<f.premiumMin||displayedPremium-1e-9>f.premiumMax)return null;
+  return {ce,pe,total:displayedPremium,combinedTotal:(ce&&pe)?(ce.premium+pe.premium)*lotSize:displayedPremium,lotSize,reference,referenceKind:f.reference};
+}
+
+function pairFilters(){
+  const read=id=>{const raw=$(id).value.trim();if(raw==='')throw new Error('Enter all values');const value=Number(raw);if(!Number.isFinite(value))throw new Error('Enter valid numbers');return value;};
+  const premiumMin=read('premiumMin'),premiumMax=read('premiumMax');
+  const otmPercent=scannerMode==='otm'?read('otmPercent'):0;
+  if(premiumMin<0||premiumMax<premiumMin)throw new Error('Max premium must be >= min premium');
+  if(otmPercent<0||otmPercent>=100)throw new Error('OTM % must be 0-99.99');
+  return {mode:scannerMode,reference:$('reference').value,premiumMin,premiumMax,otmPercent};
+}
+
+function pairPause(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+async function fetchPremiumStock(stock,expiry,filters,run){
+  for(let attempt=0;attempt<3;attempt++){
+    if(run!==scanEpoch)throw new Error('Scan cancelled');
+    try{
+      const data=await fetchStock(stock,expiry);
+      const ref=Number(filters.reference==='FUTURE'?data.future_ltp:data.equity_ltp);
+      if(!Number.isFinite(ref)||ref<=0)throw new Error(filters.reference+' reference price unavailable');
+      const lot=Number(data.lot_size);
+      if(!Number.isInteger(lot)||lot<=0)throw new Error('Lot size unavailable');
+      return data;
+    }catch(e){
+      if(e.status===401||e.status===403)throw e;
+      const retry=!e.status||e.status===429||e.status>=500;
+      if(!retry||attempt===2)throw e;
+      await pairPause(1500*(attempt+1));
+    }
+  }
+}
+
+let premiumErrors=[];
+function renderPremiumErrors(){
+  if(!premiumErrors.length)return;
+  const box=document.createElement('details');box.className='empty';box.open=true;
+  const head=document.createElement('summary');head.textContent=premiumErrors.length+' stocks error details';box.appendChild(head);
+  const text=document.createElement('div');text.style.whiteSpace='pre-wrap';text.textContent=premiumErrors.map(e=>e.symbol+': '+e.error).join('\n');box.appendChild(text);$('results').prepend(box);
+  }
+  async function scanOptions(){
+  if(scanning)return;scanning=true;const run=++scanEpoch;
+  lastResults=[];openSymbol=null;premiumErrors=[];
+  $("summary").textContent="Scanning "+scannerMode.toUpperCase()+" premium pairsâ€¦";renderOptions();
+  try{
+    const f=pairFilters(),expiry=$('expiry').value;
+    if(!expiry)throw new Error('Expiry date not available');
+    const selected=$('symbol').value;
+    const list=(selected==='ALL'?stocks:[stockMap.get(selected)]).filter(Boolean);
+    let failures=0;
+    // Faster premium scan: 5 stocks in parallel instead of 2.
+    // This keeps the scan responsive while avoiding an unnecessarily long pause.
+    for(let i=0;i<list.length;i+=5){
+      const found=await Promise.all(list.slice(i,i+5).map(async s=>{
+        try{
+          const data=await fetchPremiumStock(s,expiry,f,run);
+          const pair=premiumPair(data,f);
+          const options=pair?[pair]:[];
+          return {symbol:s.symbol,name:s.name,expiry,options};
+        }catch(e){return {symbol:s.symbol,status:e.status,error:(e.status?'HTTP '+e.status+' â€¢ ':'')+(e.step?e.step+' â€¢ ':'')+e.message};}
+      }));
+      if(run!==scanEpoch)return;
+      premiumErrors.push(...found.filter(x=>x.error));failures=premiumErrors.length;
+      lastResults.push(...found.filter(x=>x.options&&x.options.length));
+      $('summary').textContent=`${f.mode.toUpperCase()} â€¢ Scanned ${Math.min(i+5,list.length)}/${list.length} â€¢ ${lastResults.reduce((n,r)=>n+r.options.length,0)} pairs${failures?' â€¢ '+failures+' errors':''}`;
+      renderOptions();
+      checkPremiumIncreaseAlert();
+      const blocked=found.find(x=>x.status===401||x.status===403||x.status===429);
+      if(blocked){$('summary').textContent+=' â€¢ Scan paused: '+blocked.error;break;}
+      if(i+5<list.length)await pairPause(100);
+      if(run!==scanEpoch)return;
+    }
+    if(!list.length)$('summary').textContent='Stock list unavailable. Reconnect.';
+  }catch(e){if(run===scanEpoch)$('summary').textContent='Scan error: '+e.message;}
+  finally{if(run===scanEpoch)scanning=false;}
+}
+
+function renderOptions(){
+  const box = $('results');
+  if(!lastResults.length){
+    box.innerHTML=`<div class="empty">No matching ${scannerMode.toUpperCase()} premium pairs.</div>`;
+    renderPremiumErrors(); return;
+  }
+  const sortMode=$("resultSort")?.value||"NEW_FIRST";
+  let rows=lastResults.flatMap(r=>(r.options||[]).map(o=>({...o,symbol:r.symbol,expiry:r.expiry})));
+  if(sortMode==="AZ") rows.sort((a,b)=>a.symbol.localeCompare(b.symbol));
+  else rows.sort((a,b)=>b.total-a.total);
+
+  const view=$("premiumView")?.value||"BOTH";
+  let head=`<th>Stock</th><th>Expiry</th><th>Reference</th>`;
+  if(view==="CE") head+=`<th>CE Strike</th><th>CALL Premium</th>`;
+  else if(view==="PE") head+=`<th>PE Strike</th><th>PUT Premium</th>`;
+  else head+=`<th>CE Strike</th><th>CALL Premium</th><th>PE Strike</th><th>PUT Premium</th>`;
+  head+=`<th>Lot Size</th><th>${view==='CE'?'CALL Premium Total':view==='PE'?'PUT Premium Total':'CE + PE Total'}</th>`;
+
+  box.innerHTML=`<div class="optionScroll"><table class="optionTable">
+    <thead><tr>${head}</tr></thead><tbody>
+      ${rows.map(o=>{
+        const single=view==="CE"
+          ? `<td>${fmtNum(o.ce.strike)}</td><td style="font-weight:700;">${money(o.ce.premium)}</td>`
+          : view==="PE"
+          ? `<td>${fmtNum(o.pe.strike)}</td><td style="font-weight:700;">${money(o.pe.premium)}</td>`
+          : `<td>${fmtNum(o.ce.strike)}</td><td style="font-weight:700;">${money(o.ce.premium)}</td><td>${fmtNum(o.pe.strike)}</td><td style="font-weight:700;">${money(o.pe.premium)}</td>`;
+        return `<tr><td style="font-weight:600;text-align:left;">${esc(o.symbol)}</td>
+          <td style="text-align:left;">${esc(o.expiry)}</td>
+          <td>${o.referenceKind==='FUTURE'?'FUT':'EQ'} ${money(o.reference)}</td>
+          ${single}<td>${fmtNum(o.lotSize)}</td>
+          <td style="color:var(--success);font-weight:700;">${money(o.total)}</td></tr>`;
+      }).join('')}
+    </tbody></table></div>`;
+  renderPremiumErrors();
+                                    }
+  
+  // -------------------------------------------------------------
+// SPREAD SCAN LOGIC
+// -------------------------------------------------------------
+async function fetchStock(s,expiry){
+  const path="/api/stock-data?underlying_key="+encodeURIComponent(s.underlying_key)+"&symbol="+encodeURIComponent(s.symbol)+"&expiry="+encodeURIComponent(expiry);
+  return await api(path);
+}
+
+function filters(){
+  const f={};
+  ['priceGap','strikeGap','ivGap','limitValue','minVolumeLots'].forEach(id=>{
+    f[id]=Number($((id)).value);
+    if(!Number.isFinite(f[id])||f[id]<0)throw new Error(`Invalid ${id}`);
+  });
+  ['type','reference','priceGapOn','deltaOn','limitType','direction'].forEach(id=>f[id]=$((id)).value);
+  f.ratio=parseRatio();
+  f.deltaRange=parseDeltaRange();
+  return f;
+}
+
+async function scanOne(s,expiry,filters){
+  try{
+    const data=await fetchStock(s,expiry);
+    if(Number(data.equity_ltp)>0) rememberValidPrice(s.symbol,"equity",data.equity_ltp);
+    if(Number(data.future_ltp)>0) rememberValidPrice(s.symbol,"future",data.future_ltp);
+    data.equity_ltp=heldPrice(s.symbol,"equity",data.equity_ltp);
+    data.future_ltp=heldPrice(s.symbol,"future",data.future_ltp);
+    const types=filters.type==="Both"?["CE","PE"]:[filters.type];
+    let candidates=[];
+    for(const t of types) candidates.push(...makeCandidates(data,t,filters.ratio,filters.direction,filters.priceGapOn,filters.priceGap,filters.strikeGap,filters.deltaOn,filters.deltaRange,filters.ivGap,filters.limitType,filters.limitValue,filters.minVolumeLots,filters.mode,filters.reference));
+    if(!candidates.length) return null;
+    return {symbol:s.symbol,name:s.name,equityLtp:data.equity_ltp,futureLtp:data.future_ltp,candidates,data,filters:{...filters}};
+  }catch(e){return null}
+}
+
+async function scan(){
+  if(scannerMode!=="spread")return scanOptions();
+  if(scanning)return;
+  scanning=true; const run=++scanEpoch; openSymbol=null; lastResults=[];
+  const currentSpreadKeys=new Set();
+  const scanStartedAt=Date.now();
+  try{
+    const f=filters(); const expiry=$("expiry").value;
+    if(!expiry) throw new Error("Expiry date not available");
+    await loadBanList();
+    if(run!==scanEpoch)return;
+    const selected=$("symbol").value;
+    const list=selected==="ALL"?stocks:[stockMap.get(selected)];
+    const usable=list.filter(Boolean);
+    $("summary").textContent="Scanning "+usable.length+" stocksâ€¦";
+    renderResults();
+
+    for(let i=0;i<usable.length;i+=5){
+      const batch=usable.slice(i,i+5);
+      const got=await Promise.all(batch.map(s=>scanOne(s,expiry,f)));
+      if(run!==scanEpoch)return;
+      const rows=got.filter(Boolean).filter(x=>x.candidates?.length);
+      for(const r of rows){
+        r.isBan=banSymbols.has(String(r.symbol).toUpperCase());
+        r.newestFoundAt=0; r.hasNewSpread=false;
+        for(const c of r.candidates){
+          const key=spreadKey(r.symbol,expiry,c,f);
+          currentSpreadKeys.add(key);
+          const newlyFormed=!previousSpreadKeys.has(key);
+          if(newlyFormed) spreadFirstSeen.set(key,scanStartedAt);
+          const firstSeen=spreadFirstSeen.get(key)||scanStartedAt;
+          c.spreadKey=key; c.firstSeenAt=firstSeen;
+          c.isNew=newlyFormed || (Date.now()-firstSeen<NEW_HIGHLIGHT_MS);
+          if(c.isNew){r.hasNewSpread=true;r.newestFoundAt=Math.max(r.newestFoundAt,firstSeen)}
+          /* New Spread notification disabled */
+        }
+  }
+      lastResults.push(...rows);
+      $("summary").textContent=`Scanning ${Math.min(i+5,usable.length)}/${usable.length} â€¢ ${lastResults.length} found`;
+      renderResults();
+    }
+    if(customAlertEnabled) await checkCustomAlert(false);
+    previousSpreadKeys=currentSpreadKeys;
+    for(const key of [...spreadFirstSeen.keys()]) if(!currentSpreadKeys.has(key)) spreadFirstSeen.delete(key);
+    $("summary").textContent=`Found ${lastResults.length} companies â€¢ Expiry: ${expiry}`;
+  }catch(e){if(run===scanEpoch)$("summary").textContent="Scan error: "+e.message}
+  finally{if(run===scanEpoch)scanning=false}
+}
+
+function renderResults(){
+  if(scannerMode!=="spread")return renderOptions();
+  const box=$("results");
+  if(!lastResults.length){box.innerHTML='<div class="empty">No qualifying company found. Adjust filters and scan.</div>';return}
+  const now=Date.now();
+  lastResults.forEach(r=>{
+    r.hasNewSpread=(r.candidates||[]).some(c=>c.firstSeenAt && now-c.firstSeenAt<NEW_HIGHLIGHT_MS);
+    r.newestFoundAt=Math.max(0,...(r.candidates||[]).filter(c=>c.firstSeenAt && now-c.firstSeenAt<NEW_HIGHLIGHT_MS).map(c=>c.firstSeenAt));
+    r.isBan=banSymbols.has(String(r.symbol).toUpperCase());
+  });
+  
+  const sortMode=$("resultSort")?.value||"NEW_FIRST";
+  if(sortMode==="AZ"){ lastResults.sort((a,b)=>a.symbol.localeCompare(b.symbol)); }
+  else { lastResults.sort((a,b)=>(Number(b.hasNewSpread)-Number(a.hasNewSpread)) || ((b.newestFoundAt||0)-(a.newestFoundAt||0)) || a.symbol.localeCompare(b.symbol)); }
+
+  const search=$('searchBox').value.trim().toUpperCase();
+  const visibleRows = lastResults.filter(o=>!search||o.symbol.includes(search));
+
+  box.innerHTML=visibleRows.map((r,i)=>`
+    <div class="result-card ${r.isBan?"banStock":""} ${r.hasNewSpread?"newSpread":""}">
+      <div class="card-header" onclick="toggleCompany('${r.symbol}')">
+        <div class="symbol-info">
+          <div class="symbol-name">
+            ${i+1}. ${esc(r.symbol)}
+            ${r.isBan?'<span class="badge badge-red">BAN</span>':""}
+            ${r.hasNewSpread?'<span class="badge badge-blue">NEW</span>':""}
+          </div>
+          <div class="symbol-ltp">
+            <span>EQ: ${money(r.equityLtp)}</span>
+            <span>FUT: ${money(r.futureLtp)}</span>
+          </div>
+          <div class="spread-top-info">
+            ${(()=>{const c=r.candidates?.[0]; const o=c?.outer;
+              if(!c||!o)return '';
+              const dir=(r.filters||filters()).direction==="BUY_SELL";
+              const a=o.a?.strike, b=o.b?.strike;
+              const net=o.credit?money(o.credit)+" CR":money(o.debit)+" DR";
+              return `<span class="spread-big-badge">SPREAD &nbsp; ${a} ${dir?"BUY":"SELL"} â†’ ${b} ${dir?"SELL":"BUY"}</span>
+                      <span class="spread-net-big ${o.credit?"text-green":"text-red"}">${net}</span>`;
+            })()}
+          </div>
+        </div>
+        <div class="badges">
+          <span class="badge badge-gray">${r.candidates.length} Sets</span>
+          <span class="badge badge-gray" style="background:transparent; border:none; padding:0;">${openSymbol===r.symbol?"â–¼":"â–¶"}</span>
+        </div>
+      </div>
+      ${openSymbol===r.symbol ? detailHtml(r) : ""}
+    </div>`).join("");
+  }
+  function toggleCompany(sym){
+  openSymbol=openSymbol===sym?null:sym;
+  renderResults();
+}
+
+function detailHtml(r){
+  const f=r.filters||filters();
+  return `<div class="card-details">
+    ${r.candidates.map((c,idx)=>`
+      <div class="spread-group">
+        <div class="spread-header">
+          <span>${c.type} â€¢ OUTER SPREAD â€¢ Delta: ${c.outerDelta==null?"â€”":c.outerDelta.toFixed(2)}</span>
+          <span>${c.firstSeenAt ? ageText(c.firstSeenAt) : ""}</span>
+        </div>
+        <div class="legs-container">
+          <div class="leg-box">
+            <div class="leg-title">${c.outer.a.strike} ${f.direction==="BUY_SELL"?"BUY":"SELL"} Ã— ${f.ratio[0]}</div>
+            <div class="leg-meta"><span>LTP ${money(c.outer.a.ltp)}</span> <span>IV ${pct(c.outer.a.iv)}</span></div>
+            <div class="leg-meta" style="margin-top:4px;"><span>Vol ${fmtNum(c.outer.a.volume)}</span> <span>Î” ${c.outer.a.delta==null?"â€”":c.outer.a.delta.toFixed(2)}</span></div>
+          </div>
+          <div class="leg-box">
+            <div class="leg-title">${c.outer.b.strike} ${f.direction==="BUY_SELL"?"SELL":"BUY"} Ã— ${f.ratio[1]}</div>
+            <div class="leg-meta"><span>LTP ${money(c.outer.b.ltp)}</span> <span>IV ${pct(c.outer.b.iv)}</span></div>
+            <div class="leg-meta" style="margin-top:4px;"><span>Vol ${fmtNum(c.outer.b.volume)}</span> <span>Î” ${c.outer.b.delta==null?"â€”":c.outer.b.delta.toFixed(2)}</span></div>
+          </div>
+        </div>
+        <div class="net-value ${c.outer.credit?"text-green":"text-red"}">
+          NET: ${c.outer.credit ? money(c.outer.credit)+" CR" : money(c.outer.debit)+" DR"}
+        </div>
+
+        ${c.inner.length > 0 ? `
+          <div style="margin-top: 20px; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">INNER SPREADS</div>
+          <div class="inner-grid">
+            ${c.inner.map((x,j)=>`
+              <div class="inner-box">
+                <div class="inner-box-header"><span>Inner ${j+1}</span> <span>IV Gap: ${pct(x.ivGap)}</span></div>
+                <div class="inner-box-main">
+                  <span>${x.a.strike} â†’ ${x.b.strike}</span>
+                  <span class="${x.pos.credit?"text-green":"text-red"}">${x.pos.credit?money(x.pos.credit)+" CR":money(x.pos.debit)+" DR"}</span>
+                </div>
+                <div class="leg-meta">LTP: ${money(x.a.ltp)} â†’ ${money(x.b.ltp)}</div>
+              </div>
+            `).join("")}
+          </div>
+        ` : ""}
+      </div>
+    `).join("")}
+  </div>`;
+}
+
+function stopScan(){
+  if(scanning)$("summary").textContent="Scan stopped.";
+  scanEpoch++;scanning=false;
+  if(autoTimer){clearInterval(autoTimer);autoTimer=null}
+  $("autoState").textContent="Auto: OFF";
+  $("autoBtn").textContent="Auto Scan";
+}
+function toggleAuto(){
+  if(autoTimer){stopScan();return}
+  scan();
+  autoTimer=setInterval(scan,600000);
+  $("autoState").textContent="Auto: ON (10m)";
+  $("autoBtn").textContent="Stop Auto";
+  }
+  let liveSocket=null; let livePrices=new Map(); let lastValidPrices=new Map(); let liveReconnectTimer=null; let liveFeedStarting=false;
+
+function rememberValidPrice(symbol,kind,value){
+  const v=Number(value); const k=symbol+"|"+kind;
+  if(Number.isFinite(v) && v>0){ livePrices.set(k,v); lastValidPrices.set(k,v); return v; }
+  const held=Number(lastValidPrices.get(k));
+  return Number.isFinite(held) && held>0 ? held : null;
+}
+function heldPrice(symbol,kind,fallback){
+  const k=symbol+"|"+kind; const live=Number(livePrices.get(k));
+  if(Number.isFinite(live) && live>0){ lastValidPrices.set(k,live); return live; }
+  const held=Number(lastValidPrices.get(k));
+  if(Number.isFinite(held) && held>0) return held;
+  const fb=Number(fallback);
+  if(Number.isFinite(fb) && fb>0){ lastValidPrices.set(k,fb); return fb; }
+  return 0;
+}
+
+function readVarint(u,o){let v=0n,s=0n;while(o.i<u.length){const b=u[o.i++];v|=BigInt(b&127)<<s;if(!(b&128))break;s+=7n}return v}
+function readLen(u,o){const n=Number(readVarint(u,o));const a=o.i,b=a+n;o.i=b;return u.slice(a,b)}
+function skipWire(u,o,w){if(w===0){readVarint(u,o);return}if(w===1){o.i+=8;return}if(w===2){o.i+=Number(readVarint(u,o));return}if(w===5){o.i+=4;return}o.i=u.length}
+function decodeLtp(buf){
+  const u=new Uint8Array(buf), o={i:0}; let ltp=null;
+  while(o.i<u.length){
+    const tag=Number(readVarint(u,o)), field=tag>>3, wire=tag&7;
+    if(field===1&&wire===1){ const dv=new DataView(u.buffer,u.byteOffset+o.i,8); ltp=dv.getFloat64(0,true); o.i+=8; }else skipWire(u,o,wire);
+  }
+  return Number.isFinite(ltp)?ltp:null;
+}
+function decodeFeed(buf){
+  const u=new Uint8Array(buf),o={i:0};let direct=null,full=null;
+  while(o.i<u.length){
+    const tag=Number(readVarint(u,o)),field=tag>>3,wire=tag&7;
+    if(wire!==2){skipWire(u,o,wire);continue}
+    const part=readLen(u,o);
+    if(field===1) direct=decodeLtp(part); else if(field===2) full=part;
+  }
+  if(Number.isFinite(direct))return direct;
+  if(full){
+    const u2=new Uint8Array(full),o2={i:0};
+    while(o2.i<u2.length){
+      const tag=Number(readVarint(u2,o2)),field=tag>>3,wire=tag&7;
+      if(wire!==2){skipWire(u2,o2,wire);continue}
+      const part=readLen(u2,o2);
+      if(field===1){const x=decodeLtp(part);if(Number.isFinite(x))return x}
+    }
+  } return null;
+}
+function decodeFeedResponse(buf){
+  const u=new Uint8Array(buf),o={i:0},out=[];
+  while(o.i<u.length){
+    const tag=Number(readVarint(u,o)),field=tag>>3,wire=tag&7;
+    if(field!==2||wire!==2){skipWire(u,o,wire);continue}
+    const entry=readLen(u,o),e={i:0};let key=null,val=null;
+    while(e.i<entry.length){
+      const etag=Number(readVarint(entry,e)),ef=etag>>3,ew=etag&7;
+      if(ew!==2){skipWire(entry,e,ew);continue}
+      const part=readLen(entry,e);
+      if(ef===1)key=new TextDecoder().decode(part); else if(ef===2)val=part;
+    }
+    if(key&&val){const ltp=decodeFeed(val);if(Number.isFinite(ltp))out.push([key,ltp])}
+  } return out;
+  }
+  function setUpstoxStatus(state,text){
+  const el=$("upstoxStatus"); if(!el)return;
+  el.className="status-indicator "+state;
+  const t=el.querySelector(".statusText"); if(t)t.textContent=text;
+}
+function markDisconnected(){setUpstoxStatus("disconnected","DISCONNECTED")}
+function markConnecting(){setUpstoxStatus("connecting","CONNECTING")}
+function markConnected(){setUpstoxStatus("connected","LIVE")}
+
+async function startLiveMarketFeed(){markConnecting();
+  if(liveFeedStarting)return;
+  const expiry=$("expiry").value;
+  if(!expiry||!stocks.length)return;
+  liveFeedStarting=true;
+  try{
+    if(liveSocket){try{liveSocket.close()}catch(e){}liveSocket=null}
+    const j=await api("/api/live-instruments?expiry="+encodeURIComponent(expiry));
+    let instruments=j.instruments||[];
+    const selected=$("symbol").value;
+    if(selected!=="ALL") instruments=instruments.filter(x=>x.symbol===selected);
+    const keys=[]; const meta=new Map();
+    instruments.forEach(x=>{if(x.equity_key){keys.push(x.equity_key);meta.set(x.equity_key,{symbol:x.symbol,kind:"equity"})}if(x.future_key){keys.push(x.future_key);meta.set(x.future_key,{symbol:x.symbol,kind:"future"})}});
+    if(!keys.length)throw new Error("No live instruments for selected expiry");
+    const auth=await api("/api/market-data-authorize");
+    const ws=new WebSocket(auth.authorized_redirect_uri); ws.binaryType="arraybuffer"; liveSocket=ws;
+    ws.onopen=()=>{markConnected();
+      const msg={guid:crypto.randomUUID(),method:"sub",data:{mode:"ltpc",instrumentKeys:keys}};
+      ws.send(new TextEncoder().encode(JSON.stringify(msg)).buffer);
+    };
+    ws.onmessage=ev=>{
+      try{
+        const updates=decodeFeedResponse(ev.data);
+        let changed=false;
+        for(const [key,ltp] of updates){
+          const m=meta.get(key); if(!m)continue;
+          const v=Number(ltp);
+          if(Number.isFinite(v) && v>0){ rememberValidPrice(m.symbol,m.kind,v); changed=true; }
+        }
+        if(changed){
+          lastResults.forEach(r=>{
+            r.equityLtp=heldPrice(r.symbol,"equity",r.equityLtp);
+            r.futureLtp=heldPrice(r.symbol,"future",r.futureLtp);
+            if(r.data){ r.data.equity_ltp=r.equityLtp; r.data.future_ltp=r.futureLtp; }
+            (r.candidates||[]).forEach(c=>{ c.equityLtp=r.equityLtp; c.futureLtp=r.futureLtp; });
+          });
+          renderResults();
+        }
+      }catch(e){}
+    };
+    ws.onerror=()=>{markDisconnected();};
+    ws.onclose=()=>{if(liveSocket===ws){liveSocket=null;markDisconnected();clearTimeout(liveReconnectTimer);liveReconnectTimer=setTimeout(()=>startLiveMarketFeed(),5000)}};
+  }catch(e){markDisconnected();}
+  finally{liveFeedStarting=false}
+}
+
+loadStocks();
+
+const filterIds=['premiumMin','premiumMax','otmPercent','symbol','type','reference','priceGapOn','priceGap','deltaOn','deltaRange','strikeGap','ivGap','minVolumeLots','ratio','customRatio','limitType','limitValue','direction','searchBox','resultSort'];
+const defaultControls=Object.fromEntries(filterIds.map(id=>[id,$(id).value]));
+  // -------------------------------------------------------------
+// TAB SWITCHING LOGIC (RESTORED COMPLETELY)
+// -------------------------------------------------------------
+function switchScannerTabUI(name,btn){
+  if(!['spread','atm','otm'].includes(name)) return;
+  try{ scannerMode=name; }catch(e){}
+
+  document.querySelectorAll('.spreadField').forEach(e=>{
+    e.style.display = name==='spread' ? '' : 'none';
+  });
+  document.querySelectorAll('.pairField').forEach(e=>{
+    e.style.display = name==='spread' ? 'none' : '';
+  });
+
+  const otmField=document.getElementById('otmField');
+  const customSpreadCard=document.getElementById('customSpreadAlertCard');
+  if(customSpreadCard) customSpreadCard.classList.toggle('pairHidden', name!=='spread');
+  if(otmField) otmField.style.display = name==='otm' ? '' : 'none';
+
+  const title=document.getElementById('scannerTitle');
+  if(title){
+    title.textContent = name==='spread' ? 'Spread Scanner' :
+                        name==='atm' ? 'ATM Scanner' : 'OTM Scanner';
+  }
+
+  document.querySelectorAll('.nav-links button').forEach(x=>x.classList.remove('active'));
+  const active=document.getElementById(
+    name==='spread' ? 'tabSpread' : name==='atm' ? 'tabATM' : 'tabOTM'
+  );
+  if(active) active.classList.add('active');
+  else if(btn) btn.classList.add('active');
+
+  if(name==='atm'){
+    const d=document.getElementById('deltaOn');
+    if(d) d.value='OFF';
+  }
+
+  try{ if(typeof renderResults==='function') renderResults(); }catch(e){}
+}
+function showPage(name,btn){ switchScannerTabUI(name,btn); }
+
+// Robust tab button binding (works even when inline handlers are blocked)
+function bindScannerTabs(){
+  const map=[['tabSpread','spread'],['tabATM','atm'],['tabOTM','otm']];
+  map.forEach(([id,name])=>{
+    const b=document.getElementById(id);
+    if(!b || b.dataset.uiBound)return;
+    b.dataset.uiBound='1';
+    b.addEventListener('click',()=>switchScannerTabUI(name,b));
+  });
+  }
+  async function testServerApi(){
+  const el=document.getElementById('serverApiStatus');
+  if(el){el.textContent='â— TESTING...';el.classList.remove('ok');}
+  try{
+    const r=await api('/api/market-data-authorize',{cache:'no-store'});
+    if(r && (r.authorized_redirect_uri || r.success)){
+      if(el){el.textContent='â— SERVER API OK';el.classList.add('ok');}
+      return true;
+    }
+    if(el){el.textContent='â— API ERROR';}
+    return false;
+  }catch(e){
+    if(el){el.textContent='â— API ERROR '+(e.status||'');el.classList.remove('ok');}
+    return false;
+  }
+}
+
+function openSettings(){document.getElementById('settingsModal')?.classList.add('open')}
+function closeSettings(){document.getElementById('settingsModal')?.classList.remove('open')}
+
+function resetFilters(){
+  stopScan();lastResults=[];openSymbol=null;previousSpreadKeys=new Set();spreadFirstSeen=new Map();
+  const defaults={priceGap:3,strikeGap:5,ivGap:5,limitValue:1000,minVolumeLots:1,premiumMin:100,premiumMax:10000,otmPercent:5};
+  Object.entries(defaults).forEach(([id,v])=>document.getElementById(id).value=v);
+  document.getElementById('priceGapOn').value='OFF';
+  document.getElementById('deltaOn').value=scannerMode==='atm'?'OFF':'ON';
+  document.getElementById('deltaRange').value='20-30';
+  document.getElementById('symbol').value='ALL';
+  document.getElementById('type').value='Both';
+  document.getElementById('reference').value='FUTURE';
+  document.getElementById('ratio').value='3:10';
+  document.getElementById('limitType').value='DEBIT';
+  document.getElementById('direction').value='BUY_SELL';
+  document.getElementById('customRatio').style.display='none';
+  document.getElementById('searchBox').value='';
+  document.getElementById('summary').textContent='Ready';
+  document.getElementById('results').innerHTML='<div class="empty">Filters reset. Press SCAN NOW.</div>';
+}
+</script>
+
+<div id="helpPopup" class="help-popup">
+  <h3>ðŸ†˜ Help & Support</h3>
+  <p>Koi problem ho to contact karein.</p>
+  <div class="help-popup-actions">
+    <a href="tel:+919316281859">ðŸ“ž Call</a>
+    <a href="https://wa.me/919316281859" target="_blank" rel="noopener">ðŸ’¬ WhatsApp</a>
+  </div>
+</div>
+
+
+<div id="accountSettingsPanel" style="display:none;margin-top:12px;padding:14px;border:1px solid #333;border-radius:12px;background:#151515">
+  <div style="font-weight:700;margin-bottom:10px">âš™ï¸ Account</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button type="button" class="btn btn-secondary" onclick="logoutScanner()">ðŸšª Logout</button>
+  </div>
+</div>
+<script>
+function logoutScanner(){
+  try{
+    localStorage.removeItem('delta_session');
+    sessionStorage.clear();
+  }catch(e){}
+  alert('Logged out. Please login again.');
+  location.reload();
+}
+</script>
+  
+<script id="settings-account-hook">
+(function(){
+  if(window.settingsPanelBound)return;
+  window.settingsPanelBound=true;
+  document.addEventListener('click',function(e){
+    const t=e.target.closest('button');
+    if(!t)return;
+    const isSettings=/settings/i.test((t.textContent||'').trim());
+    const p=document.getElementById('accountSettingsPanel');
+    if(p)p.style.display=isSettings?'block':'none';
+  });
+})();
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  try { switchScannerTabUI('spread', document.getElementById('tabSpread')); } catch(e) {}
+});
+</script>
+
+<script>
+(function(){
+  function setupCombinedPremiumCustom(){
+    const sel=document.getElementById('combinedPremiumPercent');
+    const inp=document.getElementById('combinedPremiumCustomPercent');
+    if(!sel || !inp || sel.dataset.bound) return;
+    sel.dataset.bound='1';
+    function sync(){
+      const custom=sel.value==='CUSTOM';
+      inp.style.display=custom?'block':'none';
+      if(custom) setTimeout(()=>inp.focus(),0);
+      const label=document.querySelector('[id*="combinedPremium"], [class*="combinedPremium"]');
+      document.querySelectorAll('div,span,p').forEach(el=>{
+        if(el.textContent && el.textContent.trim()==='CE Premium + PE Premium â†’ selected %'){
+          const v=custom ? (inp.value ? '+'+inp.value+'%' : 'Custom %') : '+'+sel.value+'%';
+          el.textContent='CE Premium + PE Premium â†’ '+v;
+        }
+      });
+    }
+    sel.addEventListener('change',sync);
+    inp.addEventListener('input',sync);
+    sync();
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',setupCombinedPremiumCustom);
+  }else{
+    setupCombinedPremiumCustom();
+  }
+})();
+</script>
+
+<style>
+#customSpreadAlertCard.pairHidden{display:none !important;}
+</style>
+
+<script>
+(function(){
+  function initCombinedPremiumUI(){
+    const sel=document.getElementById('combinedPremiumPercent');
+    const inp=document.getElementById('combinedPremiumCustomPercent');
+    if(!sel || !inp || sel.dataset.fixedBound) return;
+    sel.dataset.fixedBound='1';
+    function sync(){
+      const custom=sel.value==='CUSTOM';
+      inp.style.display=custom?'block':'none';
+      if(custom && document.activeElement!==inp) setTimeout(()=>inp.focus(),0);
+      const pct=custom ? (inp.value ? '+'+inp.value+'%' : 'Custom %') : '+'+sel.value+'%';
+      document.querySelectorAll('div,span,p').forEach(el=>{
+        const t=(el.textContent||'').trim();
+        if(t==='CE Premium + PE Premium â†’ +10%' ||
+           t==='CE Premium + PE Premium â†’ selected %' ||
+           t==='CE Premium + PE Premium â†’ +5%' ||
+           t==='CE Premium + PE Premium â†’ +15%' ||
+           t==='CE Premium + PE Premium â†’ +20%' ||
+           t==='CE Premium + PE Premium â†’ Custom %'){
+          el.textContent='CE Premium + PE Premium â†’ '+pct;
+        }
+      });
+    }
+    sel.addEventListener('change',sync);
+    inp.addEventListener('input',sync);
+    sync();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initCombinedPremiumUI);
+  else initCombinedPremiumUI();
+})();
+</script>
+
+<style id="combinedPremiumStyles">
+#combinedPremiumAlertCard{
+  margin-top:12px;
+  padding:14px 16px;
+  border:1px solid #2b2b2b;
+  border-radius:10px;
+  background:#111;
+}
+  #combinedPremiumAlertCard .combinedPremiumHeader{font-size:16px;margin-bottom:14px}
+#combinedPremiumAlertCard .combinedPremiumGrid{
+  display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:22px;align-items:start;
+}
+#combinedPremiumAlertCard .alertLabel{
+  font-size:11px;letter-spacing:.4px;color:#8c8c8c;margin-bottom:7px;
+}
+#combinedPremiumAlertCard .combinedPremiumControls{
+  display:grid;grid-template-columns:190px 1fr 180px;gap:12px;align-items:end;margin-top:14px;
+}
+#combinedPremiumAlertCard select,
+#combinedPremiumAlertCard input{
+  width:100%;box-sizing:border-box;background:#090909;color:#fff;border:1px solid #333;
+  border-radius:6px;padding:10px;font-size:14px;
+}
+#combinedPremiumAlertCard .combinedCustomWrap{
+  display:none;position:relative;min-width:0;
+}
+#combinedPremiumAlertCard .combinedCustomWrap input{padding-right:34px}
+#combinedPremiumAlertCard .combinedCustomWrap span{
+  position:absolute;right:10px;top:10px;color:#aaa;
+}
+#combinedPremiumAlertCard button{
+  min-height:40px;border:1px solid #333;border-radius:7px;background:#202020;color:#fff;
+  font-weight:700;padding:0 14px;cursor:pointer;
+}
+#combinedPremiumAlertCard .combinedPremiumHelp{
+  margin-top:10px;color:#8e8e8e;font-size:12px;line-height:1.35;
+}
+@media(max-width:700px){
+  #combinedPremiumAlertCard .combinedPremiumGrid{grid-template-columns:1.2fr 1fr 1fr;gap:12px}
+  #combinedPremiumAlertCard .combinedPremiumControls{grid-template-columns:1fr 1fr}
+  #combinedPremiumAlertCard .combinedPremiumControls button{grid-column:1/-1}
+}
+</style>
+
+<script>
+(function(){
+  function syncPairAlertCard(name){
+    const card=document.getElementById('combinedPremiumAlertCard');
+    if(card) card.style.display=(name==='spread')?'none':'block';
+  }
+
+  const oldSwitch=window.switchScannerTabUI;
+  if(typeof oldSwitch==='function'){
+    // Keep the existing switcher and add only the card visibility behavior.
+    window.switchScannerTabUI=function(name,btn){
+      oldSwitch(name,btn);
+      syncPairAlertCard(name);
+    };
+  }
+
+  function initCombinedPremiumAlert(){
+    const sel=document.getElementById('pairCombinedPremiumPercent');
+    const wrap=document.getElementById('combinedCustomWrap');
+    const input=document.getElementById('pairCombinedPremiumCustomPercent');
+    const text=document.getElementById('combinedPremiumAlertText');
+    if(!sel || !wrap || !input || !text || sel.dataset.bound2) return;
+    sel.dataset.bound2='1';
+
+    function sync(){
+      const custom=sel.value==='CUSTOM';
+      wrap.style.display=custom?'block':'none';
+      const pct=custom ? (input.value ? '+'+input.value+'%' : 'Custom %') : '+'+sel.value+'%';
+      text.innerHTML='CE Premium + PE Premium â†’ <strong>'+pct+'</strong>';
+    }
+    sel.addEventListener('change',sync);
+    input.addEventListener('input',sync);
+    sync();
+
+    const btn=document.getElementById('combinedPremiumStartBtn');
+    if(btn) btn.addEventListener('click',function(){
+      const baseline=document.getElementById('combinedPremiumBaseline');
+      const status=document.getElementById('combinedPremiumStatus');
+      if(baseline) baseline.textContent='Current premium';
+      if(status) status.textContent='Alert ON';
+    });
+  }
+
+  function init(){
+    initCombinedPremiumAlert();
+    const active=document.querySelector('.nav-links button.active');
+    if(active){
+      const id=active.id;
+      syncPairAlertCard(id==='tabSpread'?'spread':id==='tabATM'?'atm':'otm');
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
+  else init();
+})();
+</script>
+<script>
+(function(){
+  function fixCustomPercentInput(){
+    const sel=document.getElementById('combinedPremiumPercent');
+    const wrap=document.getElementById('combinedCustomWrap');
+    const input=document.getElementById('combinedPremiumCustomPercent');
+    if(!sel || !wrap || !input || sel.dataset.typingFix) return;
+    sel.dataset.typingFix='1';
+
+    function sync(){
+      const isCustom=sel.value==='CUSTOM';
+      wrap.style.display=isCustom?'block':'none';
+      input.disabled=!isCustom;
+      input.style.pointerEvents=isCustom?'auto':'none';
+      input.style.userSelect=isCustom?'text':'none';
+
+      const text=document.getElementById('combinedPremiumAlertText');
+      if(text){
+        const pct=isCustom
+          ? (input.value ? '+'+input.value+'%' : 'Custom %')
+          : '+'+sel.value+'%';
+        text.innerHTML='CE Premium + PE Premium â†’ <strong>'+pct+'</strong>';
+      }
+    }
+
+    sel.addEventListener('change',function(){
+      sync();
+      if(sel.value==='CUSTOM'){
+        setTimeout(function(){ input.focus(); },50);
+      }
+    });
+    input.addEventListener('input',sync);
+    sync();
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',fixCustomPercentInput);
+  }else{
+    fixCustomPercentInput();
+  }
+})();
+</script>
+
+<script>
+(function(){
+  function enableCustomPercentTyping(){
+    const select=document.getElementById('combinedPremiumPercent');
+    const input=document.getElementById('combinedPremiumCustomPercent');
+    if(!select || !input || select.dataset.customInputFinal) return;
+    select.dataset.customInputFinal='1';
+
+    function update(){
+      const custom=select.value==='CUSTOM';
+      input.style.display=custom?'block':'none';
+      input.disabled=!custom;
+      input.style.pointerEvents=custom?'auto':'none';
+      input.style.userSelect=custom?'text':'none';
+      if(custom) input.setAttribute('aria-label','Custom percentage');
+    }
+
+    select.addEventListener('change', function(){
+      update();
+      if(select.value==='CUSTOM'){
+        setTimeout(()=>input.focus(),50);
+      }
+    });
+    update();
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',enableCustomPercentTyping);
+  }else{
+    enableCustomPercentTyping();
+  }
+})();
+  </script>
+</div>
+<script id="delta-login-defensive-v2">
+(function(){
+  function syncLoginOverlay(){
+    const overlay=document.getElementById("deltaLoginOverlay");
+    if(!overlay)return;
+    if(localStorage.getItem("delta_auth_token")) overlay.classList.add("hidden");
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",syncLoginOverlay);
+  else syncLoginOverlay();
+})();
+</script>
+</body>
+</html>
