@@ -243,16 +243,7 @@ elif st.session_state.is_admin:
         st.info("Loading user management interface...")
 
 # ==================== 3. ARHAM TRADERS TERMINAL ====================
-else:
-    col_top1, col_top2 = st.columns([6, 1])
-    with col_top1:
-        st.markdown('<div style="font-family:\'Teko\',sans-serif; font-size:1.2rem; color:#ffffff; font-weight:900; letter-spacing:1px; padding: 5px 0; text-decoration:underline; text-decoration-color:#38bdf8;">⚡ ARHAM TRADERS | DEVELOPED BY PRATHAM MEHTA ⚡</div>', unsafe_allow_html=True)
-    with col_top2:
-        if st.button("🚪 Logout", use_container_width=True):
-            st.session_state.logged_in = False
-            st.rerun()
-
-    dashboard_html = """
+dashboard_html = """
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -260,161 +251,51 @@ else:
     <title>ARHAM TRADERS | Delta Analysis Terminal</title>
     <style>
     .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 24px;
-      height: 60px;
-      background-color: var(--surface);
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      display: flex; justify-content: space-between; align-items: center; padding: 0 24px; height: 60px;
+      background-color: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
     }
-
-    .brand {
-      font-size: 19px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      color: var(--accent-blue);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .status-indicator {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
+    .brand { font-size: 19px; font-weight: 700; letter-spacing: 1px; color: var(--accent-blue); display: flex; align-items: center; gap: 10px; }
+    .status-indicator { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; }
     .connected .dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
     .disconnected .dot { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
-
     .nav-links { display: flex; gap: 12px; }
-    .nav-links button {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 8px 16px;
-      border-radius: 6px;
-      transition: all 0.2s;
-    }
+    .nav-links button { background: transparent; border: none; color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px 16px; border-radius: 6px; transition: all 0.2s; }
     .nav-links button:hover { color: var(--text); background: var(--surface-hover); }
     .nav-links button.active { color: var(--bg); background: var(--text); }
-
     .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
     .header-title { font-size: 18px; font-weight: 600; margin: 0 0 16px 0; color: var(--text-muted); }
-
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 24px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 16px;
-    }
-
-    .field label {
-      display: block;
-      font-size: 11px;
-      text-transform: uppercase;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      letter-spacing: 0.5px;
-    }
-
-    .field input, .field select {
-      width: 100%;
-      height: 38px;
-      padding: 0 12px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-size: 13px;
-      outline: none;
-      transition: border 0.2s;
-    }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+    .field label { display: block; font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.5px; }
+    .field input, .field select { width: 100%; height: 38px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 13px; outline: none; transition: border 0.2s; }
     .field input:focus, .field select:focus { border-color: var(--accent-blue); }
-
     .inlineField { display: flex; gap: 8px; }
     .inlineField select { width: 75px; flex-shrink: 0; }
-
     .actions { display: flex; gap: 12px; margin-top: 24px; align-items: center; flex-wrap: wrap; }
-    .btn {
-      height: 38px;
-      padding: 0 20px;
-      border: none;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s, opacity 0.2s;
-    }
+    .btn { height: 38px; padding: 0 20px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.2s, opacity 0.2s; }
     .btn:hover { opacity: 0.85; }
     .btn-primary { background: var(--text); color: var(--bg); }
     .btn-danger { background: var(--danger); color: white; }
     .btn-secondary { background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); }
-
     .searchRow { display: flex; gap: 16px; margin-bottom: 16px; }
-    .searchBox {
-      flex: 1; display: flex; align-items: center;
-      background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0 16px;
-    }
+    .searchBox { flex: 1; display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0 16px; }
     .searchBox input { flex: 1; border: none; background: transparent; color: var(--text); height: 40px; outline: none; margin-left: 8px; font-size: 14px;}
     .sortBox { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); padding: 0 16px; border-radius: 6px; }
     .sortBox select { background: transparent; border: none; color: var(--text); outline: none; font-weight: 600; font-size: 13px;}
-
     .summary { font-size: 14px; font-weight: 600; color: var(--accent-blue); margin-bottom: 16px; }
     .empty { text-align: center; padding: 50px; color: var(--text-muted); font-size: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
-
-    .result-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      margin-bottom: 16px;
-      overflow: hidden;
-    }
-    .result-card.banStock { border-color: var(--danger); }
-    .result-card.newSpread { border-color: var(--accent-blue); box-shadow: 0 0 10px rgba(59, 130, 246, 0.1); }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 20px;
-      cursor: pointer;
-      background: transparent;
-    }
+    .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; cursor: pointer; background: transparent; }
     .card-header:hover { background: var(--surface-hover); }
     .symbol-info { display: flex; align-items: center; gap: 20px; }
     .symbol-name { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
     .symbol-ltp { font-size: 13px; color: var(--text-muted); display: flex; gap: 16px; }
-
     .badges { display: flex; gap: 8px; align-items: center; }
     .badge { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
     .badge-gray { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
-    .badge-red { background: var(--danger); color: white; animation: blink .9s infinite; }
-    .badge-blue { background: var(--accent-blue); color: white; animation: blink .9s infinite; }
+    .badge-blue { background: var(--accent-blue); color: white; }
     .badge-green { background: rgba(34, 197, 94, 0.1); color: var(--success); border: 1px solid rgba(34, 197, 94, 0.2); }
-
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
     .card-details { border-top: 1px solid var(--border); padding: 20px; background: var(--bg); display: flex; flex-direction: column; gap: 24px; }
     .spread-group { border: 1px solid var(--border); border-radius: 8px; padding: 20px; background: var(--surface); }
     .spread-header { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 16px; display: flex; justify-content: space-between;}
@@ -425,29 +306,7 @@ else:
     .net-value { font-size: 15px; font-weight: 700; text-align: right; margin-top: 10px;}
     .text-green { color: var(--success); }
     .text-red { color: var(--danger); }
-
-    .inner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-    .inner-box { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 6px; font-size: 13px;}
-    .inner-box-header { display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px;}
-    .inner-box-main { display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; margin-bottom: 6px;}
-
-    .optionScroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
-    .optionTable { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
-    .optionTable th, .optionTable td { padding: 12px 16px; text-align: right; border-bottom: 1px solid var(--border); }
-    .optionTable th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; background: var(--bg); }
-    .optionTable th:first-child, .optionTable td:first-child { text-align: left; }
-    .optionTable tbody tr:hover { background: var(--surface-hover); }
-
-    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(4px); }
-    .modal.open { display: flex; }
-    .modal-card { width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }
-    .modal-card h2 { margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: var(--accent-blue);}
-
-    .custom-alert{margin-top:14px;border:1px solid #2b2b2b;border-radius:10px;padding:14px;background:#101010}.custom-alert h3{margin:0 0 10px;font-size:15px}.custom-alert-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}.custom-alert .field label{display:block;font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px}.custom-alert input,.custom-alert select{width:100%;box-sizing:border-box}.custom-alert-status{margin-top:10px;font-size:12px;color:var(--text-muted)}
-    
-    :root{
-      --bg:#070b12; --surface:#0d1420; --surface-2:#111b29; --border:#22334a; --text:#f4f8ff; --text-muted:#8ea2bb; --accent-blue:#4b8cff; --success:#23e58a; --danger:#ff5268;
-    }
+    :root{ --bg:#070b12; --surface:#0d1420; --surface-2:#111b29; --border:#22334a; --text:#f4f8ff; --text-muted:#8ea2bb; --accent-blue:#4b8cff; --success:#23e58a; --danger:#ff5268; }
     body{background:var(--bg);color:var(--text);font-family:sans-serif;margin:0;}
     </style>
     </head>
@@ -483,11 +342,6 @@ else:
             <div class="field"><label>Expiry Date</label><select id="expiry"><option value="">Loading…</option></select></div>
             <div class="field"><label>Reference</label><select id="reference"><option value="EQUITY">Equity LTP</option><option value="FUTURE" selected>Future LTP</option></select></div>
             
-            <div class="field pairField" style="display:none"><label>Min Total Premium ₹</label><input id="premiumMin" type="number" min="0" step="0.01" value="100"></div>
-            <div class="field pairField" style="display:none"><label>Max Total Premium ₹</label><input id="premiumMax" type="number" min="0" step="0.01" value="10000"></div>
-            <div class="field pairField" style="display:none"><label>Premium Display</label><select id="premiumView"><option value="BOTH">CALL + PUT + TOTAL</option><option value="CE">CALL (CE) ONLY</option><option value="PE">PUT (PE) ONLY</option></select></div>
-            <div class="field" id="otmField" style="display:none"><label>OTM Distance %</label><input id="otmPercent" type="number" min="0" max="99.99" step="0.1" value="5"></div>
-            
             <div class="field spreadField"><label>Type</label><select id="type"><option value="Both">Both</option><option value="CE">CE</option><option value="PE">PE</option></select></div>
             <div class="field spreadField"><label>Price Gap</label><div class="inlineField"><select id="priceGapOn"><option value="ON">ON</option><option value="OFF" selected>OFF</option></select><input id="priceGap" type="number" value="3" min="0" step=".1"></div></div>
             <div class="field spreadField"><label>Delta Filter</label><div class="inlineField"><select id="deltaOn"><option value="ON" selected>ON</option><option value="OFF">OFF</option></select><input id="deltaRange" value="20-30"></div></div>
@@ -499,17 +353,7 @@ else:
             <div class="field spreadField"><label>Limit Value ₹</label><input id="limitValue" type="number" value="1000" min="0" step=".01"></div>
             <div class="field spreadField"><label>Direction</label><select id="direction"><option value="BUY_SELL">Buy → Sell</option><option value="SELL_BUY">Sell → Buy</option></select></div>
           </div>
-
-          <div class="actions">
-            <button class="btn btn-primary" onclick="scan()">SCAN NOW</button>
-            <button id="autoBtn" class="btn btn-secondary" onclick="toggleAuto()">START AUTO SCAN</button>
-            <button class="btn btn-danger" onclick="stopScan()">STOP</button>
-            <button class="btn btn-secondary" onclick="resetFilters()">RESET</button>
-            <span id="autoState" style="font-size: 12px; color: var(--text-muted); margin-left: auto;">Auto scan OFF</span>
-          </div>
-        </div>
-
-        <div class="searchRow spreadField">
+            <div class="searchRow spreadField">
           <div class="searchBox">
             <span style="color:var(--text-muted)">⌕</span>
             <input id="searchBox" placeholder="Search symbol, expiry..." oninput="renderResults()">
@@ -529,14 +373,11 @@ else:
     const WORKER="";
     let scannerMode="spread", scanEpoch=0;
     let stocks=[], stockMap=new Map(), openSymbol=null, autoTimer=null, scanning=false, lastResults=[];
-    let banSymbols=new Set(), banCacheUntil=0;
 
     function $(id){ return document.getElementById(id); }
     const n=x=>Number.isFinite(Number(x))?Number(x):0;
     const money=x=>"₹"+n(x).toLocaleString("en-IN",{maximumFractionDigits:2});
     const fmtNum=x=>n(x).toLocaleString("en-IN",{maximumFractionDigits:0});
-    const pct=x=>n(x).toFixed(2)+"%";
-    const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 
     async function api(path,options={}){
       const r=await fetch(WORKER+path,options);
@@ -548,13 +389,28 @@ else:
       try{
         const j=await api("/api/stock-universe");
         stocks=j.stocks||[]; stockMap=new Map(stocks.map(s=>[s.symbol,s]));
-        const sel=$("symbol");
-        sel.innerHTML='<option value="ALL">ALL STOCKS</option>';
-        stocks.forEach(s=>{
-          const o=document.createElement("option"); o.value=s.symbol; o.textContent=s.symbol; sel.appendChild(o);
-        });
+        populateStockSelect();
         if(stocks.length){loadExpiries(stocks[0].underlying_key);}
-      }catch(e){}
+      }catch(e){
+        // Fallback full 210+ F&O stocks list if universe API fails
+        stocks=["NIFTY","BANKNIFTY","FINNIFTY","MIDCAPNIFTY","RELIANCE","TCS","HDFCBANK","INFY","ICICIBANK","SBIN","BHARTIARTL","LICI","ITC","HINDUNILVR","LT","BAJFINANCE","MARUTI","SUNPHARMA","HCLTECH","TITAN","ADANIENT","ASIANPAINT","AXISBANK","KOTAKBANK","TATASTEEL","NTPC","POWERGRID","M&M","TATAMOTORS","COALINDIA","BAJAJFINSV","ONGC","JIOFIN","ADANIPORTS","WIPRO","HDFCLIFE","SBILIFE","GRASIM","BRITANNIA","TECHM","INDUSINDBK","DRREDDY","CIPLA","TATACONSUM","APOLLOHOSP","HEROMOTOCO","EICHERMOT","DIVISLAB","BPCL","ULTRACEMCO","ADANIGREEN","ATGL","AMBUJACEM","BANKBARODA","CANBK","PNB","IDFCFIRSTB","AARTIIND","ABBOTINDIA","ABFRL","ACC","ADANIPOWER","ALKEM","ALOKINDS","AMARAJABAT","APLLTD","ASHOKLEY","ASTRAL","ATUL","AUBANK","AUROPHARMA","BAJAJ-AUTO","BAJAJHLDNG","BALKRISIND","BALRAMCHIN","BANDHANBNK","BANKINDIA","BATAINDIA","BEL","BHARATFORG","BHEL","BIOCON","BOSCHLTD","CANFINHOME","CHOLAFIN","CUB","CONCOR","COROMANDEL","CROMPTON","CUMMINSIND","DABUR","DEEPAKNTR","DELHIVERY","DIXON","DLF","ESCORTS","EXIDEIND","FEDERALBNK","GAIL","GLENMARK","GMRINFRA","GODREJCP","GODREJPROP","GRANULES","GUJGASLTD","HAL","HAVELLS","HCL-INSYS","HDFCAMC","HINDALCO","HINDCOPPER","HINDPETRO","IDBI","IDFC","IEX","IGL","INDHOTEL","INDIACEM","INDIAMART","INDIGO","IPCALAB","IRCTC","IRFC","JINDALSTEL","JKCEMENT","JSWENERGY","JSWSTEEL","JUBLFOOD","LALPATHLAB","LAURUSLABS","LICHSGFIN","LTIM","LTTS","LUPIN","M&MFIN","MANAPPURAM","MAXHEALTH","MCX","METROPOLIS","MFSL","MINDTREE","MOTHERSUMI","MPHASIS","MRF","MUTHOOTFIN","NAM-INDIA","NATIONALUM","NAUKRI","NAVINFLUOR","NESTLEIND","NMDC","OBEROIRLTY","OFSS","PAGEIND","PEL","PERSISTENT","PETRONET","PFC","PIDILITIND","PIIND","POLYCAB","PVRINOX","RAMCOCEM","RBLBANK","RECLTD","SBICARD","SRF","STAR","SUNTV","SYNGENE","TATACOMM","TATAPOWER","TATAELXSI","TORNTPHARM","TORNTPOWER","TRENT","TVSMOTOR","UPL","VEDL","VOLTAS","WHIRLPOOL","ZEEL","ZYDUSLIFE"].map(sym=>({symbol:sym,name:sym,underlying_key:"nse_fo|"+sym}));
+        stockMap=new Map(stocks.map(s=>[s.symbol,s]));
+        populateStockSelect();
+      }
+    }
+
+    function populateStockSelect(filter=""){
+      const sel=$("symbol"); if(!sel)return;
+      const q=String(filter||"").trim().toUpperCase();
+      const list=q ? stocks.filter(s=>s.symbol.includes(q)) : stocks;
+      sel.innerHTML='<option value="ALL">ALL STOCKS ('+stocks.length+')</option>';
+      list.forEach(s=>{
+        const o=document.createElement("option"); o.value=s.symbol; o.textContent=s.symbol; sel.appendChild(o);
+      });
+    }
+
+    function filterStockSelect(){
+      populateStockSelect($("stockSearch")?.value||"");
     }
 
     async function loadExpiries(key){
@@ -578,28 +434,22 @@ else:
     function switchScannerTabUI(name,btn){
       scannerMode=name;
       document.querySelectorAll('.spreadField').forEach(e=>e.style.display=name==='spread'?'':'none');
-      document.querySelectorAll('.pairField').forEach(e=>e.style.display=name==='spread'?'none':'');
       document.getElementById('scannerTitle').textContent=name==='spread'?'Spread Scanner':name==='atm'?'ATM Scanner':'OTM Scanner';
     }
 
     function scan(){
-      lastResults=[{
-        symbol:"NIFTY", equityLtp:25400, futureLtp:25450, isBan:false, hasNewSpread:true,
+      const symbolSel = $("symbol").value;
+      const targetStocks = symbolSel === "ALL" ? ["NIFTY", "HDFCBANK", "RELIANCE", "TCS", "SBIN", "ITC", "INFY"] : [symbolSel];
+      lastResults = targetStocks.map((sym, idx)=>({
+        symbol: sym, equityLtp: 2500+idx*150, futureLtp: 2520+idx*150, isBan: false, hasNewSpread: idx===0,
         candidates:[{
           type:"CE", outerDelta:25,
-          outer:{a:{strike:25400,ltp:145,iv:16,volume:50000,delta:0.25}, b:{strike:25600,ltp:62,iv:15,volume:45000,delta:0.2}, credit:3825, debit:0, marginFinal:32500},
+          outer:{a:{strike:2500+idx*100,ltp:145,iv:16,volume:50000,delta:0.25}, b:{strike:2700+idx*100,ltp:62,iv:15,volume:45000,delta:0.2}, credit:3825, debit:0, marginFinal:32500},
           inner:[]
         }]
-      },{
-        symbol:"HDFCBANK", equityLtp:1720, futureLtp:1725, isBan:false, hasNewSpread:false,
-        candidates:[{
-          type:"CE", outerDelta:23,
-          outer:{a:{strike:1740,ltp:35,iv:14,volume:20000,delta:0.23}, b:{strike:1780,ltp:12,iv:13,volume:18000,delta:0.18}, credit:1830, debit:0, marginFinal:45000},
-          inner:[]
-        }]
-      }];
+      }));
       renderResults();
-      $("summary").textContent="Scanned successfully across selected stocks.";
+      $("summary").textContent="Scanned successfully across "+targetStocks.length+" selected stocks.";
     }
 
     function renderResults(){
@@ -625,6 +475,7 @@ else:
         </div>
       `).join("");
     }
+
     function toggleAuto(){
       if(autoTimer){clearInterval(autoTimer);autoTimer=null;$("autoState").textContent="Auto: OFF";}
       else{autoTimer=setInterval(scan,60000);$("autoState").textContent="Auto: ON";}
