@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import os
 from datetime import datetime, date, timedelta
+import pytz
 
 st.set_page_config(page_title="ARHAM TRADERS | Delta Analysis", layout="wide", initial_sidebar_state="expanded")
 
@@ -104,13 +105,11 @@ if not st.session_state.logged_in:
     st.markdown('''
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
-        
         .stApp {
             background: linear-gradient(135deg, #05080f 0%, #0a1120 50%, #03060a 100%) !important;
             color: #ffffff !important;
             font-family: 'Rajdhani', sans-serif !important;
         }
-        
         .brand-card {
             display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
             margin: 25px auto 15px auto; padding: 22px 35px; background: rgba(11, 18, 36, 0.95);
@@ -129,24 +128,14 @@ if not st.session_state.logged_in:
             text-shadow: 0 0 16px rgba(56, 189, 248, 0.9); margin-top: 6px !important;
             text-decoration: underline !important; text-decoration-color: #38bdf8 !important; text-underline-offset: 4px !important;
         }
-
         label, p, span, div, .stTabs [data-baseweb="tab"] {
-            color: #ffffff !important;
-            font-weight: 800 !important;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4) !important;
+            color: #ffffff !important; font-weight: 800 !important; text-shadow: 0 0 10px rgba(255, 255, 255, 0.4) !important;
         }
-        
         .stTabs [data-baseweb="tab"] {
-            text-decoration: underline !important;
-            text-decoration-color: #38bdf8 !important;
-            font-size: 1.05rem !important;
+            text-decoration: underline !important; text-decoration-color: #38bdf8 !important; font-size: 1.05rem !important;
         }
-
         input {
-            color: #ffffff !important;
-            font-weight: 800 !important;
-            background-color: #0b1224 !important;
-            border: 2px solid #38bdf8 !important;
+            color: #ffffff !important; font-weight: 800 !important; background-color: #0b1224 !important; border: 2px solid #38bdf8 !important;
         }
     </style>
     ''', unsafe_allow_html=True)
@@ -285,28 +274,28 @@ else:
         .stApp { background-color: #080d16 !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }
         [data-testid="stSidebar"] { background-color: #0e1626 !important; border-right: 1px solid #1e293b !important; }
         
-        div[data-baseweb="select"] > div {
+        /* UNIVERSAL 100% VISIBLE DARK DROPDOWN FOR DESKTOP & MOBILE */
+        div[data-baseweb="select"] {
             background-color: #000000 !important;
-            color: #ffffff !important;
             border: 2px solid #38bdf8 !important;
             border-radius: 8px !important;
         }
-        div[data-baseweb="select"] span {
+        div[data-baseweb="select"] * {
             color: #ffffff !important;
             font-weight: 900 !important;
+            -webkit-text-fill-color: #ffffff !important;
         }
-        div[data-baseweb="popover"], div[data-baseweb="menu"], ul[data-baseweb="menu"] {
+        div[data-baseweb="popover"], div[data-baseweb="menu"], ul[data-baseweb="menu"], [data-baseweb="option"] {
             background-color: #000000 !important;
             color: #ffffff !important;
-            border: 1px solid #38bdf8 !important;
         }
-        ul[data-baseweb="menu"] li, ul[data-baseweb="menu"] li div, ul[data-baseweb="menu"] li span {
+        ul[data-baseweb="menu"] li, ul[data-baseweb="menu"] li div, ul[data-baseweb="menu"] li span, [data-baseweb="option"] div {
             background-color: #000000 !important;
             color: #ffffff !important;
             font-weight: 900 !important;
             -webkit-text-fill-color: #ffffff !important;
         }
-        ul[data-baseweb="menu"] li:hover {
+        ul[data-baseweb="menu"] li:hover, [data-baseweb="option"]:hover {
             background-color: #38bdf8 !important;
             color: #000000 !important;
             -webkit-text-fill-color: #000000 !important;
@@ -373,13 +362,14 @@ else:
             st.session_state.logged_in = False
             st.rerun()
 
-    # REAL-TIME MARKET STATUS (Monday–Friday, 9:00 AM to 3:40 PM IST)
-    now_dt = datetime.now()
-    current_time_val = now_dt.time()
+    # REAL-TIME MARKET STATUS IN IST (Indian Standard Time)
+    ist_tz = pytz.timezone('Asia/Kolkata')
+    now_ist = datetime.now(ist_tz)
+    current_time_val = now_ist.time()
     market_open_time = datetime.strptime("09:00:00", "%H:%M:%S").time()
     market_close_time = datetime.strptime("15:40:00", "%H:%M:%S").time()
     
-    is_weekday = now_dt.weekday() < 5
+    is_weekday = now_ist.weekday() < 5 # Monday to Friday
     if is_weekday and market_open_time <= current_time_val <= market_close_time:
         market_status_html = '<div style="background:rgba(16,185,129,0.2); border:1.5px solid #10b981; color:#ffffff; padding:4px 10px; border-radius:6px; font-weight:900; text-align:center; font-size:0.95rem; text-decoration:underline;">🟢 Market Open</div>'
     else:
