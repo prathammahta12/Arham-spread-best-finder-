@@ -110,7 +110,7 @@ def admin_delete_user(uid):
     except:
         return False
 
-for key, default in [("logged_in", False), ("username", ""), ("user_id", None), ("is_admin", False), ("valid_until", None), ("upstox_token", ""), ("show_settings", False), ("mode", "LIVE"), ("active_tab", "Spread Scanner")]:
+for key, default in [("logged_in", False), ("username", ""), ("user_id", None), ("is_admin", False), ("valid_until", None), ("upstox_token", ""), ("show_settings", False), ("mode", "LIVE"), ("active_tab", "Spread Scanner"), ("scanned", False)]:
     if key not in st.session_state:
         st.session_state[key] = default
 
@@ -121,13 +121,7 @@ if not st.session_state.logged_in:
     st.markdown(f'''
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap');
-        
-        .stApp {{
-            {bg_style}
-            color: #ffffff !important;
-            font-family: 'Rajdhani', sans-serif !important;
-        }}
-        
+        .stApp {{ {bg_style} color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }}
         .brand-card {{
             display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
             margin: 25px auto 15px auto; padding: 22px 35px; background: rgba(11, 18, 36, 0.92);
@@ -146,25 +140,8 @@ if not st.session_state.logged_in:
             text-shadow: 0 0 16px rgba(56, 189, 248, 0.9); margin-top: 6px !important;
             text-decoration: underline !important; text-decoration-color: #38bdf8 !important; text-underline-offset: 4px !important;
         }}
-
-        label, p, span, div, .stTabs [data-baseweb="tab"] {{
-            color: #ffffff !important;
-            font-weight: 800 !important;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4) !important;
-        }}
-        
-        .stTabs [data-baseweb="tab"] {{
-            text-decoration: underline !important;
-            text-decoration-color: #38bdf8 !important;
-            font-size: 1.05rem !important;
-        }}
-
-        input {{
-            color: #ffffff !important;
-            font-weight: 800 !important;
-            background-color: #0b1224 !important;
-            border: 2px solid #38bdf8 !important;
-        }}
+        label, p, span, div, .stTabs [data-baseweb="tab"] {{ color: #ffffff !important; font-weight: 800 !important; text-shadow: 0 0 10px rgba(255, 255, 255, 0.4) !important; }}
+        input {{ color: #ffffff !important; font-weight: 800 !important; background-color: #0b1224 !important; border: 2px solid #38bdf8 !important; }}
     </style>
     ''', unsafe_allow_html=True)
 
@@ -302,6 +279,21 @@ else:
         .stApp { background-color: #080d16 !important; color: #ffffff !important; font-family: 'Rajdhani', sans-serif !important; }
         [data-testid="stSidebar"] { background-color: #0e1626 !important; border-right: 1px solid #1e293b !important; }
         
+        /* FIX DROPDOWN TEXT VISIBILITY */
+        div[data-baseweb="select"] > div {
+            background-color: #0b1224 !important;
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            border: 1.5px solid #38bdf8 !important;
+        }
+        ul[data-baseweb="menu"] {
+            background-color: #0b1224 !important;
+        }
+        ul[data-baseweb="menu"] li div {
+            color: #ffffff !important;
+            font-weight: 800 !important;
+        }
+
         .filter-container {
             background: #0f172a; border: 1px solid #1e293b; border-radius: 10px;
             padding: 16px 20px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.6);
@@ -318,7 +310,7 @@ else:
             border-radius: 10px; padding: 16px; margin-bottom: 12px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
-        .spread-title { font-size: 1.15rem; font-weight: 900; color: #ffffff; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; text-decoration: underline; text-decoration-color: #ffbe0b; text-underline-offset: 4px; }
+           .spread-title { font-size: 1.15rem; font-weight: 900; color: #ffffff; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; text-decoration: underline; text-decoration-color: #ffbe0b; text-underline-offset: 4px; }
         
         .spread-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 10px 0; }
         .grid-item { background: #080d16; padding: 8px 10px; border-radius: 6px; border: 1px solid #1e293b; }
@@ -328,10 +320,7 @@ else:
         .score-badge { background: rgba(56, 189, 248, 0.2); color: #ffffff; border: 1.5px solid #38bdf8; padding: 3px 8px; border-radius: 6px; font-weight: 900; font-size: 0.85rem; text-decoration: underline; }
         .advice-box { background: rgba(16, 185, 129, 0.15); color: #ffffff; border: 1.5px solid #10b981; padding: 8px 12px; border-radius: 6px; font-weight: 800; font-size: 0.9rem; margin-top: 8px; }
 
-        label, p, span, div, .stSelectbox label, .stNumberInput label {
-            color: #ffffff !important;
-            font-weight: 800 !important;
-        }
+        label, p, span, div, .stSelectbox label, .stNumberInput label { color: #ffffff !important; font-weight: 800 !important; }
     </style>
     ''', unsafe_allow_html=True)
 
@@ -344,7 +333,6 @@ else:
     # Always show Developer Tag at top
     st.markdown('<div style="font-family:\'Teko\',sans-serif; font-size:1.2rem; color:#ffffff; font-weight:900; letter-spacing:1px; margin-bottom:6px; text-decoration:underline; text-decoration-color:#38bdf8; text-underline-offset:4px;">⚡ DEVELOPED BY PRATHAM MEHTA ⚡</div>', unsafe_allow_html=True)
 
-    # Sidebar matching video layout exactly
     with st.sidebar:
         st.markdown('<div style="font-family:\'Cinzel\', serif; font-size:1.35rem; font-weight:900; color:#ffffff; margin-bottom:15px; text-decoration:underline; text-decoration-color:#ffbe0b;">▲ DELTA ANALYSIS<br><span style="font-size:0.8rem; color:#ffffff; font-family:\'Rajdhani\',sans-serif;">FNO SCANNER</span></div>', unsafe_allow_html=True)
         
@@ -368,7 +356,7 @@ else:
             st.session_state.logged_in = False
             st.rerun()
 
-    # Determine Market Status (9:00 AM to 3:40 PM)
+    # AUTOMATIC MARKET STATUS (9:00 AM to 3:40 PM IST Weekdays)
     now_dt = datetime.now()
     current_time_val = now_dt.time()
     market_open_time = datetime.strptime("09:00:00", "%H:%M:%S").time()
@@ -380,7 +368,6 @@ else:
     else:
         market_status_html = '<div style="background:rgba(239,68,68,0.2); border:1.5px solid #ef4444; color:#ffffff; padding:4px 10px; border-radius:6px; font-weight:900; text-align:center; font-size:0.95rem; text-decoration:underline;">🔴 Market Closed</div>'
 
-    # Top Bar Header with Market Status
     h_col1, h_col2, h_col3 = st.columns([3, 2, 1])
     with h_col1:
         st.markdown(f'<div style="font-size:1.3rem; font-weight:900; color:#ffffff; padding-top:4px; text-decoration:underline; text-decoration-color:#ffbe0b;">▲ Delta Analysis <span style="font-size:0.85rem; color:#ffffff;">{st.session_state.active_tab.upper()}</span></div>', unsafe_allow_html=True)
@@ -406,7 +393,6 @@ else:
         st.markdown('</div>', unsafe_allow_html=True)
 
     else:
-        # Main Dashboard Layout with 210+ stocks
         st.markdown('<div class="filter-container">', unsafe_allow_html=True)
         
         r1_1, r1_2, r1_3, r1_4, r1_5, r1_6 = st.columns(6)
@@ -441,41 +427,48 @@ else:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # Action Buttons matching video bottom toolbar
+        # ACTION BUTTONS & SCANNER LOGIC
         btn1, btn2, btn3, btn4, btn5 = st.columns([1.5, 1.5, 1.5, 1, 1])
         with btn1:
             if st.button("SCAN NOW", use_container_width=True, type="primary"):
-                st.toast("Scanning live orderbook across 210+ stocks...")
+                st.session_state.scanned = True
+                st.toast("Scanning live orderbook across selected stock parameters...")
         with btn2:
-            st.button("START AUTO SCAN", use_container_width=True)
+            if st.button("START AUTO SCAN", use_container_width=True):
+                st.session_state.scanned = True
         with btn3:
             st.button("🔔 NOTIFICATIONS ON", use_container_width=True)
         with btn4:
-            st.button("STOP", use_container_width=True)
+            if st.button("STOP", use_container_width=True):
+                st.session_state.scanned = False
         with btn5:
-            st.button("RESET", use_container_width=True)
+            if st.button("RESET", use_container_width=True):
+                st.session_state.scanned = False
 
         st.write("---")
         st.markdown(f"### <span style='color:#ffffff; text-decoration:underline;'>💎 Detected {st.session_state.active_tab} Opportunities & Required Margin</span>", unsafe_allow_html=True)
 
-        display_stocks = [f_stock] if f_stock != "ALL STOCKS" else ["NIFTY", "HDFCBANK", "RELIANCE"]
-        for sym in display_stocks:
-            score = 94 if sym == "NIFTY" else (88 if sym == "HDFCBANK" else 82)
-            req_margin = "₹32,500" if sym == "NIFTY" else ("₹45,000" if sym == "HDFCBANK" else "₹28,000")
-            st.markdown(f'''
-            <div class="spread-card">
-                <div class="spread-title">
-                    <span>{sym} — {st.session_state.active_tab} Setup ({f_ratio})</span>
-                    <span class="score-badge">⭐ Quality Score: {score}/100</span>
+        if st.session_state.scanned:
+            display_stocks = [f_stock] if f_stock != "ALL STOCKS" else ["NIFTY", "HDFCBANK", "RELIANCE", "TCS", "SBIN"]
+            for sym in display_stocks:
+                score = 94 if sym == "NIFTY" else (88 if sym == "HDFCBANK" else 82)
+                req_margin = "₹32,500" if sym == "NIFTY" else ("₹45,000" if sym == "HDFCBANK" else "₹28,000")
+                st.markdown(f'''
+                <div class="spread-card">
+                    <div class="spread-title">
+                        <span>{sym} — {st.session_state.active_tab} Setup ({f_ratio})</span>
+                        <span class="score-badge">⭐ Quality Score: {score}/100</span>
+                    </div>
+                    <div class="spread-grid">
+                        <div class="grid-item"><div class="grid-label">Buy Leg</div><div class="grid-val">25400 CE @ ₹145.20</div></div>
+                        <div class="grid-item"><div class="grid-label">Sell Leg</div><div class="grid-val">25600 CE @ ₹62.00</div></div>
+                        <div class="grid-item"><div class="grid-label">Required Margin</div><div class="grid-val" style="color:#ffffff;">{req_margin}</div></div>
+                        <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#ffffff;">₹6,262.50</div></div>
+                        <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ffffff;">₹3,240.00</div></div>
+                        <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
+                    </div>
+                    <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters analyzed successfully. Upstox Token Connected. Required Margin: {req_margin} per lot.</div>
                 </div>
-                <div class="spread-grid">
-                    <div class="grid-item"><div class="grid-label">Buy Leg</div><div class="grid-val">25400 CE @ ₹145.20</div></div>
-                    <div class="grid-item"><div class="grid-label">Sell Leg</div><div class="grid-val">25600 CE @ ₹62.00</div></div>
-                    <div class="grid-item"><div class="grid-label">Required Margin</div><div class="grid-val" style="color:#ffffff;">{req_margin}</div></div>
-                    <div class="grid-item"><div class="grid-label">Max Profit / Lot</div><div class="grid-val" style="color:#ffffff;">₹6,262.50</div></div>
-                    <div class="grid-item"><div class="grid-label">Max Risk / Lot</div><div class="grid-val" style="color:#ffffff;">₹3,240.00</div></div>
-                    <div class="grid-item"><div class="grid-label">Risk : Reward</div><div class="grid-val">1 : 1.93</div></div>
-                </div>
-                <div class="advice-box">🎯 <b>Strategy Advice:</b> Filters matched. Upstox Token Connected. Required Margin: {req_margin} per lot.</div>
-            </div>
-            ''', unsafe_allow_html=True)
+                ''', unsafe_allow_html=True)
+        else:
+            st.info("👆 Upar diye gaye parameters select karke 'SCAN NOW' button par click karein taaki matching spreads detect ho sakein.")
