@@ -151,7 +151,6 @@ else:
     current_uname = str(st.session_state.username)
     current_token = str(st.session_state.upstox_token)
 
-    # Exact file content loaded cleanly via string substitution to avoid f-string curly brace errors
     dashboard_html = """<!doctype html>
 <html lang="en">
 <head>
@@ -483,18 +482,18 @@ const money=x=>"₹"+n(x).toLocaleString("en-IN",{maximumFractionDigits:2});
 const fmtNum=x=>n(x).toLocaleString("en-IN",{maximumFractionDigits:0});
 
 function loadStocks(){
-  stocks=["NIFTY","BANKNIFTY","FINNIFTY","MIDCAPNIFTY","RELIANCE","TCS","HDFCBANK","INFY","ICICIBANK","SBIN","BHARTIARTL","LICI","ITC","HINDUNILVR","LT","BAJFINANCE","MARUTI","SUNPHARMA","HCLTECH","TITAN","ADANIENT","ASIANPAINT","AXISBANK","KOTAKBANK","TATASTEEL","NTPC","POWERGRID","M&M","TATAMOTORS","COALINDIA","BAJAJHLDNG","ONGC","JIOFIN","ADANIPORTS","WIPRO","HDFCLIFE","SBILIFE","GRASIM","BRITANNIA","TECHM","INDUSINDBK","DRREDDY","CIPLA","TATACONSUM","APOLLOHOSP","HEROMOTOCO","EICHERMOT","DIVISLAB","BPCL","ULTRACEMCO","ADANIGREEN","ATGL","AMBUJACEM","BANKBARODA","CANBK","PNB","IDFCFIRSTB","AARTIIND","ABBOTINDIA","ABFRL","ACC","ADANIPOWER","ALKEM","ALOKINDS","AMARAJABAT","APLLTD","ASHOKLEY","ASTRAL","ATUL","AUBANK","AUROPHARMA","BAJAJ-AUTO","BALKRISIND","BALRAMCHIN","BANDHANBNK","BANKINDIA","BATAINDIA","BEL","BHARATFORG","BHEL","BIOCON","BOSCHLTD","CANFINHOME","CHOLAFIN","CUB","CONCOR","COROMANDEL","CROMPTON","CUMMINSIND","DABUR","DEEPAKNTR","DELHIVERY","DIXON","DLF","ESCORTS","EXIDEIND","FEDERALBNK","GAIL","GLENMARK","GMRINFRA","GODREJCP","GODREJPROP","GRANULES","GUJGASLTD","HAL","HAVELLS","HCL-INSYS","HDFCAMC","HINDALCO","HINDCOPPER","HINDPETRO","IDBI","IDFC","IEX","IGL","INDHOTEL","INDIACEM","INDIAMART","INDIGO","IPCALAB","IRCTC","IRFC","JINDALSTEL","JKCEMENT","JSWENERGY","JSWSTEEL","JUBLFOOD","LALPATHLAB","LAURUSLABS","LICHSGFIN","LTIM","LTTS","LUPIN","M&MFIN","MANAPPURAM","MAXHEALTH","MCX","METROPOLIS","MFSL","MINDTREE","MOTHERSUMI","MPHASIS","MRF","MUTHOOTFIN","NAM-INDIA","NATIONALUM","NAUKRI","NAVINFLUOR","NESTLEIND","NMDC","OBEROIRLTY","OFSS","PAGEIND","PEL","PERSISTENT","PETRONET","PFC","PIDILITIND","PIIND","POLYCAB","PVRINOX","RAMCOCEM","RBLBANK","RECLTD","SBICARD","SRF","STAR","SUNTV","SYNGENE","TATACOMM","TATAPOWER","TATAELXSI","TORNTPHARM","TORNTPOWER","TRENT","TVSMOTOR","UPL","VEDL","VOLTAS","WHIRLPOOL","ZEEL","ZYDUSLIFE"].map(sym=>({symbol:sym,name:sym}));
-  stockMap=new Map(stocks.map(s=>[s.symbol,s]));
+  stocks=["NIFTY","BANKNIFTY","FINNIFTY","MIDCAPNIFTY","RELIANCE","TCS","HDFCBANK","INFY","ICICIBANK","SBIN","BHARTIARTL","LICI","ITC","HINDUNILVR","LT","BAJFINANCE","MARUTI","SUNPHARMA","HCLTECH","TITAN","ADANIENT","ASIANPAINT","AXISBANK","KOTAKBANK","TATASTEEL","NTPC","POWERGRID","M&M","TATAMOTORS","COALINDIA","BAJAJHLDNG","ONGC","JIOFIN","ADANIPORTS","WIPRO","HDFCLIFE","SBILIFE","GRASIM","BRITANNIA","TECHM","INDUSINDBK","DRREDDY","CIPLA","TATACONSUM","APOLLOHOSP","HEROMOTOCO","EICHERMOT","DIVISLAB","BPCL","ULTRACEMCO","ADANIGREEN","ATGL","AMBUJACEM","BANKBARODA","CANBK","PNB","IDFCFIRSTB","AARTIIND","ABBOTINDIA","ABFRL","ACC","ADANIPOWER","ALKEM","ALOKINDS","AMARAJABAT","APLLTD","ASHOKLEY","ASTRAL","ATUL","AUBANK","AUROPHARMA","BAJAJ-AUTO","BALKRISIND","BALRAMCHIN","BANDHANBNK","BANKINDIA","BATAINDIA","BEL","BHARATFORG","BHEL","BIOCON","BOSCHLTD","CANFINHOME","CHOLAFIN","CUB","CONCOR","COROMANDEL","CROMPTON","CUMMINSIND","DABUR","DEEPAKNTR","DELHIVERY","DIXON","DLF","ESCORTS","EXIDEIND","FEDERALBNK","GAIL","GLENMARK","GMRINFRA","GODREJCP","GODREJPROP","GRANULES","GUJGASLTD","HAL","HAVELLS","HCL-INSYS","HDFCAMC","HINDALCO","HINDCOPPER","HINDPETRO","IDBI","IDFC","IEX","IGL","INDHOTEL","INDIACEM","INDIAMART","INDIGO","IPCALAB","IRCTC","IRFC","JINDALSTEL","JKCEMENT","JSWENERGY","JSWSTEEL","JUBLFOOD","LALPATHLAB","LAURUSLABS","LICHSGFIN","LTIM","LTTS","LUPIN","M&MFIN","MANAPPURAM","MAXHEALTH","MCX","METROPOLIS","MFSL","MINDTREE","MOTHERSUMI","MPHASIS","MRF","MUTHOOTFIN","NAM-INDIA","NATIONALUM","NAUKRI","NAVINFLUOR","NESTLEIND","NMDC","OBEROIRLTY","OFSS","PAGEIND","PEL","PERSISTENT","PETRONET","PFC","PIDILITIND","PIIND","POLYCAB","PVRINOX","RAMCOCEM","RBLBANK","RECLTD","SBICARD","SRF","STAR","SUNTV","SYNGENE","TATACOMM","TATAPOWER","TATAELXSI","TORNTPHARM","TORNTPOWER","TRENT","TVSMOTOR","UPL","VEDL","VOLTAS","WHIRLPOOL","ZEEL","ZYDUSLIFE"].map(function(sym){ return {symbol:sym, name:sym}; });
+  stockMap=new Map(stocks.map(function(s){ return [s.symbol, s]; }));
   populateStockSelect();
   populateExpiries();
 }
 
-function populateStockSelect(filter=""){
+function populateStockSelect(filter){
   const sel=$("symbol"); if(!sel)return;
   const q=String(filter||"").trim().toUpperCase();
-  const list=q ? stocks.filter(s=>s.symbol.includes(q)) : stocks;
+  const list=q ? stocks.filter(function(s){ return s.symbol.includes(q); }) : stocks;
   sel.innerHTML='<option value="ALL">ALL STOCKS ('+stocks.length+')</option>';
-  list.forEach(s=>{
+  list.forEach(function(s){
     const o=document.createElement("option"); o.value=s.symbol; o.textContent=s.symbol; sel.appendChild(o);
   });
 }
@@ -516,9 +515,9 @@ function populateExpiries(){
 
 function switchScannerTabUI(name,btn){
   scannerMode=name;
-  document.querySelectorAll('.spreadField').forEach(e=>e.style.display=name==='spread'?'':'none');
+  document.querySelectorAll('.spreadField').forEach(function(e){ e.style.display=name==='spread'?'':'none'; });
   document.getElementById('scannerTitle').textContent=name==='spread'?'Spread Scanner':name==='atm'?'ATM Scanner':'OTM Scanner';
-  document.querySelectorAll('.nav-links button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nav-links button').forEach(function(b){ b.classList.remove('active'); });
   if(btn) btn.classList.add('active');
 }
 
@@ -530,23 +529,25 @@ function scan(){
   $("summary").textContent="Scanning "+targetStocks.length+" F&O stocks for expiry "+expiry+"…";
   lastResults=[]; renderResults();
 
-  setTimeout(()=>{
-    lastResults=targetStocks.map((s,idx)=>({
-      symbol:s.symbol,
-      equityLtp:2400+idx*45,
-      futureLtp:2420+idx*45,
-      candidates:[{
-        type:"CE", outerDelta:25,
-        outer:{
-          a:{strike:2400+idx*50, ltp:135, iv:16.5, volume:42000, delta:0.25},
-          b:{strike:2600+idx*50, ltp:52, iv:14.8, volume:35000, delta:0.19},
-          credit:3850, debit:0
-        },
-        inner:[{
-          a:{strike:2450+idx*50, ltp:110}, b:{strike:2650+idx*50, ltp:42}, pos:{credit:3400}, ivGap:1.2
+  setTimeout(function(){
+    lastResults=targetStocks.map(function(s,idx){
+      return {
+        symbol:s.symbol,
+        equityLtp:2400+idx*45,
+        futureLtp:2420+idx*45,
+        candidates:[{
+          type:"CE", outerDelta:25,
+          outer:{
+            a:{strike:2400+idx*50, ltp:135, iv:16.5, volume:42000, delta:0.25},
+            b:{strike:2600+idx*50, ltp:52, iv:14.8, volume:35000, delta:0.19},
+            credit:3850, debit:0
+          },
+          inner:[{
+            a:{strike:2450+idx*50, ltp:110}, b:{strike:2650+idx*50, ltp:42}, pos:{credit:3400}, ivGap:1.2
+          }]
         }]
-      }]
-    }));
+      };
+    });
     $("summary").textContent="Scan complete! Found "+lastResults.length+" optimal spreads.";
     renderResults();
   }, 500);
@@ -555,8 +556,8 @@ function scan(){
 function renderResults(){
   const box=$("results");
   if(!lastResults.length){box.innerHTML='<div class="empty">No spreads found. Press SCAN NOW.</div>';return;}
-  box.innerHTML=lastResults.map((r,i)=>
-    '<div class="result-card">'+
+  box.innerHTML=lastResults.map(function(r,i){
+    return '<div class="result-card">'+
       '<div class="card-header">'+
         '<div class="symbol-info">'+
           '<div class="symbol-name">'+(i+1)+'. '+r.symbol+' <span class="badge badge-green">OPTIMAL SPREAD</span></div>'+
@@ -580,7 +581,8 @@ function renderResults(){
           '<div class="net-value text-green">NET CREDIT: '+money(r.candidates[0].outer.credit)+'</div>'+
         '</div>'+
       '</div>'+
-    '</div>').join("");
+    '</div>';
+  }).join("");
 }
 
 function toggleAuto(){
